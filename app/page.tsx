@@ -231,7 +231,7 @@ export default function LoginPage() {
           textAlign: "center", marginTop: 28, fontSize: 12,
           color: "rgba(255,255,255,0.15)", letterSpacing: "0.08em",
         }}>
-          ✦ Hanya untuk Elfan & Savira ✦
+          ✦ Hanya untuk Kita ✦
         </p>
       </motion.div>
 
