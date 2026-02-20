@@ -11,7 +11,7 @@ export const LOCAL_SONGS = [
     { id: 'pp-04', title: 'Anything You Want', artist: 'Reality Club', url: '/music/paypay/AnythingYouWant-RealityClub.mp3', duration: 237 },
     { id: 'pp-05', title: 'Bimbang', artist: 'Melody', url: '/music/paypay/Bimbang-Melody.mp3', duration: 216 },
     { id: 'pp-06', title: 'Blue Jeans', artist: 'Gangga Kusuma', url: '/music/paypay/BlueJeans-GanggaKusuma.mp3', duration: 225 },
-    { id: 'pp-07', title: "Nothing's Gonna Hurt You Baby", artist: 'Cigarettes After Sex', url: "/music/paypay/Cigarettes After Sex - Nothing's Gonna Hurt You Baby (Lyrics).mp3", duration: 295 },
+    { id: 'pp-07', title: "Nothing's Gonna Hurt You Baby", artist: 'Cigarettes After Sex', url: '/music/paypay/NothingsGonnaHurtYouBaby-CigarettesAfterSex.mp3', duration: 295 },
     { id: 'pp-08', title: 'Cinnamon Girl', artist: 'Lana Del Rey', url: '/music/paypay/CinnamonGirl-LanaDelRey.mp3', duration: 301 },
     { id: 'pp-09', title: 'Coffee', artist: 'Beabadoobee', url: '/music/paypay/Coffee-Beabadoobee.mp3', duration: 128 },
     { id: 'pp-10', title: 'Falling In Love', artist: 'Cigarettes After Sex', url: '/music/paypay/FallingInLove-CigarettesAfterSex.mp3', duration: 246 },
