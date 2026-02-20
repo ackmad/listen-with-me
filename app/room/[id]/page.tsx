@@ -281,6 +281,7 @@ function RoomInner() {
     const [mobileTab, setMobileTab] = useState<"queue" | "requests" | "users">("queue");
 
     const [isSyncing, setIsSyncing] = useState(false);
+    const [needsInteraction, setNeedsInteraction] = useState(false);
     const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [currentTime, setCurrentTime] = useState(0);
@@ -346,8 +347,15 @@ function RoomInner() {
                     const target = Math.min(Math.max(offset, 0), audio.duration || offset);
                     if (Math.abs(audio.currentTime - target) > 1.5) audio.currentTime = target;
                 }
-                try { await audio.play(); } catch (e: any) {
-                    if (e.name !== "AbortError") console.warn("Play:", e.message);
+                try {
+                    await audio.play();
+                    setNeedsInteraction(false); // Play success, hide interaction overlay
+                } catch (e: any) {
+                    if (e.name === "NotAllowedError") {
+                        setNeedsInteraction(true); // Play failed due to interaction policy
+                    } else if (e.name !== "AbortError") {
+                        console.warn("Play:", e.message);
+                    }
                 }
             } else {
                 audio.pause();
@@ -471,7 +479,7 @@ function RoomInner() {
             />
 
             <AnimatePresence>
-                {isSyncing && (
+                {(isSyncing || needsInteraction) && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -479,10 +487,63 @@ function RoomInner() {
                         transition={{ duration: 0.3 }}
                         style={{ position: "fixed", inset: 0, zIndex: 2000 }}
                     >
-                        <SyncScreen
-                            songTitle={room?.currentSong?.title}
-                            artist={room?.currentSong?.artist}
-                        />
+                        {needsInteraction ? (
+                            <div style={{
+                                position: "absolute", inset: 0,
+                                background: "var(--app-bg)",
+                                display: "flex", flexDirection: "column",
+                                alignItems: "center", justifyContent: "center", gap: 32,
+                                padding: 32, textAlign: "center",
+                                transition: "var(--theme-transition)",
+                            }}>
+                                <div style={{ position: "relative" }}>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.1, 1] }}
+                                        transition={{ duration: 2, repeat: Infinity }}
+                                        style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--app-bg-secondary)", border: "2px solid var(--app-border)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                    >
+                                        <MusicalNoteIcon style={{ width: 40, height: 40, color: "var(--app-primary)" }} />
+                                    </motion.div>
+                                </div>
+                                <div>
+                                    <h2 style={{ margin: "0 0 12px", fontSize: 24, fontWeight: 900, color: "var(--app-text)" }}>
+                                        Siap untuk Mendengarkan?
+                                    </h2>
+                                    <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600, fontFamily: "var(--font-fredoka)", maxWidth: 300 }}>
+                                        Tap tombol di bawah untuk bergabung dan sinkronisasi musik otomatis! ✨
+                                    </p>
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={async () => {
+                                        const audio = audioRef.current;
+                                        if (audio) {
+                                            try {
+                                                await audio.play();
+                                                setNeedsInteraction(false);
+                                            } catch (e) {
+                                                console.warn("Manual join failed:", e);
+                                            }
+                                        }
+                                    }}
+                                    style={{
+                                        padding: "18px 40px", borderRadius: 24,
+                                        background: "var(--app-primary)", border: "none",
+                                        color: "#fff", fontSize: 18, fontWeight: 900,
+                                        cursor: "pointer", boxShadow: "0 10px 30px var(--app-soft-accent)",
+                                        display: "flex", alignItems: "center", gap: 12
+                                    }}
+                                >
+                                    Gabung & Sinkron →
+                                </motion.button>
+                            </div>
+                        ) : (
+                            <SyncScreen
+                                songTitle={room?.currentSong?.title}
+                                artist={room?.currentSong?.artist}
+                            />
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -702,8 +763,8 @@ function RoomInner() {
                                                     <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 600 }}>dari {req.requestedBy}</p>
                                                 </div>
                                                 <div style={{ display: "flex", gap: 8 }}>
-                                                    <button onClick={() => approveRequest(req)} style={{ flex: 1, py: "6px", borderRadius: 10, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", padding: "6px" }}>Setujui</button>
-                                                    <button onClick={() => rejectRequest(req)} style={{ py: "6px", px: 12, borderRadius: 10, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 12, cursor: "pointer", padding: "6px" }}>Tolak</button>
+                                                    <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 10, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", padding: "6px" }}>Setujui</button>
+                                                    <button onClick={() => rejectRequest(req)} style={{ borderRadius: 10, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>Tolak</button>
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -726,7 +787,7 @@ function RoomInner() {
                                 ))}
                             </div>
                         ) : (
-                            <div style={{ textAlign: "center", py: 40, background: "var(--app-bg-secondary)", borderRadius: 20, padding: 24, border: "1.5px dashed var(--app-border)" }}>
+                            <div style={{ textAlign: "center", padding: "40px 24px", background: "var(--app-bg-secondary)", borderRadius: 20, border: "1.5px dashed var(--app-border)" }}>
                                 <p style={{ margin: 0, fontSize: 13, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
                                 <button onClick={() => setShowSongs(true)} style={{ marginTop: 12, color: "var(--app-primary)", fontWeight: 800, fontSize: 12, background: "none", border: "none", cursor: "pointer" }}>+ Tambah Lagu</button>
                             </div>
