@@ -22,7 +22,7 @@ import {
     type UserPresence,
 } from "@/hooks/usePresence";
 import { ToastProvider, useToast } from "@/components/Toast";
-import SongManager from "@/components/SongManager";
+import SongManager, { LOCAL_SONGS } from "@/components/SongManager";
 import ReactionSystem from "@/components/ReactionSystem";
 
 // ─── Sync Loading Screen ──────────────────────────────────────────────────
@@ -399,7 +399,10 @@ function RoomInner() {
                 if (!data) return;
 
                 // Sync check: only advance if the finished song is still currentSong
-                if (data.currentSong?.url !== audioRef.current?.src) return;
+                // Note: currentSrc might be absolute, so we check if it ends with the stored relative URL
+                const currentSrc = audioRef.current?.src || "";
+                const dbUrl = data.currentSong?.url || "";
+                if (!currentSrc || !dbUrl || !currentSrc.endsWith(dbUrl)) return;
 
                 const queue: any[] = data.queue || [];
                 if (queue.length === 0) {
@@ -444,6 +447,19 @@ function RoomInner() {
         };
         await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songWithId) });
         toast("Lagu ditambahkan ke antrian 🎵", "success");
+    };
+
+    const addRandomSongs = async () => {
+        if (!rId || !user) return;
+        const shuffled = [...LOCAL_SONGS].sort(() => 0.5 - Math.random());
+        const selected = shuffled.slice(0, 5).map(s => ({
+            ...s,
+            queueId: `${s.id}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            requestedBy: displayName,
+            requesterId: user.uid
+        }));
+        await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(...selected) });
+        toast("5 Lagu random ditambahkan! 🎲", "success");
     };
 
     const removeFromQueue = async (song: any) => {
@@ -767,11 +783,27 @@ function RoomInner() {
                     <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
 
 
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                            <QueueListIcon style={{ width: 14, height: 14, color: "var(--app-text-muted)" }} />
-                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
-                                List Antrian
-                            </p>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <QueueListIcon style={{ width: 14, height: 14, color: "var(--app-text-muted)" }} />
+                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
+                                    List Antrian
+                                </p>
+                            </div>
+                            <button
+                                onClick={addRandomSongs}
+                                title="Tambah 5 Lagu Random"
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 6,
+                                    padding: "4px 8px", borderRadius: 8, border: "none",
+                                    background: "var(--app-bg-secondary)", color: "var(--app-primary)",
+                                    fontSize: 10, fontWeight: 800, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "var(--app-surface)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "var(--app-bg-secondary)"}
+                            >
+                                <span>🎲</span> RANDOM 5
+                            </button>
                         </div>
 
                         {room?.queue?.length > 0 ? (
@@ -870,9 +902,23 @@ function RoomInner() {
                             }} />
 
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
-                                </h3>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                        {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
+                                    </h3>
+                                    {mobileTab === "queue" && (
+                                        <button
+                                            onClick={addRandomSongs}
+                                            style={{
+                                                padding: "4px 10px", borderRadius: 10, border: "none",
+                                                background: "var(--app-primary)", color: "#fff",
+                                                fontSize: 10, fontWeight: 900, cursor: "pointer"
+                                            }}
+                                        >
+                                            🎲 RANDOM 5
+                                        </button>
+                                    )}
+                                </div>
                                 <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 8, borderRadius: "50%", color: "var(--app-text-muted)" }}>
                                     <XMarkIcon style={{ width: 20, height: 20 }} />
                                 </button>
