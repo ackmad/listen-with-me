@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowRightOnRectangleIcon, PlusIcon, MusicalNoteIcon, UserGroupIcon,
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import {
@@ -17,94 +18,196 @@ import {
     type UserPresence,
 } from "@/hooks/usePresence";
 
-// ─── Presence dot ─────────────────────────────────────────────────────────
+// ─── Status Dot ──────────────────────────────────────────────────────────
 function StatusDot({ status }: { status: UserPresence["status"] }) {
-    const color = status === "online" ? "#4ade80" : status === "idle" ? "#fbbf24" : "#6b7280";
+    const color = status === "online" ? "#4ade80" : status === "idle" ? "#fbbf24" : "#374151";
     return (
-        <span style={{
-            display: "inline-block", width: 8, height: 8, borderRadius: "50%",
-            background: color, flexShrink: 0,
-            boxShadow: status === "online" ? `0 0 5px ${color}` : "none",
-        }}>
+        <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10, flexShrink: 0 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "block" }} />
             {status === "online" && (
                 <motion.span
-                    animate={{ scale: [1, 1.6, 1], opacity: [0.6, 0, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    style={{
-                        display: "block", width: "100%", height: "100%",
-                        borderRadius: "50%", background: color,
-                    }}
+                    animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2.5, repeat: Infinity }}
+                    style={{ position: "absolute", inset: 0, borderRadius: "50%", background: color, pointerEvents: "none" }}
                 />
             )}
         </span>
     );
 }
 
-// ─── User card for presence list ──────────────────────────────────────────
+// ─── User card for presence drawer ───────────────────────────────────────
 function UserCard({ u, isMe }: { u: UserPresence; isMe: boolean }) {
-    const activityLabel =
+    const activity =
         u.status === "offline" ? "Offline" :
             u.status === "idle" ? "Sedang idle" :
                 u.currentRoom ? "Sedang di room" : "Melihat dashboard";
 
     return (
         <div style={{
-            display: "flex", alignItems: "center", gap: 12, padding: "11px 14px",
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
             borderRadius: 14,
-            background: isMe ? "rgba(200,0,100,0.05)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${isMe ? "rgba(200,0,100,0.12)" : "rgba(255,255,255,0.05)"}`,
+            background: isMe ? "rgba(200,0,100,0.06)" : "rgba(255,255,255,0.02)",
+            border: `1px solid ${isMe ? "rgba(200,0,100,0.14)" : "rgba(255,255,255,0.04)"}`,
         }}>
-            {/* Avatar */}
             <div style={{
-                width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
-                background: "linear-gradient(135deg, rgba(180,0,80,0.4), rgba(100,0,150,0.4))",
+                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                background: isMe
+                    ? "linear-gradient(135deg, rgba(200,0,100,0.45), rgba(120,0,160,0.45))"
+                    : "rgba(255,255,255,0.07)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 13, fontWeight: 800, color: "rgba(255,200,220,0.9)",
-                border: `2px solid ${u.status === "online" ? "rgba(74,222,128,0.25)" : "rgba(255,255,255,0.06)"}`,
+                fontSize: 12, fontWeight: 800,
+                color: isMe ? "rgba(255,200,220,0.9)" : "rgba(255,255,255,0.45)",
                 position: "relative",
             }}>
                 {getInitials(u.displayName)}
                 <span style={{
                     position: "absolute", bottom: -1, right: -1,
-                    width: 10, height: 10, borderRadius: "50%",
-                    background: u.status === "online" ? "#4ade80" : u.status === "idle" ? "#fbbf24" : "#6b7280",
-                    border: "2px solid #0a0508",
+                    width: 10, height: 10, borderRadius: "50%", border: "2px solid #0a0508",
+                    background: u.status === "online" ? "#4ade80" : u.status === "idle" ? "#fbbf24" : "#374151",
                 }} />
             </div>
-
-            {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
                     <p style={{
                         margin: 0, fontSize: 13, fontWeight: 700,
                         color: u.status === "offline" ? "rgba(255,255,255,0.3)" : "#fff",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
-                        {u.displayName}{isMe && " (kamu)"}
+                        {u.displayName}
                     </p>
                     {isMe && (
-                        <span style={{
-                            fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
-                            color: "rgba(200,0,100,0.8)", background: "rgba(200,0,100,0.1)",
-                            padding: "2px 6px", borderRadius: 20, flexShrink: 0,
-                        }}>kamu</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(200,0,100,0.7)", background: "rgba(200,0,100,0.1)", padding: "2px 6px", borderRadius: 20, flexShrink: 0 }}>
+                            kamu
+                        </span>
                     )}
                 </div>
-                <p style={{
-                    margin: "2px 0 0", fontSize: 11,
-                    color: u.status === "offline" ? "rgba(255,255,255,0.2)" :
-                        u.status === "idle" ? "rgba(251,191,36,0.6)" :
-                            "rgba(74,222,128,0.6)",
-                }}>
-                    {activityLabel}
+                <p style={{ margin: 0, fontSize: 11, color: u.status === "offline" ? "rgba(255,255,255,0.18)" : u.status === "idle" ? "rgba(251,191,36,0.55)" : "rgba(74,222,128,0.6)" }}>
+                    {activity}
                 </p>
                 {u.status !== "online" && u.lastSeen > 0 && (
-                    <p style={{ margin: "1px 0 0", fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
-                        Terakhir aktif {formatLastSeen(u.lastSeen)}
+                    <p style={{ margin: "1px 0 0", fontSize: 10, color: "rgba(255,255,255,0.12)" }}>
+                        {formatLastSeen(u.lastSeen)}
                     </p>
                 )}
             </div>
         </div>
+    );
+}
+
+// ─── Room Card ────────────────────────────────────────────────────────────
+function RoomCard({ room, usersInRoom, onClick, index }: { room: any; usersInRoom: UserPresence[]; onClick: () => void; index: number }) {
+    const [hov, setHov] = useState(false);
+    const isActive = room.isPlaying;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: index * 0.06 }}
+            onClick={onClick}
+            onMouseEnter={() => setHov(true)}
+            onMouseLeave={() => setHov(false)}
+            style={{
+                display: "flex", alignItems: "center", gap: 14, padding: "16px 18px",
+                borderRadius: 18, cursor: "pointer",
+                background: hov
+                    ? isActive ? "rgba(200,0,100,0.07)" : "rgba(255,255,255,0.04)"
+                    : isActive ? "rgba(200,0,100,0.04)" : "rgba(255,255,255,0.02)",
+                border: `1px solid ${hov
+                    ? isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.09)"
+                    : isActive ? "rgba(200,0,100,0.12)" : "rgba(255,255,255,0.05)"}`,
+                transition: "all 0.2s ease",
+                transform: hov ? "translateY(-2px)" : "translateY(0)",
+                boxShadow: hov
+                    ? isActive ? "0 8px 32px rgba(200,0,100,0.12)" : "0 8px 24px rgba(0,0,0,0.2)"
+                    : "none",
+            }}
+        >
+            {/* Disc icon */}
+            <div style={{
+                width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+                background: isActive
+                    ? "linear-gradient(135deg, rgba(180,0,80,0.5), rgba(100,0,150,0.5))"
+                    : "rgba(255,255,255,0.04)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: `1px solid ${isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.06)"}`,
+                boxShadow: isActive ? "0 0 20px rgba(180,0,80,0.2)" : "none",
+                position: "relative", overflow: "hidden",
+            }}>
+                {isActive
+                    ? <PlayIcon style={{ width: 18, height: 18, color: "rgba(220,120,160,0.95)", marginLeft: 2 }} />
+                    : <MusicalNoteIcon style={{ width: 18, height: 18, color: "rgba(255,255,255,0.2)" }} />
+                }
+                {isActive && (
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                        style={{
+                            position: "absolute", inset: -32, borderRadius: "50%", opacity: 0.06,
+                            background: "conic-gradient(rgba(200,0,100,0.8) 0deg, transparent 180deg)",
+                            pointerEvents: "none",
+                        }}
+                    />
+                )}
+            </div>
+
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {room.name}
+                    </p>
+                    <span style={{
+                        fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0,
+                        padding: "2px 7px", borderRadius: 10,
+                        background: isActive ? "rgba(200,0,100,0.12)" : "rgba(255,255,255,0.05)",
+                        color: isActive ? "rgba(220,100,150,0.8)" : "rgba(255,255,255,0.25)",
+                        border: `1px solid ${isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.07)"}`,
+                    }}>
+                        {isActive ? "Aktif" : "Diam"}
+                    </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.28)" }}>oleh {room.hostName}</span>
+
+                    {room.currentSong && (
+                        <>
+                            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block", flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: "rgba(220,100,150,0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
+                                ♪ {room.currentSong.title}
+                            </span>
+                        </>
+                    )}
+
+                    {usersInRoom.length > 0 && (
+                        <>
+                            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block", flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: "rgba(74,222,128,0.55)" }}>
+                                {usersInRoom.length} di ruang ini
+                            </span>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Right: waveform if playing */}
+            <div style={{ flexShrink: 0 }}>
+                {isActive ? (
+                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 20 }}>
+                        {[1, 2, 3, 2, 1].map((h, i) => (
+                            <motion.div key={i}
+                                animate={{ height: [h * 3, h * 3 + 8, h * 3] }}
+                                transition={{ duration: 0.6 + i * 0.08, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
+                                style={{ width: 3, background: "rgba(200,0,100,0.55)", borderRadius: 3, minHeight: 3 }}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <ArrowRightOnRectangleIcon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.12)", transform: "rotate(180deg)" }} />
+                )}
+            </div>
+        </motion.div>
     );
 }
 
@@ -120,7 +223,6 @@ export default function Dashboard() {
     const [creating, setCreating] = useState(false);
     const [showUsers, setShowUsers] = useState(false);
 
-    // Auth
     useEffect(() => {
         return onAuthStateChanged(auth, (u) => {
             if (!u) { router.push("/"); return; }
@@ -128,22 +230,13 @@ export default function Dashboard() {
         });
     }, [router]);
 
-    // Presence: broadcast self
     const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
-    const { updateActivity } = useBroadcastPresence(
-        user?.uid ?? null,
-        displayName,
-        user?.photoURL ?? null,
-        { activity: "Melihat dashboard", currentRoom: null }
-    );
 
-    // Presence: watch all users
-    const handlePresenceUpdate = useCallback((users: UserPresence[]) => {
-        setAllUsers(users);
-    }, []);
+    useBroadcastPresence(user?.uid ?? null, displayName, user?.photoURL ?? null, { activity: "Melihat dashboard", currentRoom: null });
+
+    const handlePresenceUpdate = useCallback((users: UserPresence[]) => setAllUsers(users), []);
     useAllPresence(handlePresenceUpdate);
 
-    // Rooms
     useEffect(() => {
         const q = query(collection(db, "rooms"), orderBy("createdAt", "desc"));
         const unsub = onSnapshot(q, (snap) => {
@@ -159,33 +252,29 @@ export default function Dashboard() {
         setCreating(true);
         try {
             const docRef = await addDoc(collection(db, "rooms"), {
-                name: newRoomName.trim(),
-                hostId: user.uid,
-                hostName: displayName,
-                createdAt: serverTimestamp(),
-                isPlaying: false,
-                currentSong: null,
-                queue: [],
+                name: newRoomName.trim(), hostId: user.uid, hostName: displayName,
+                createdAt: serverTimestamp(), isPlaying: false, currentSong: null, queue: [],
             });
             router.push(`/room/${docRef.id}`);
-        } catch (err: any) {
-            console.error("Create room:", err.message);
-            setCreating(false);
-        }
+        } catch (err: any) { console.error("Create room:", err.message); setCreating(false); }
     };
 
-    const handleLogout = async () => {
-        await signOut(auth);
-        router.push("/");
-    };
+    const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
     const greeting = () => {
         const h = new Date().getHours();
         if (h < 5) return "Masih melek nih";
-        if (h < 12) return "Selamat pagi";
-        if (h < 17) return "Selamat siang";
-        if (h < 20) return "Selamat sore";
+        if (h < 11) return "Selamat pagi";
+        if (h < 15) return "Selamat siang";
+        if (h < 18) return "Selamat sore";
         return "Selamat malam";
+    };
+    const greetingEmoji = () => {
+        const h = new Date().getHours();
+        if (h < 5) return "🌙";
+        if (h < 11) return "☀️";
+        if (h < 18) return "👋";
+        return "🌙";
     };
 
     const onlineUsers = allUsers.filter(u => u.status === "online");
@@ -197,17 +286,14 @@ export default function Dashboard() {
 
     return (
         <div style={{
-            minHeight: "100vh", background: "#0a0508",
+            minHeight: "100vh", background: "#080408",
             fontFamily: "var(--font-geist-sans), sans-serif", color: "#e8e8e8",
-            position: "relative", overflow: "hidden",
+            position: "relative",
         }}>
-            {/* Ambient glow */}
-            <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-                <div style={{
-                    position: "absolute", top: "-15%", left: "50%", transform: "translateX(-50%)",
-                    width: 700, height: 500,
-                    background: "radial-gradient(ellipse, rgba(160,0,80,0.07) 0%, transparent 70%)",
-                }} />
+            {/* Background ambient */}
+            <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+                <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(150,0,70,0.08) 0%, transparent 65%)" }} />
+                <div style={{ position: "absolute", bottom: "5%", right: "10%", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(60,0,120,0.06) 0%, transparent 60%)" }} />
             </div>
 
             {/* ── Header ── */}
@@ -215,260 +301,209 @@ export default function Dashboard() {
                 padding: "0 20px", height: 58,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 borderBottom: "1px solid rgba(255,255,255,0.05)",
-                background: "rgba(10,5,8,0.85)", backdropFilter: "blur(16px)",
+                background: "rgba(8,4,8,0.9)", backdropFilter: "blur(20px)",
                 position: "sticky", top: 0, zIndex: 30,
             }}>
-                <div>
+                {/* Logo */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: "linear-gradient(135deg, #c4005c, #6c0050)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 0 12px rgba(180,0,85,0.35)",
+                    }}>
+                        <MusicalNoteIcon style={{ width: 14, height: 14, color: "#fff" }} />
+                    </div>
                     <h1 style={{
-                        margin: 0, fontSize: 15, fontWeight: 800,
-                        background: "linear-gradient(135deg, #fff, rgba(255,180,200,0.7))",
+                        margin: 0, fontSize: 15, fontWeight: 800, letterSpacing: "-0.2px",
+                        background: "linear-gradient(135deg, #fff 40%, rgba(255,180,200,0.7) 100%)",
                         WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                    }}>🎧 ListenWithMe</h1>
+                    }}>ListenWithMe</h1>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    {/* Online count pill */}
-                    <button
+                {/* Right controls */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <motion.button
+                        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                         onClick={() => setShowUsers(v => !v)}
                         style={{
                             display: "flex", alignItems: "center", gap: 6,
-                            padding: "6px 12px", borderRadius: 20,
-                            background: showUsers ? "rgba(200,0,100,0.1)" : "rgba(255,255,255,0.04)",
-                            border: `1px solid ${showUsers ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.07)"}`,
-                            color: showUsers ? "rgba(220,100,150,0.9)" : "rgba(255,255,255,0.4)",
-                            cursor: "pointer", fontSize: 13, fontFamily: "inherit",
-                            transition: "all 0.2s",
+                            padding: "6px 12px", borderRadius: 20, cursor: "pointer",
+                            background: showUsers ? "rgba(200,0,100,0.1)" : "rgba(255,255,255,0.05)",
+                            border: `1px solid ${showUsers ? "rgba(200,0,100,0.22)" : "rgba(255,255,255,0.07)"}`,
+                            color: showUsers ? "rgba(220,110,150,0.9)" : "rgba(255,255,255,0.4)",
+                            fontSize: 13, fontFamily: "inherit", transition: "all 0.2s",
                         }}
                     >
-                        <span style={{
-                            width: 7, height: 7, borderRadius: "50%", background: "#4ade80",
-                            boxShadow: "0 0 5px #4ade80",
-                        }} />
-                        <span>{onlineUsers.length} online</span>
+                        <StatusDot status="online" />
+                        {onlineUsers.length} online
                         <UserGroupIcon style={{ width: 14, height: 14 }} />
-                    </button>
+                    </motion.button>
 
                     <button onClick={handleLogout} style={{
-                        display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 20,
-                        background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
-                        color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13, fontFamily: "inherit",
+                        width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)",
+                        background: "transparent", color: "rgba(255,255,255,0.3)",
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                     }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = "#e0608a"}
-                        onMouseLeave={(e) => e.currentTarget.style.color = "rgba(255,255,255,0.3)"}
+                        onMouseEnter={e => (e.currentTarget.style.color = "#e0608a")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
                     >
-                        <ArrowRightOnRectangleIcon style={{ width: 15, height: 15 }} />
-                        <span style={{ display: "none" }}>Keluar</span>
+                        <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} />
                     </button>
                 </div>
             </header>
 
-            {/* ── Layout: sidebar + main ── */}
-            <div style={{
-                maxWidth: 1100, margin: "0 auto", padding: "0 16px",
-                display: "flex", gap: 28, position: "relative", zIndex: 1,
-                alignItems: "flex-start",
-            }}>
-                {/* ──── Main Content ──── */}
-                <div style={{ flex: 1, minWidth: 0, paddingTop: 36, paddingBottom: 40 }}>
-                    {/* Greeting */}
-                    <div style={{ marginBottom: 28 }}>
-                        <h2 style={{
-                            margin: "0 0 5px", fontSize: "clamp(20px, 4vw, 26px)",
-                            fontWeight: 800, letterSpacing: "-0.3px", color: "#fff",
-                        }}>
-                            {greeting()}, {displayName} 👋
+            {/* ── Body ── */}
+            <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px", position: "relative", zIndex: 1, display: "flex", gap: 24, alignItems: "flex-start" }}>
+
+                {/* ─── Main ─── */}
+                <div style={{ flex: 1, minWidth: 0, paddingTop: 40, paddingBottom: 80 }}>
+
+                    {/* Greeting header */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ marginBottom: 36 }}>
+                        <h2 style={{ margin: "0 0 6px", fontSize: "clamp(22px,4vw,30px)", fontWeight: 800, letterSpacing: "-0.5px", color: "#fff" }}>
+                            {greeting()}, {displayName} {greetingEmoji()}
                         </h2>
-                        <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.3)" }}>
+                        <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.28)", lineHeight: 1.5 }}>
                             {onlineUsers.length > 1
-                                ? `${onlineUsers.length} orang sedang online sekarang`
+                                ? `${onlineUsers.length} orang sedang online sekarang ✦`
                                 : "Mau dengerin lagu bareng hari ini?"
                             }
                         </p>
-                    </div>
+                    </motion.div>
 
-                    {/* Create button */}
-                    <motion.button
-                        whileHover={{ scale: 1.015, y: -1 }}
-                        whileTap={{ scale: 0.985 }}
-                        onClick={() => setShowCreate(true)}
-                        style={{
-                            width: "100%", padding: "17px 24px", marginBottom: 28,
-                            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                            background: "linear-gradient(135deg, rgba(180,0,80,0.85), rgba(110,0,60,0.85))",
-                            border: "1px solid rgba(200,0,100,0.2)",
-                            borderRadius: 18, color: "#fff", cursor: "pointer",
-                            fontFamily: "inherit", fontSize: 15, fontWeight: 700,
-                            boxShadow: "0 4px 20px rgba(160,0,80,0.2), inset 0 1px 0 rgba(255,255,255,0.07)",
-                        }}
+                    {/* ── Create Room CTA ── */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }}
+                        style={{ marginBottom: 36 }}
                     >
-                        <PlusIcon style={{ width: 20, height: 20 }} />
-                        Mulai Sesi Baru
-                    </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.015, y: -2, boxShadow: "0 12px 40px rgba(180,0,80,0.3)" }}
+                            whileTap={{ scale: 0.985 }}
+                            onClick={() => setShowCreate(true)}
+                            style={{
+                                width: "100%", padding: "18px 28px",
+                                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                                background: "linear-gradient(135deg, #c4005c 0%, #780042 100%)",
+                                border: "1px solid rgba(220,100,160,0.2)",
+                                borderRadius: 20, color: "#fff", cursor: "pointer",
+                                fontFamily: "inherit", fontSize: 16, fontWeight: 700,
+                                boxShadow: "0 4px 24px rgba(160,0,80,0.25), inset 0 1px 0 rgba(255,255,255,0.1)",
+                                position: "relative", overflow: "hidden",
+                                letterSpacing: "-0.1px",
+                            }}
+                        >
+                            {/* Shimmer */}
+                            <motion.div
+                                animate={{ x: ["-100%", "200%"] }}
+                                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
+                                style={{
+                                    position: "absolute", inset: 0,
+                                    background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
+                                    pointerEvents: "none",
+                                }}
+                            />
+                            <PlusIcon style={{ width: 20, height: 20 }} />
+                            Mulai Sesi Baru
+                        </motion.button>
+                    </motion.div>
 
-                    {/* Rooms */}
-                    <p style={{
-                        fontSize: 10, fontWeight: 700, letterSpacing: "0.14em",
-                        color: "rgba(255,255,255,0.2)", textTransform: "uppercase", margin: "0 0 14px",
-                    }}>
-                        Sesi Tersedia
-                    </p>
-
-                    {loading ? (
-                        <div style={{ textAlign: "center", padding: "50px 0" }}>
-                            <div style={{ width: 28, height: 28, border: "2px solid rgba(200,0,100,0.15)", borderTopColor: "#c4005c", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-                        </div>
-                    ) : rooms.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "50px 20px" }}>
-                            <MusicalNoteIcon style={{ width: 36, height: 36, color: "rgba(255,255,255,0.1)", margin: "0 auto 12px", display: "block" }} />
-                            <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.15)" }}>Belum ada sesi aktif</p>
-                            <p style={{ margin: "6px 0 0", fontSize: 13, color: "rgba(200,0,100,0.35)", cursor: "pointer" }} onClick={() => setShowCreate(true)}>
-                                Buat yang pertama →
+                    {/* ── Rooms ── */}
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.14 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase" }}>
+                                Sesi Tersedia
                             </p>
+                            {rooms.length > 0 && (
+                                <span style={{
+                                    fontSize: 11, fontWeight: 700, color: "rgba(200,0,100,0.6)",
+                                    background: "rgba(200,0,100,0.08)", padding: "2px 8px", borderRadius: 20,
+                                    border: "1px solid rgba(200,0,100,0.12)",
+                                }}>
+                                    {rooms.length}
+                                </span>
+                            )}
                         </div>
-                    ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {rooms.map((room, i) => {
-                                const usersInRoom = allUsers.filter(u => u.currentRoom === room.id && u.status !== "offline");
-                                return (
-                                    <motion.div
-                                        key={room.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.22, delay: i * 0.04 }}
-                                        onClick={() => router.push(`/room/${room.id}`)}
-                                        style={{
-                                            display: "flex", alignItems: "center", gap: 14,
-                                            padding: "15px 18px", borderRadius: 16, cursor: "pointer",
-                                            background: "rgba(255,255,255,0.02)",
-                                            border: "1px solid rgba(255,255,255,0.05)",
-                                            transition: "all 0.18s",
-                                        }}
-                                        whileHover={{
-                                            background: "rgba(200,0,100,0.05)",
-                                            borderColor: "rgba(200,0,100,0.13)",
-                                            y: -2,
-                                        }}
-                                    >
-                                        {/* Play icon */}
-                                        <div style={{
-                                            width: 42, height: 42, borderRadius: 11, flexShrink: 0,
-                                            background: room.isPlaying
-                                                ? "linear-gradient(135deg, rgba(180,0,80,0.4), rgba(100,0,150,0.4))"
-                                                : "rgba(255,255,255,0.04)",
-                                            display: "flex", alignItems: "center", justifyContent: "center",
-                                            boxShadow: room.isPlaying ? "0 0 14px rgba(180,0,80,0.25)" : "none",
-                                        }}>
-                                            {room.isPlaying
-                                                ? <PlayIcon style={{ width: 17, height: 17, color: "rgba(220,100,150,0.9)", marginLeft: 2 }} />
-                                                : <MusicalNoteIcon style={{ width: 17, height: 17, color: "rgba(255,255,255,0.2)" }} />
-                                            }
-                                        </div>
 
-                                        {/* Info */}
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                {room.name}
-                                            </p>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>oleh {room.hostName}</span>
-                                                {room.currentSong && (
-                                                    <>
-                                                        <span style={{ width: 2, height: 2, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-                                                        <span style={{ fontSize: 12, color: "rgba(220,100,150,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
-                                                            ♪ {room.currentSong.title}
-                                                        </span>
-                                                    </>
-                                                )}
-                                                {usersInRoom.length > 0 && (
-                                                    <>
-                                                        <span style={{ width: 2, height: 2, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
-                                                        <span style={{ fontSize: 12, color: "rgba(74,222,128,0.5)" }}>
-                                                            {usersInRoom.length} di ruang ini
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Status indicator */}
-                                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                                            {room.isPlaying && (
-                                                <div style={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
-                                                    {[1, 2, 3].map(j => (
-                                                        <motion.div key={j}
-                                                            animate={{ height: [3, 10, 3] }}
-                                                            transition={{ duration: 0.7, repeat: Infinity, delay: j * 0.1 }}
-                                                            style={{ width: 2.5, background: "rgba(200,0,100,0.5)", borderRadius: 2, minHeight: 3 }}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <span style={{
-                                                fontSize: 11,
-                                                color: room.isPlaying ? "rgba(220,100,150,0.7)" : "rgba(255,255,255,0.2)",
-                                            }}>
-                                                {room.isPlaying ? "Aktif" : "Diam"}
-                                            </span>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    )}
+                        {loading ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                {[1, 2].map(i => (
+                                    <motion.div key={i}
+                                        animate={{ opacity: [0.4, 0.7, 0.4] }}
+                                        transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.3 }}
+                                        style={{ height: 80, borderRadius: 18, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.04)" }}
+                                    />
+                                ))}
+                            </div>
+                        ) : rooms.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "60px 20px", borderRadius: 20, background: "rgba(255,255,255,0.01)", border: "1px dashed rgba(255,255,255,0.06)" }}>
+                                <div style={{ fontSize: 40, marginBottom: 14 }}>🎵</div>
+                                <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.25)" }}>Belum ada sesi aktif</p>
+                                <p onClick={() => setShowCreate(true)} style={{ margin: 0, fontSize: 13, color: "rgba(200,0,100,0.4)", cursor: "pointer" }}>
+                                    Buat yang pertama →
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                {rooms.map((room, i) => {
+                                    const usersInRoom = allUsers.filter(u => u.currentRoom === room.id && u.status !== "offline");
+                                    return (
+                                        <RoomCard
+                                            key={room.id} room={room} usersInRoom={usersInRoom}
+                                            onClick={() => router.push(`/room/${room.id}`)} index={i}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </motion.div>
                 </div>
 
-                {/* ──── Sidebar: Online Users ──── */}
+                {/* ─── Users Sidebar ─── */}
                 <AnimatePresence>
                     {showUsers && (
                         <motion.aside
-                            initial={{ opacity: 0, x: 20, width: 0 }}
-                            animate={{ opacity: 1, x: 0, width: 276 }}
-                            exit={{ opacity: 0, x: 20, width: 0 }}
-                            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                            style={{
-                                flexShrink: 0, overflow: "hidden",
-                                paddingTop: 36,
-                            }}
+                            initial={{ opacity: 0, x: 24, width: 0 }}
+                            animate={{ opacity: 1, x: 0, width: 268 }}
+                            exit={{ opacity: 0, x: 24, width: 0 }}
+                            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                            className="presence-sidebar"
+                            style={{ flexShrink: 0, overflow: "hidden", paddingTop: 40 }}
                         >
                             <div style={{
-                                width: 276,
-                                background: "rgba(8,4,7,0.6)",
+                                width: 268,
+                                background: "rgba(12,5,10,0.8)",
                                 border: "1px solid rgba(255,255,255,0.05)",
-                                borderRadius: 20,
-                                padding: "20px 16px",
+                                borderRadius: 20, padding: "20px 14px",
                                 position: "sticky", top: 78,
+                                backdropFilter: "blur(16px)",
                             }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                                     <div>
-                                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.7)" }}>
-                                            Pengguna Aktif
-                                        </p>
+                                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.65)" }}>Pengguna</p>
                                         <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
-                                            {onlineUsers.length} dari {orderedUsers.length} online
+                                            {onlineUsers.length}/{orderedUsers.length} online
                                         </p>
                                     </div>
-                                    {/* Online bar */}
-                                    <div style={{
-                                        height: 3, width: 50, borderRadius: 3, overflow: "hidden",
-                                        background: "rgba(255,255,255,0.07)",
-                                    }}>
-                                        <div style={{
-                                            height: "100%", borderRadius: 3,
-                                            width: `${orderedUsers.length ? (onlineUsers.length / orderedUsers.length) * 100 : 0}%`,
-                                            background: "linear-gradient(90deg, #4ade80, #22d3ee)",
-                                            transition: "width 0.5s ease",
-                                        }} />
-                                    </div>
+                                    <button onClick={() => setShowUsers(false)} style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                        <XMarkIcon style={{ width: 14, height: 14 }} />
+                                    </button>
+                                </div>
+
+                                {/* Online ratio bar */}
+                                <div style={{ height: 2, borderRadius: 2, background: "rgba(255,255,255,0.05)", marginBottom: 16, overflow: "hidden" }}>
+                                    <motion.div
+                                        animate={{ width: `${orderedUsers.length ? (onlineUsers.length / orderedUsers.length) * 100 : 0}%` }}
+                                        transition={{ duration: 0.6 }}
+                                        style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #4ade80, #22d3ee)" }}
+                                    />
                                 </div>
 
                                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                    {orderedUsers.length === 0 ? (
-                                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.2)", textAlign: "center", padding: "20px 0" }}>
-                                            Belum ada data presence
-                                        </p>
-                                    ) : orderedUsers.map(u => (
-                                        <UserCard key={u.uid} u={u} isMe={u.uid === user?.uid} />
-                                    ))}
+                                    {orderedUsers.length === 0
+                                        ? <p style={{ fontSize: 13, color: "rgba(255,255,255,0.18)", textAlign: "center", padding: "20px 0", margin: 0 }}>Belum ada data</p>
+                                        : orderedUsers.map(u => <UserCard key={u.uid} u={u} isMe={u.uid === user?.uid} />)
+                                    }
                                 </div>
                             </div>
                         </motion.aside>
@@ -476,63 +511,81 @@ export default function Dashboard() {
                 </AnimatePresence>
             </div>
 
+            {/* ── Mobile bottom nav ── */}
+            <div className="mobile-bottomnav" style={{
+                display: "none", position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30,
+                background: "rgba(8,4,8,0.97)", backdropFilter: "blur(20px)",
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+                padding: "10px 24px 24px",
+                justifyContent: "space-around",
+            }}>
+                <button onClick={() => router.push("/dashboard")} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: "rgba(200,0,100,0.85)", padding: "4px 16px" }}>
+                    <MusicalNoteIcon style={{ width: 22, height: 22 }} />
+                    <span style={{ fontSize: 10, fontFamily: "inherit", fontWeight: 600 }}>Dashboard</span>
+                </button>
+                <button onClick={() => router.push("/profile")} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: "4px 16px" }}>
+                    <UserGroupIcon style={{ width: 22, height: 22 }} />
+                    <span style={{ fontSize: 10, fontFamily: "inherit", fontWeight: 600 }}>Profile</span>
+                </button>
+            </div>
+
             {/* ── Create Room Modal ── */}
             <AnimatePresence>
                 {showCreate && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        onClick={(e) => e.target === e.currentTarget && setShowCreate(false)}
+                        onClick={e => e.target === e.currentTarget && setShowCreate(false)}
                         style={{
                             position: "fixed", inset: 0, zIndex: 200,
-                            background: "rgba(0,0,0,0.65)",
-                            backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+                            background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)",
                             display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
                         }}
                     >
                         <motion.div
-                            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+                            initial={{ scale: 0.93, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.94, opacity: 0, y: 16 }}
-                            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                            exit={{ scale: 0.93, opacity: 0, y: 20 }}
+                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                             style={{
-                                width: "100%", maxWidth: 380, padding: "32px 28px",
-                                background: "rgba(12,5,9,0.97)",
+                                width: "100%", maxWidth: 390, padding: "32px 28px",
+                                background: "rgba(12,5,9,0.98)",
                                 border: "1px solid rgba(255,255,255,0.07)",
-                                borderRadius: 24, boxShadow: "0 40px 80px rgba(0,0,0,0.6)",
+                                borderRadius: 24, boxShadow: "0 40px 80px rgba(0,0,0,0.7)",
                                 position: "relative", overflow: "hidden",
                             }}
                         >
-                            <div style={{
-                                position: "absolute", top: 0, left: "30%", right: "30%", height: 1,
-                                background: "linear-gradient(90deg, transparent, rgba(200,0,100,0.5), transparent)",
-                            }} />
-                            <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: "#fff" }}>Buat Sesi Baru</h2>
-                            <p style={{ margin: "0 0 22px", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+                            {/* Top accent line */}
+                            <div style={{ position: "absolute", top: 0, left: "25%", right: "25%", height: 1, background: "linear-gradient(90deg, transparent, rgba(200,0,100,0.6), transparent)" }} />
+
+                            <div style={{ fontSize: 36, marginBottom: 16, textAlign: "center" }}>🎵</div>
+                            <h2 style={{ margin: "0 0 7px", fontSize: 20, fontWeight: 800, color: "#fff", textAlign: "center" }}>Buat Sesi Baru</h2>
+                            <p style={{ margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
                                 Beri nama ruang dengerin kalian
                             </p>
+
                             <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                 <input
-                                    type="text" placeholder="malam minggu sama savira..."
-                                    value={newRoomName} onChange={(e) => setNewRoomName(e.target.value)}
+                                    type="text"
+                                    placeholder="malam minggu sama savira..."
+                                    value={newRoomName}
+                                    onChange={e => setNewRoomName(e.target.value)}
                                     autoFocus required
                                     style={{
-                                        width: "100%", padding: "13px 16px",
+                                        width: "100%", padding: "14px 16px", boxSizing: "border-box",
                                         background: "rgba(255,255,255,0.04)",
                                         border: "1px solid rgba(255,255,255,0.08)",
-                                        borderRadius: 12, color: "#fff", fontSize: 14,
-                                        fontFamily: "inherit", outline: "none", boxSizing: "border-box",
-                                        transition: "border-color 0.2s",
+                                        borderRadius: 14, color: "#fff", fontSize: 14,
+                                        fontFamily: "inherit", outline: "none",
                                     }}
-                                    onFocus={(e) => e.target.style.borderColor = "rgba(200,0,100,0.4)"}
-                                    onBlur={(e) => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+                                    onFocus={e => e.target.style.borderColor = "rgba(200,0,100,0.45)"}
+                                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
                                 />
                                 <div style={{ display: "flex", gap: 10 }}>
-                                    <button type="button" onClick={() => setShowCreate(false)}
-                                        style={{
-                                            flex: 1, height: 48, borderRadius: 12, cursor: "pointer",
-                                            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
-                                            color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: 14,
-                                        }}>
+                                    <button type="button" onClick={() => setShowCreate(false)} style={{
+                                        flex: 1, height: 50, borderRadius: 14, cursor: "pointer",
+                                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                                        color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: 14,
+                                    }}>
                                         Batal
                                     </button>
                                     <motion.button
@@ -540,14 +593,15 @@ export default function Dashboard() {
                                         whileTap={!creating && newRoomName.trim() ? { scale: 0.98 } : {}}
                                         type="submit" disabled={creating || !newRoomName.trim()}
                                         style={{
-                                            flex: 2, height: 48, borderRadius: 12,
+                                            flex: 2, height: 50, borderRadius: 14,
                                             cursor: creating || !newRoomName.trim() ? "not-allowed" : "pointer",
                                             background: "linear-gradient(135deg, #c4005c, #8c004a)",
                                             border: "none", color: "#fff", fontFamily: "inherit",
-                                            fontSize: 14, fontWeight: 700,
-                                            boxShadow: "0 3px 14px rgba(180,0,80,0.3)",
-                                            opacity: creating || !newRoomName.trim() ? 0.6 : 1,
-                                        }}>
+                                            fontSize: 15, fontWeight: 700,
+                                            boxShadow: "0 4px 16px rgba(180,0,80,0.3)",
+                                            opacity: creating || !newRoomName.trim() ? 0.55 : 1,
+                                        }}
+                                    >
                                         {creating ? "Membuat..." : "Yuk Mulai →"}
                                     </motion.button>
                                 </div>
@@ -557,7 +611,13 @@ export default function Dashboard() {
                 )}
             </AnimatePresence>
 
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @media (max-width: 680px) {
+                    .presence-sidebar { display: none !important; }
+                    .mobile-bottomnav { display: flex !important; }
+                }
+            `}</style>
         </div>
     );
 }
