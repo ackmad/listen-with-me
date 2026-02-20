@@ -93,12 +93,12 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     const mTime = data.createdAt?.toMillis ? data.createdAt.toMillis() : now;
 
                     if (now - mTime < 5000) {
-                        const burstMsg: MessageItem[] = Array.from({ length: 4 }).map((_, i) => ({
+                        const burstMsg: MessageItem[] = Array.from({ length: 8 }).map((_, i) => ({
                             id: `${change.doc.id}-${i}`,
                             text: data.text,
                             userId: data.userId,
                             createdAt: data.createdAt,
-                            startX: Math.random() * 80 - 40,
+                            startX: Math.random() * 90 - 45, // Wider spread
                         }));
                         setMessages(prev => [...prev, ...burstMsg]);
                     }
@@ -119,7 +119,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
             }));
             setMessages(prev => prev.filter(m => {
                 const t = m.createdAt?.toMillis ? m.createdAt.toMillis() : now;
-                return now - t < 6000;
+                return now - t < 6500;
             }));
         }, 1500);
         return () => clearInterval(interval);
@@ -179,33 +179,42 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     {messages.map((m, idx) => (
                         <motion.div
                             key={m.id}
-                            initial={{ opacity: 0, scale: 0.5, y: "110vh", x: `${50 + m.startX}vw` }}
+                            initial={{
+                                opacity: 0,
+                                scale: 0.3,
+                                y: "115vh",
+                                x: `${50 + m.startX}vw`,
+                                rotate: Math.random() * 40 - 20
+                            }}
                             animate={{
                                 opacity: [0, 1, 1, 0],
-                                y: "-30vh",
-                                x: `${50 + m.startX + (idx % 2 === 0 ? 15 : -15)}vw`
+                                y: "-40vh",
+                                x: `${50 + m.startX + (Math.random() * 60 - 30)}vw`,
+                                rotate: Math.random() * 60 - 30,
+                                scale: [0.3, 1.2, 1, 0.8]
                             }}
                             transition={{
-                                duration: 5 + Math.random() * 2,
-                                ease: "linear",
-                                delay: (idx % 4) * 0.2 // Small stagger for the burst
+                                duration: 4.5 + Math.random() * 3,
+                                ease: "easeOut",
+                                delay: (idx % 8) * 0.15 // Randomized stagger for 8 items
                             }}
                             style={{
                                 position: "absolute",
                                 background: "var(--app-primary)",
-                                backdropFilter: "blur(12px)",
+                                backdropFilter: "blur(14px)",
                                 border: "3px solid #fff",
-                                borderRadius: "24px 24px 4px 24px",
-                                padding: "14px 24px",
+                                borderRadius: "24px 24px 8px 24px",
+                                padding: "16px 28px",
                                 color: "#fff",
-                                fontSize: 24, // Bigger font
-                                fontWeight: 900, // Extra bold
+                                fontSize: 26, // Even bigger for impact
+                                fontWeight: 900,
                                 fontFamily: "var(--font-fredoka), cursive",
-                                maxWidth: 280,
-                                boxShadow: "0 15px 35px rgba(0,0,0,0.3), 0 0 20px var(--app-primary)",
+                                maxWidth: 320,
+                                boxShadow: "0 18px 45px rgba(0,0,0,0.35), 0 0 25px var(--app-primary)",
                                 pointerEvents: "none",
                                 textAlign: "center",
                                 letterSpacing: "-0.01em",
+                                whiteSpace: "nowrap"
                             }}
                         >
                             {m.text}
