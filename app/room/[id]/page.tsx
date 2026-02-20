@@ -890,7 +890,6 @@ function RoomInner() {
             <ReactionSystem
                 roomId={rId}
                 userId={user?.uid || ""}
-                bottomOffset={0}
             />
             {/* Mobile-aware reaction wrapper via CSS */}
             <style>{`
@@ -898,8 +897,6 @@ function RoomInner() {
                 @media (max-width: 700px) {
                     .room-sidebar { display: none !important; }
                     .mobile-tabbar { display: flex !important; }
-                    /* Push reaction pill above mobile tab bar */
-                    [data-reaction-pill] { bottom: 200px !important; }
                 }
             `}</style>
 
