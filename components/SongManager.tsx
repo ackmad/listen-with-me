@@ -43,8 +43,8 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                     onClick={(e) => e.target === e.currentTarget && onClose()}
                     style={{
                         position: "fixed", inset: 0, zIndex: 200,
-                        background: "rgba(0,0,0,0.7)",
-                        backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+                        background: "rgba(0,0,0,0.5)",
+                        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
                         display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
                     }}
                 >
@@ -55,42 +55,37 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                         style={{
                             width: "100%", maxWidth: 440,
-                            background: "rgba(12, 5, 9, 0.97)",
-                            border: "1px solid rgba(255,255,255,0.07)",
+                            background: "var(--app-surface)",
+                            border: "1.5px solid var(--app-border)",
                             borderRadius: 24, overflow: "hidden",
                             display: "flex", flexDirection: "column", maxHeight: "78vh",
-                            boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,0,100,0.08)",
+                            boxShadow: "0 40px 80px rgba(0,0,0,0.25)",
                             position: "relative",
+                            transition: "var(--theme-transition)",
                         }}
                     >
-                        {/* Accent line */}
-                        <div style={{
-                            position: "absolute", top: 0, left: "25%", right: "25%", height: 1,
-                            background: "linear-gradient(90deg, transparent, rgba(200,0,100,0.5), transparent)",
-                        }} />
-
                         {/* Header */}
                         <div style={{
                             padding: "24px 24px 18px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
+                            borderBottom: "1px solid var(--app-border)",
                             display: "flex", alignItems: "center", justifyContent: "space-between",
                         }}>
                             <div>
-                                <h2 style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 800, color: "#fff" }}>
+                                <h2 style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 800, color: "var(--app-text)" }}>
                                     Pilih Lagunya
                                 </h2>
-                                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+                                <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>
                                     {LOCAL_SONGS.length} lagu tersedia
                                 </p>
                             </div>
                             <button onClick={onClose} style={{
                                 width: 34, height: 34, borderRadius: "50%", border: "none",
-                                background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)",
+                                background: "var(--app-bg-secondary)", color: "var(--app-text-muted)",
                                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                                transition: "all 0.15s",
+                                transition: "all 0.2s",
                             }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(200,0,100,0.15)"; e.currentTarget.style.color = "#e0608a"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--app-primary)"; e.currentTarget.style.color = "#fff"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--app-bg-secondary)"; e.currentTarget.style.color = "var(--app-text-muted)"; }}
                             >
                                 <XMarkIcon style={{ width: 16, height: 16 }} />
                             </button>
@@ -100,23 +95,24 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                         <div style={{ padding: "14px 18px 10px" }}>
                             <div style={{ position: "relative" }}>
                                 <MagnifyingGlassIcon style={{
-                                    width: 16, height: 16, color: "rgba(255,255,255,0.2)",
-                                    position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                                    width: 16, height: 16, color: "var(--app-text-muted)",
+                                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
                                     pointerEvents: "none",
                                 }} />
                                 <input
-                                    type="text" placeholder="Cari lagu..." value={searchTerm}
+                                    type="text" placeholder="Cari lagu favorit..." value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     style={{
-                                        width: "100%", padding: "10px 14px 10px 36px",
-                                        background: "rgba(255,255,255,0.04)",
-                                        border: "1px solid rgba(255,255,255,0.07)",
-                                        borderRadius: 10, color: "#fff", fontSize: 14,
-                                        fontFamily: "inherit", outline: "none", boxSizing: "border-box",
-                                        transition: "border-color 0.2s",
+                                        width: "100%", padding: "12px 14px 12px 40px",
+                                        background: "var(--app-bg-secondary)",
+                                        border: "1.5px solid var(--app-border)",
+                                        borderRadius: 14, color: "var(--app-text)", fontSize: 14,
+                                        fontFamily: "var(--font-fredoka)", fontWeight: 600,
+                                        outline: "none", boxSizing: "border-box",
+                                        transition: "all 0.2s",
                                     }}
-                                    onFocus={(e) => { e.target.style.borderColor = "rgba(200,0,100,0.35)"; }}
-                                    onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.07)"; }}
+                                    onFocus={(e) => { e.target.style.borderColor = "var(--app-primary)"; e.target.style.boxShadow = "0 0 0 3px var(--app-soft-accent)"; }}
+                                    onBlur={(e) => { e.target.style.borderColor = "var(--app-border)"; e.target.style.boxShadow = "none"; }}
                                 />
                             </div>
                         </div>
@@ -124,7 +120,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                         {/* Song List */}
                         <div style={{ flex: 1, overflowY: "auto", padding: "0 14px 14px" }}>
                             {filtered.length > 0 ? (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                                     {filtered.map((song) => (
                                         <div
                                             key={song.id}
@@ -133,58 +129,59 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                                             onMouseLeave={() => setHoveredId(null)}
                                             style={{
                                                 display: "flex", alignItems: "center", gap: 12,
-                                                padding: "10px 12px", borderRadius: 12, cursor: "pointer",
-                                                background: hoveredId === song.id ? "rgba(200,0,100,0.07)" : "transparent",
-                                                border: `1px solid ${hoveredId === song.id ? "rgba(200,0,100,0.15)" : "transparent"}`,
-                                                transition: "all 0.15s ease",
+                                                padding: "12px", borderRadius: 16, cursor: "pointer",
+                                                background: hoveredId === song.id ? "var(--app-bg-secondary)" : "transparent",
+                                                border: `1.5px solid ${hoveredId === song.id ? "var(--app-primary)" : "transparent"}`,
+                                                transition: "all 0.2s ease",
                                             }}
                                         >
                                             <div style={{
-                                                width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                                                background: hoveredId === song.id
-                                                    ? "linear-gradient(135deg, rgba(200,0,100,0.4), rgba(100,0,180,0.4))"
-                                                    : "rgba(255,255,255,0.04)",
+                                                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                                                background: hoveredId === song.id ? "var(--app-primary)" : "var(--app-bg-secondary)",
                                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                                transition: "all 0.15s",
+                                                color: hoveredId === song.id ? "#fff" : "var(--app-primary)",
+                                                transition: "all 0.2s",
                                             }}>
                                                 {hoveredId === song.id
-                                                    ? <PlayIcon style={{ width: 15, height: 15, color: "#fff", marginLeft: 2 }} />
-                                                    : <MusicalNoteIcon style={{ width: 15, height: 15, color: "rgba(255,255,255,0.2)" }} />
+                                                    ? <PlayIcon style={{ width: 16, height: 16, marginLeft: 2 }} />
+                                                    : <MusicalNoteIcon style={{ width: 16, height: 16 }} />
                                                 }
                                             </div>
                                             <div style={{ minWidth: 0, flex: 1 }}>
                                                 <p style={{
-                                                    margin: "0 0 2px", fontSize: 14, fontWeight: 600,
-                                                    color: hoveredId === song.id ? "#fff" : "rgba(255,255,255,0.7)",
+                                                    margin: "0 0 3px", fontSize: 14, fontWeight: 800,
+                                                    color: hoveredId === song.id ? "var(--app-primary)" : "var(--app-text)",
                                                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                                                 }}>
                                                     {song.title}
                                                 </p>
                                                 <p style={{
-                                                    margin: 0, fontSize: 11,
-                                                    color: hoveredId === song.id ? "rgba(220,100,150,0.8)" : "rgba(255,255,255,0.25)",
+                                                    margin: 0, fontSize: 11, fontWeight: 600,
+                                                    color: "var(--app-text-muted)",
                                                 }}>
                                                     {song.artist}
                                                 </p>
                                             </div>
                                             {hoveredId === song.id && (
-                                                <span style={{
-                                                    fontSize: 11, fontWeight: 600, color: "rgba(220,100,150,0.9)",
-                                                    padding: "3px 9px", borderRadius: 20,
-                                                    background: "rgba(200,0,100,0.1)",
-                                                    border: "1px solid rgba(200,0,100,0.2)",
-                                                    flexShrink: 0,
-                                                }}>
-                                                    Tambah
-                                                </span>
+                                                <motion.span
+                                                    initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
+                                                    style={{
+                                                        fontSize: 11, fontWeight: 800, color: "#fff",
+                                                        padding: "4px 10px", borderRadius: 20,
+                                                        background: "var(--app-primary)",
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    Pilih
+                                                </motion.span>
                                             )}
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div style={{ textAlign: "center", padding: "36px 20px", color: "rgba(255,255,255,0.2)" }}>
-                                    <MusicalNoteIcon style={{ width: 36, height: 36, margin: "0 auto 10px", display: "block" }} />
-                                    <p style={{ margin: 0, fontSize: 13 }}>Lagunya nggak ketemu 😅</p>
+                                <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--app-text-muted)" }}>
+                                    <MusicalNoteIcon style={{ width: 40, height: 40, margin: "0 auto 12px", display: "block", opacity: 0.3 }} />
+                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Lagunya nggak ketemu 😅</p>
                                 </div>
                             )}
                         </div>

@@ -14,7 +14,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const friendlyError = (code: string) => {
-    if (code.includes("user-not-found")) return "Kamu belum terdaftar di sini. Hubungi Elfan dulu ya 💌";
+    if (code.includes("user-not-found")) return "Kamu belum terdaftar di sini. Hubungi host dulu ya 💌";
     if (code.includes("wrong-password")) return "Kata sandinya kurang tepat, coba ingat-ingat lagi 🔑";
     if (code.includes("too-many-requests")) return "Terlalu banyak percobaan. Tunggu sebentar ya ⏳";
     if (code.includes("network-request-failed")) return "Koneksinya agak rewel nih, coba lagi 🌐";
@@ -39,152 +39,130 @@ export default function LoginPage() {
     <div style={{
       minHeight: "100vh",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "var(--font-geist-sans), sans-serif",
-      background: "#0a0508",
+      fontFamily: "var(--font-fredoka), sans-serif",
+      background: "var(--app-bg)",
       position: "relative", overflow: "hidden",
       padding: 24,
+      transition: "var(--theme-transition)",
     }}>
-      {/* Ambient — subtle only */}
+      {/* Ambient Decor */}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <div style={{
-          position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)",
-          width: 600, height: 600, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(180,0,100,0.12) 0%, transparent 70%)",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "-15%", right: "-10%",
-          width: 350, height: 350, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(80,0,160,0.08) 0%, transparent 70%)",
+          position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
+          width: 800, height: 600,
+          background: "radial-gradient(circle, var(--app-soft-accent) 0%, transparent 70%)",
         }} />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          width: "100%", maxWidth: 400, position: "relative", zIndex: 1,
+          width: "100%", maxWidth: 420, position: "relative", zIndex: 1,
         }}
       >
-        {/* Header — personal identity */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{
-            fontSize: 36, marginBottom: 16,
-            filter: "drop-shadow(0 0 20px rgba(255,80,160,0.4))",
-            lineHeight: 1,
-          }}>🎧</div>
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            style={{ fontSize: 44, marginBottom: 16 }}
+          >
+            🎧
+          </motion.div>
           <h1 style={{
-            margin: "0 0 10px", fontSize: 28, fontWeight: 800, letterSpacing: "-0.5px",
-            background: "linear-gradient(135deg, #fff 30%, rgba(255,130,200,0.8) 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
+            margin: "0 0 10px", fontSize: 32, fontWeight: 900, letterSpacing: "-0.02em",
+            color: "var(--app-text)"
           }}>
-            Ruang kita masih di sini
+            Selamat Datang
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "rgba(255,180,200,0.5)", lineHeight: 1.5 }}>
-            Siap dengerin lagu bareng hari ini?
+          <p style={{ margin: 0, fontSize: 16, color: "var(--app-text-muted)", fontWeight: 600 }}>
+            Masuk untuk mendengarkan lagu bareng!
           </p>
         </div>
 
-        {/* Glass Card */}
         <div style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: 24, padding: "32px 28px",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          boxShadow: "0 2px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,100,180,0.06)",
+          background: "var(--app-surface)",
+          border: "2.5px solid var(--app-border)",
+          borderRadius: 32, padding: "36px 32px",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.06)",
           position: "relative", overflow: "hidden",
+          transition: "var(--theme-transition)",
         }}>
-          {/* Top accent line */}
-          <div style={{
-            position: "absolute", top: 0, left: "30%", right: "30%", height: 1,
-            background: "linear-gradient(90deg, transparent, rgba(255,100,180,0.5), transparent)",
-          }} />
-
-          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Email */}
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div>
               <label style={{
-                display: "block", fontSize: 11, fontWeight: 700,
-                letterSpacing: "0.1em", textTransform: "uppercase",
-                color: "rgba(255,180,200,0.5)", marginBottom: 8,
+                display: "block", fontSize: 12, fontWeight: 800,
+                letterSpacing: "0.05em", textTransform: "uppercase",
+                color: "var(--app-text-muted)", marginBottom: 10, paddingLeft: 4
               }}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="masukkan emailmu"
+                placeholder="Masukkan email kamu..."
                 required
-                autoComplete="email"
                 style={{
-                  width: "100%", padding: "13px 16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 12, color: "#fff", fontSize: 15,
-                  fontFamily: "inherit", outline: "none",
+                  width: "100%", padding: "16px 20px",
+                  background: "var(--app-bg-secondary)",
+                  border: "2px solid var(--app-border)",
+                  borderRadius: 18, color: "var(--app-text)", fontSize: 15,
+                  fontWeight: 600, fontFamily: "inherit", outline: "none",
                   boxSizing: "border-box", transition: "all 0.2s",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "rgba(220,60,130,0.5)";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(220,60,130,0.1)";
-                  e.target.style.background = "rgba(220,60,130,0.04)";
+                  e.target.style.borderColor = "var(--app-primary)";
+                  e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.target.style.borderColor = "var(--app-border)";
                   e.target.style.boxShadow = "none";
-                  e.target.style.background = "rgba(255,255,255,0.04)";
                 }}
               />
             </div>
 
-            {/* Password */}
             <div>
               <label style={{
-                display: "block", fontSize: 11, fontWeight: 700,
-                letterSpacing: "0.1em", textTransform: "uppercase",
-                color: "rgba(255,180,200,0.5)", marginBottom: 8,
+                display: "block", fontSize: 12, fontWeight: 800,
+                letterSpacing: "0.05em", textTransform: "uppercase",
+                color: "var(--app-text-muted)", marginBottom: 10, paddingLeft: 4
               }}>Kata Sandi</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="rahasia kita"
+                placeholder="Kata sandi rahasia..."
                 required
-                autoComplete="current-password"
                 style={{
-                  width: "100%", padding: "13px 16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 12, color: "#fff", fontSize: 15,
-                  fontFamily: "inherit", outline: "none",
+                  width: "100%", padding: "16px 20px",
+                  background: "var(--app-bg-secondary)",
+                  border: "2px solid var(--app-border)",
+                  borderRadius: 18, color: "var(--app-text)", fontSize: 15,
+                  fontWeight: 600, fontFamily: "inherit", outline: "none",
                   boxSizing: "border-box", transition: "all 0.2s",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "rgba(220,60,130,0.5)";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(220,60,130,0.1)";
-                  e.target.style.background = "rgba(220,60,130,0.04)";
+                  e.target.style.borderColor = "var(--app-primary)";
+                  e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.target.style.borderColor = "var(--app-border)";
                   e.target.style.boxShadow = "none";
-                  e.target.style.background = "rgba(255,255,255,0.04)";
                 }}
               />
             </div>
 
-            {/* Error */}
             <AnimatePresence>
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -6, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   style={{
-                    padding: "11px 14px", fontSize: 13,
-                    background: "rgba(200,30,80,0.08)",
-                    border: "1px solid rgba(200,30,80,0.2)",
-                    borderRadius: 10, color: "rgba(255,140,160,0.9)",
-                    lineHeight: 1.5,
+                    padding: "12px 16px", fontSize: 13,
+                    background: "rgba(239, 68, 68, 0.1)",
+                    border: "1.5px solid rgba(239, 68, 68, 0.2)",
+                    borderRadius: 14, color: "#ef4444",
+                    fontWeight: 700, textAlign: "center", lineHeight: 1.4
                   }}
                 >
                   {error}
@@ -192,46 +170,35 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
 
-            {/* Submit */}
             <motion.button
-              whileHover={!isLoading ? { scale: 1.02, y: -1 } : {}}
+              whileHover={!isLoading ? { scale: 1.02, y: -2, boxShadow: "0 8px 20px var(--app-soft-accent)" } : {}}
               whileTap={!isLoading ? { scale: 0.98 } : {}}
               type="submit"
               disabled={isLoading}
               style={{
-                marginTop: 4, height: 52,
-                background: isLoading
-                  ? "rgba(180,30,100,0.35)"
-                  : "linear-gradient(135deg, #c4005c 0%, #8c004a 100%)",
-                color: "#fff", fontWeight: 700, fontSize: 15,
-                border: "none", borderRadius: 12, cursor: isLoading ? "not-allowed" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                boxShadow: isLoading ? "none" : "0 4px 20px rgba(180,0,90,0.35), inset 0 1px 0 rgba(255,255,255,0.1)",
-                transition: "all 0.2s ease", fontFamily: "inherit", letterSpacing: "0.02em",
+                marginTop: 8, padding: "18px",
+                background: "var(--app-primary)",
+                color: "#fff", fontWeight: 900, fontSize: 16,
+                border: "none", borderRadius: 18, cursor: isLoading ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                boxShadow: "0 6px 20px var(--app-soft-accent)",
+                transition: "all 0.3s ease", fontFamily: "inherit",
               }}
             >
               {isLoading ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    style={{ animation: "spin 0.8s linear infinite" }}>
-                    <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)" strokeWidth="3" />
-                    <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                  </svg>
-                  <span>Masuk...</span>
-                </>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", animation: "spin 0.8s linear infinite" }} />
               ) : (
-                <span>Masuk ke Ruang Kita →</span>
+                "Masuk Ke Ruang Kita →"
               )}
             </motion.button>
           </form>
         </div>
 
-        {/* Footer */}
         <p style={{
-          textAlign: "center", marginTop: 28, fontSize: 12,
-          color: "rgba(255,255,255,0.15)", letterSpacing: "0.08em",
+          textAlign: "center", marginTop: 40, fontSize: 12,
+          color: "var(--app-text-muted)", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase"
         }}>
-          ✦ Hanya untuk Kita ✦
+          ✦ ListenWithMe ✦
         </p>
       </motion.div>
 

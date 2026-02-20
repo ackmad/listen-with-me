@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { CheckCircleIcon, XCircleIcon, InformationCircleIcon } from "@heroicons/react/24/solid";
 
 interface Toast {
     id: string;
@@ -30,58 +30,51 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }, 3500);
     }, []);
 
-    const colors = {
-        success: { bg: "rgba(30,140,80,0.9)", border: "rgba(50,200,110,0.25)", icon: "#4ade80" },
-        error: { bg: "rgba(140,30,60,0.9)", border: "rgba(220,60,100,0.25)", icon: "#f87171" },
-        info: { bg: "rgba(30,60,140,0.9)", border: "rgba(80,130,255,0.25)", icon: "#93c5fd" },
-    };
-
     return (
         <ToastContext.Provider value={{ toast }}>
             {children}
             <div style={{
-                position: "fixed", bottom: 90, right: 20, zIndex: 999,
-                display: "flex", flexDirection: "column", gap: 8,
+                position: "fixed", bottom: 100, right: 20, zIndex: 3000,
+                display: "flex", flexDirection: "column", gap: 10,
                 pointerEvents: "none",
             }}>
                 <AnimatePresence>
-                    {toasts.map((t) => {
-                        const c = colors[t.type];
-                        return (
-                            <motion.div
-                                key={t.id}
-                                initial={{ opacity: 0, x: 40, scale: 0.95 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
-                                exit={{ opacity: 0, x: 40, scale: 0.95 }}
-                                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 10,
-                                    padding: "11px 16px",
-                                    background: c.bg,
-                                    border: `1px solid ${c.border}`,
-                                    borderRadius: 12,
-                                    backdropFilter: "blur(12px)",
-                                    boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-                                    pointerEvents: "auto",
-                                    maxWidth: 300,
-                                }}
-                            >
-                                <div style={{
-                                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                                    background: "rgba(255,255,255,0.1)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>
-                                    {t.type === "error"
-                                        ? <XMarkIcon style={{ width: 12, height: 12, color: c.icon }} />
-                                        : <CheckIcon style={{ width: 12, height: 12, color: c.icon }} />
-                                    }
-                                </div>
-                                <p style={{ margin: 0, fontSize: 13, color: "#fff", fontWeight: 500, lineHeight: 1.4 }}>
-                                    {t.message}
-                                </p>
-                            </motion.div>
-                        );
-                    })}
+                    {toasts.map((t) => (
+                        <motion.div
+                            key={t.id}
+                            initial={{ opacity: 0, x: 50, scale: 0.9, y: 10 }}
+                            animate={{ opacity: 1, x: 0, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                            style={{
+                                display: "flex", alignItems: "center", gap: 12,
+                                padding: "14px 20px",
+                                background: "var(--app-toast-bg)",
+                                border: "1.5px solid var(--app-toast-border)",
+                                borderRadius: 20,
+                                backdropFilter: "blur(20px)",
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                                pointerEvents: "auto",
+                                maxWidth: 340,
+                                transition: "var(--theme-transition)",
+                            }}
+                        >
+                            <div style={{ flexShrink: 0 }}>
+                                {t.type === "success" && <CheckCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
+                                {t.type === "error" && <XCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
+                                {t.type === "info" && <InformationCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
+                            </div>
+                            <p style={{
+                                margin: 0, fontSize: 13,
+                                color: "var(--app-toast-text)",
+                                fontWeight: 800,
+                                lineHeight: 1.4,
+                                fontFamily: "var(--font-fredoka)",
+                                letterSpacing: "0.01em"
+                            }}>
+                                {t.message}
+                            </p>
+                        </motion.div>
+                    ))}
                 </AnimatePresence>
             </div>
         </ToastContext.Provider>

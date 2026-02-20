@@ -10,7 +10,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowRightOnRectangleIcon, PlusIcon, MusicalNoteIcon, UserGroupIcon,
-    XMarkIcon,
+    XMarkIcon, UserIcon
 } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import {
@@ -20,13 +20,13 @@ import {
 
 // ─── Status Dot ──────────────────────────────────────────────────────────
 function StatusDot({ status }: { status: UserPresence["status"] }) {
-    const color = status === "online" ? "#4ade80" : status === "idle" ? "#fbbf24" : "#374151";
+    const color = status === "online" ? "var(--app-indicator)" : status === "idle" ? "#fbbf24" : "var(--app-text-muted)";
     return (
         <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10, flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "block" }} />
             {status === "online" && (
                 <motion.span
-                    animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+                    animate={{ scale: [1, 2, 1], opacity: [0.3, 0, 0.3] }}
                     transition={{ duration: 2.5, repeat: Infinity }}
                     style={{ position: "absolute", inset: 0, borderRadius: "50%", background: color, pointerEvents: "none" }}
                 />
@@ -40,55 +40,45 @@ function UserCard({ u, isMe }: { u: UserPresence; isMe: boolean }) {
     const activity =
         u.status === "offline" ? "Offline" :
             u.status === "idle" ? "Sedang idle" :
-                u.currentRoom ? "Sedang di room" : "Melihat dashboard";
+                u.currentRoom ? "Sedang mendengarkan" : "Melihat dashboard";
 
     return (
         <div style={{
-            display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-            borderRadius: 14,
-            background: isMe ? "rgba(200,0,100,0.06)" : "rgba(255,255,255,0.02)",
-            border: `1px solid ${isMe ? "rgba(200,0,100,0.14)" : "rgba(255,255,255,0.04)"}`,
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+            borderRadius: 16,
+            background: isMe ? "var(--app-bg-secondary)" : "var(--app-surface)",
+            border: `1.5px solid ${isMe ? "var(--app-primary)" : "var(--app-border)"}`,
+            transition: "all 0.2s ease"
         }}>
             <div style={{
-                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-                background: isMe
-                    ? "linear-gradient(135deg, rgba(200,0,100,0.45), rgba(120,0,160,0.45))"
-                    : "rgba(255,255,255,0.07)",
+                width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+                background: isMe ? "var(--app-primary)" : "var(--app-bg-secondary)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 12, fontWeight: 800,
-                color: isMe ? "rgba(255,200,220,0.9)" : "rgba(255,255,255,0.45)",
+                fontSize: 13, fontWeight: 800,
+                color: isMe ? "#fff" : "var(--app-text-muted)",
                 position: "relative",
+                border: "1.5px solid var(--app-border)",
             }}>
                 {getInitials(u.displayName)}
                 <span style={{
                     position: "absolute", bottom: -1, right: -1,
-                    width: 10, height: 10, borderRadius: "50%", border: "2px solid #0a0508",
-                    background: u.status === "online" ? "#4ade80" : u.status === "idle" ? "#fbbf24" : "#374151",
+                    width: 10, height: 10, borderRadius: "50%", border: "2px solid var(--app-surface)",
+                    background: u.status === "online" ? "var(--app-indicator)" : u.status === "idle" ? "#fbbf24" : "var(--app-text-muted)",
                 }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                     <p style={{
                         margin: 0, fontSize: 13, fontWeight: 700,
-                        color: u.status === "offline" ? "rgba(255,255,255,0.3)" : "#fff",
+                        color: "var(--app-text)",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
-                        {u.displayName}
+                        {u.displayName}{isMe ? " (Kamu)" : ""}
                     </p>
-                    {isMe && (
-                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(200,0,100,0.7)", background: "rgba(200,0,100,0.1)", padding: "2px 6px", borderRadius: 20, flexShrink: 0 }}>
-                            kamu
-                        </span>
-                    )}
                 </div>
-                <p style={{ margin: 0, fontSize: 11, color: u.status === "offline" ? "rgba(255,255,255,0.18)" : u.status === "idle" ? "rgba(251,191,36,0.55)" : "rgba(74,222,128,0.6)" }}>
+                <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 600 }}>
                     {activity}
                 </p>
-                {u.status !== "online" && u.lastSeen > 0 && (
-                    <p style={{ margin: "1px 0 0", fontSize: 10, color: "rgba(255,255,255,0.12)" }}>
-                        {formatLastSeen(u.lastSeen)}
-                    </p>
-                )}
             </div>
         </div>
     );
@@ -101,110 +91,82 @@ function RoomCard({ room, usersInRoom, onClick, index }: { room: any; usersInRoo
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: index * 0.06 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
             onClick={onClick}
             onMouseEnter={() => setHov(true)}
             onMouseLeave={() => setHov(false)}
             style={{
-                display: "flex", alignItems: "center", gap: 14, padding: "16px 18px",
-                borderRadius: 18, cursor: "pointer",
-                background: hov
-                    ? isActive ? "rgba(200,0,100,0.07)" : "rgba(255,255,255,0.04)"
-                    : isActive ? "rgba(200,0,100,0.04)" : "rgba(255,255,255,0.02)",
-                border: `1px solid ${hov
-                    ? isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.09)"
-                    : isActive ? "rgba(200,0,100,0.12)" : "rgba(255,255,255,0.05)"}`,
-                transition: "all 0.2s ease",
-                transform: hov ? "translateY(-2px)" : "translateY(0)",
-                boxShadow: hov
-                    ? isActive ? "0 8px 32px rgba(200,0,100,0.12)" : "0 8px 24px rgba(0,0,0,0.2)"
-                    : "none",
+                display: "flex", alignItems: "center", gap: 16, padding: "18px 20px",
+                borderRadius: 22, cursor: "pointer",
+                background: isActive ? "var(--app-bg-secondary)" : "var(--app-surface)",
+                border: `1.5px solid ${hov ? "var(--app-primary)" : isActive ? "var(--app-primary)" : "var(--app-border)"}`,
+                transition: "all 0.3s ease",
+                transform: hov ? "translateY(-3px)" : "translateY(0)",
+                boxShadow: hov ? "0 12px 30px var(--app-soft-accent)" : "none",
             }}
         >
-            {/* Disc icon */}
             <div style={{
-                width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: isActive
-                    ? "linear-gradient(135deg, rgba(180,0,80,0.5), rgba(100,0,150,0.5))"
-                    : "rgba(255,255,255,0.04)",
+                width: 54, height: 54, borderRadius: 16, flexShrink: 0,
+                background: isActive ? "var(--app-primary)" : "var(--app-bg-secondary)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                border: `1px solid ${isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.06)"}`,
-                boxShadow: isActive ? "0 0 20px rgba(180,0,80,0.2)" : "none",
+                color: "#fff",
+                boxShadow: isActive ? "0 4px 15px var(--app-soft-accent)" : "none",
                 position: "relative", overflow: "hidden",
             }}>
                 {isActive
-                    ? <PlayIcon style={{ width: 18, height: 18, color: "rgba(220,120,160,0.95)", marginLeft: 2 }} />
-                    : <MusicalNoteIcon style={{ width: 18, height: 18, color: "rgba(255,255,255,0.2)" }} />
+                    ? <PlayIcon style={{ width: 22, height: 22, marginLeft: 2 }} />
+                    : <MusicalNoteIcon style={{ width: 22, height: 22, color: "var(--app-primary)" }} />
                 }
-                {isActive && (
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                        style={{
-                            position: "absolute", inset: -32, borderRadius: "50%", opacity: 0.06,
-                            background: "conic-gradient(rgba(200,0,100,0.8) 0deg, transparent 180deg)",
-                            pointerEvents: "none",
-                        }}
-                    />
-                )}
             </div>
 
-            {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: "var(--app-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {room.name}
                     </p>
-                    <span style={{
-                        fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0,
-                        padding: "2px 7px", borderRadius: 10,
-                        background: isActive ? "rgba(200,0,100,0.12)" : "rgba(255,255,255,0.05)",
-                        color: isActive ? "rgba(220,100,150,0.8)" : "rgba(255,255,255,0.25)",
-                        border: `1px solid ${isActive ? "rgba(200,0,100,0.2)" : "rgba(255,255,255,0.07)"}`,
-                    }}>
-                        {isActive ? "Aktif" : "Diam"}
-                    </span>
+                    {isActive && (
+                        <span style={{
+                            fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
+                            padding: "3px 8px", borderRadius: 20,
+                            background: "var(--app-primary)", color: "#fff",
+                        }}>
+                            Aktif
+                        </span>
+                    )}
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.28)" }}>oleh {room.hostName}</span>
-
+                    <span style={{ fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>by {room.hostName}</span>
                     {room.currentSong && (
                         <>
-                            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block", flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, color: "rgba(220,100,150,0.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
+                            <span style={{ fontSize: 12, color: "var(--app-primary)", fontWeight: 700 }}>
                                 ♪ {room.currentSong.title}
                             </span>
                         </>
                     )}
-
                     {usersInRoom.length > 0 && (
-                        <>
-                            <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block", flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, color: "rgba(74,222,128,0.55)" }}>
-                                {usersInRoom.length} di ruang ini
-                            </span>
-                        </>
+                        <span style={{ fontSize: 12, color: "var(--app-indicator)", fontWeight: 700 }}>
+                            • {usersInRoom.length} mendengarkan
+                        </span>
                     )}
                 </div>
             </div>
 
-            {/* Right: waveform if playing */}
             <div style={{ flexShrink: 0 }}>
                 {isActive ? (
-                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 20 }}>
-                        {[1, 2, 3, 2, 1].map((h, i) => (
+                    <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 24 }}>
+                        {[1, 2, 3, 4, 3, 2, 1].map((h, i) => (
                             <motion.div key={i}
-                                animate={{ height: [h * 3, h * 3 + 8, h * 3] }}
+                                animate={{ height: [h * 3, h * 3 + 10, h * 3] }}
                                 transition={{ duration: 0.6 + i * 0.08, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
-                                style={{ width: 3, background: "rgba(200,0,100,0.55)", borderRadius: 3, minHeight: 3 }}
+                                style={{ width: 3.5, background: "var(--app-primary)", borderRadius: 3 }}
                             />
                         ))}
                     </div>
                 ) : (
-                    <ArrowRightOnRectangleIcon style={{ width: 16, height: 16, color: "rgba(255,255,255,0.12)", transform: "rotate(180deg)" }} />
+                    <ArrowRightOnRectangleIcon style={{ width: 20, height: 20, color: "var(--app-text-muted)", transform: "rotate(180deg)" }} />
                 )}
             </div>
         </motion.div>
@@ -231,7 +193,6 @@ export default function Dashboard() {
     }, [router]);
 
     const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
-
     useBroadcastPresence(user?.uid ?? null, displayName, user?.photoURL ?? null, { activity: "Melihat dashboard", currentRoom: null });
 
     const handlePresenceUpdate = useCallback((users: UserPresence[]) => setAllUsers(users), []);
@@ -261,21 +222,13 @@ export default function Dashboard() {
 
     const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
-    const greeting = () => {
-        const h = new Date().getHours();
-        if (h < 5) return "Masih melek nih";
-        if (h < 11) return "Selamat pagi";
-        if (h < 15) return "Selamat siang";
-        if (h < 18) return "Selamat sore";
-        return "Selamat malam";
-    };
-    const greetingEmoji = () => {
-        const h = new Date().getHours();
-        if (h < 5) return "🌙";
-        if (h < 11) return "☀️";
-        if (h < 18) return "👋";
-        return "🌙";
-    };
+    const hour = new Date().getHours();
+    const isMorning = hour >= 4 && hour < 11;
+    const isDay = hour >= 11 && hour < 15;
+    const isEvening = hour >= 15 && hour < 18;
+
+    const greeting = isMorning ? "Selamat Pagi" : isDay ? "Selamat Siang" : isEvening ? "Selamat Sore" : "Selamat Malam";
+    const greetingEmoji = isMorning ? "☀️" : isDay ? "🌈" : isEvening ? "🌇" : "🌙";
 
     const onlineUsers = allUsers.filter(u => u.status === "online");
     const orderedUsers = [
@@ -286,324 +239,178 @@ export default function Dashboard() {
 
     return (
         <div style={{
-            minHeight: "100vh", background: "#080408",
-            fontFamily: "var(--font-geist-sans), sans-serif", color: "#e8e8e8",
-            position: "relative",
+            minHeight: "100vh", background: "var(--app-bg)",
+            fontFamily: "var(--font-fredoka), sans-serif", color: "var(--app-text)",
+            position: "relative", transition: "var(--theme-transition)",
         }}>
-            {/* Background ambient */}
+            {/* Ambient Vibes */}
             <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-                <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, rgba(150,0,70,0.08) 0%, transparent 65%)" }} />
-                <div style={{ position: "absolute", bottom: "5%", right: "10%", width: 400, height: 400, background: "radial-gradient(ellipse, rgba(60,0,120,0.06) 0%, transparent 60%)" }} />
+                <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, var(--app-soft-accent) 0%, transparent 65%)" }} />
             </div>
 
-            {/* ── Header ── */}
+            {/* Header */}
             <header style={{
-                padding: "0 20px", height: 58,
+                padding: "0 20px", height: 64,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
-                background: "rgba(8,4,8,0.9)", backdropFilter: "blur(20px)",
-                position: "sticky", top: 0, zIndex: 30,
+                borderBottom: "1.5px solid var(--app-border)",
+                background: "var(--app-surface)", backdropFilter: "blur(20px)",
+                position: "sticky", top: 0, zIndex: 100,
+                transition: "var(--theme-transition)",
             }}>
-                {/* Logo */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{
-                        width: 28, height: 28, borderRadius: 8,
-                        background: "linear-gradient(135deg, #c4005c, #6c0050)",
+                        width: 32, height: 32, borderRadius: 10,
+                        background: "var(--app-primary)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 0 12px rgba(180,0,85,0.35)",
+                        boxShadow: "0 4px 12px var(--app-soft-accent)",
                     }}>
-                        <MusicalNoteIcon style={{ width: 14, height: 14, color: "#fff" }} />
+                        <MusicalNoteIcon style={{ width: 16, height: 16, color: "#fff" }} />
                     </div>
-                    <h1 style={{
-                        margin: 0, fontSize: 15, fontWeight: 800, letterSpacing: "-0.2px",
-                        background: "linear-gradient(135deg, #fff 40%, rgba(255,180,200,0.7) 100%)",
-                        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                    }}>ListenWithMe</h1>
+                    <h1 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: "var(--app-primary)" }}>ListenWithMe</h1>
                 </div>
 
-                {/* Right controls */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <motion.button
-                        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                        onClick={() => setShowUsers(v => !v)}
-                        style={{
-                            display: "flex", alignItems: "center", gap: 6,
-                            padding: "6px 12px", borderRadius: 20, cursor: "pointer",
-                            background: showUsers ? "rgba(200,0,100,0.1)" : "rgba(255,255,255,0.05)",
-                            border: `1px solid ${showUsers ? "rgba(200,0,100,0.22)" : "rgba(255,255,255,0.07)"}`,
-                            color: showUsers ? "rgba(220,110,150,0.9)" : "rgba(255,255,255,0.4)",
-                            fontSize: 13, fontFamily: "inherit", transition: "all 0.2s",
-                        }}
-                    >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <button onClick={() => setShowUsers(!showUsers)} style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "8px 14px", borderRadius: 20, cursor: "pointer",
+                        background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)",
+                        color: "var(--app-text-secondary)", fontSize: 12, fontWeight: 800,
+                        transition: "all 0.2s"
+                    }}>
                         <StatusDot status="online" />
-                        {onlineUsers.length} online
-                        <UserGroupIcon style={{ width: 14, height: 14 }} />
-                    </motion.button>
-
-                    <button onClick={handleLogout} style={{
-                        width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)",
-                        background: "transparent", color: "rgba(255,255,255,0.3)",
-                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "#e0608a")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
-                    >
-                        <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} />
+                        {onlineUsers.length} Online
+                    </button>
+                    <button onClick={() => router.push("/profile")} style={{
+                        width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--app-border)",
+                        background: "var(--app-bg-secondary)", color: "var(--app-text-muted)",
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                        <UserIcon style={{ width: 20, height: 20 }} />
                     </button>
                 </div>
             </header>
 
-            {/* ── Body ── */}
-            <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px", position: "relative", zIndex: 1, display: "flex", gap: 24, alignItems: "flex-start" }}>
+            <main style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px", position: "relative", zIndex: 1 }}>
 
-                {/* ─── Main ─── */}
-                <div style={{ flex: 1, minWidth: 0, paddingTop: 40, paddingBottom: 80 }}>
+                {/* Greeting Area */}
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 40 }}>
+                    <h2 style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 900, color: "var(--app-text)", letterSpacing: "-0.02em" }}>
+                        {greeting}, {displayName.split(" ")[0]} {greetingEmoji}
+                    </h2>
+                    <p style={{ margin: 0, fontSize: 16, color: "var(--app-text-muted)", fontWeight: 600 }}>
+                        {rooms.length > 0 ? `Ada ${rooms.length} ruang seru yang sedang mendengarkan! ✨` : "Mulai ruang musik pertamamu hari ini."}
+                    </p>
+                </motion.div>
 
-                    {/* Greeting header */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ marginBottom: 36 }}>
-                        <h2 style={{ margin: "0 0 6px", fontSize: "clamp(22px,4vw,30px)", fontWeight: 800, letterSpacing: "-0.5px", color: "#fff" }}>
-                            {greeting()}, {displayName} {greetingEmoji()}
-                        </h2>
-                        <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.28)", lineHeight: 1.5 }}>
-                            {onlineUsers.length > 1
-                                ? `${onlineUsers.length} orang sedang online sekarang ✦`
-                                : "Mau dengerin lagu bareng hari ini?"
-                            }
+                {/* Create Button Large */}
+                <motion.button
+                    whileHover={{ scale: 1.02, y: -4, boxShadow: "0 15px 35px var(--app-soft-accent)" }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCreate(true)}
+                    style={{
+                        width: "100%", padding: "22px", marginBottom: 48,
+                        background: "var(--app-primary)",
+                        borderRadius: 24, color: "#fff", cursor: "pointer",
+                        fontSize: 18, fontWeight: 900, border: "none",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+                        boxShadow: "0 10px 25px var(--app-soft-accent)",
+                    }}
+                >
+                    <PlusIcon style={{ width: 24, height: 24 }} strokeWidth={2.5} />
+                    Buat Ruang Musik Baru
+                </motion.button>
+
+                {/* Rooms List */}
+                <section>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
+                            Eksplorasi Ruang
                         </p>
-                    </motion.div>
+                    </div>
 
-                    {/* ── Create Room CTA ── */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 }}
-                        style={{ marginBottom: 36 }}
-                    >
-                        <motion.button
-                            whileHover={{ scale: 1.015, y: -2, boxShadow: "0 12px 40px rgba(180,0,80,0.3)" }}
-                            whileTap={{ scale: 0.985 }}
-                            onClick={() => setShowCreate(true)}
-                            style={{
-                                width: "100%", padding: "18px 28px",
-                                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                                background: "linear-gradient(135deg, #c4005c 0%, #780042 100%)",
-                                border: "1px solid rgba(220,100,160,0.2)",
-                                borderRadius: 20, color: "#fff", cursor: "pointer",
-                                fontFamily: "inherit", fontSize: 16, fontWeight: 700,
-                                boxShadow: "0 4px 24px rgba(160,0,80,0.25), inset 0 1px 0 rgba(255,255,255,0.1)",
-                                position: "relative", overflow: "hidden",
-                                letterSpacing: "-0.1px",
-                            }}
-                        >
-                            {/* Shimmer */}
-                            <motion.div
-                                animate={{ x: ["-100%", "200%"] }}
-                                transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3 }}
-                                style={{
-                                    position: "absolute", inset: 0,
-                                    background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)",
-                                    pointerEvents: "none",
-                                }}
-                            />
-                            <PlusIcon style={{ width: 20, height: 20 }} />
-                            Mulai Sesi Baru
-                        </motion.button>
-                    </motion.div>
-
-                    {/* ── Rooms ── */}
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.14 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase" }}>
-                                Sesi Tersedia
-                            </p>
-                            {rooms.length > 0 && (
-                                <span style={{
-                                    fontSize: 11, fontWeight: 700, color: "rgba(200,0,100,0.6)",
-                                    background: "rgba(200,0,100,0.08)", padding: "2px 8px", borderRadius: 20,
-                                    border: "1px solid rgba(200,0,100,0.12)",
-                                }}>
-                                    {rooms.length}
-                                </span>
-                            )}
+                    {loading ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            {[1, 2, 3].map(i => (
+                                <div key={i} style={{ height: 90, borderRadius: 22, background: "var(--app-surface)", border: "1.5px solid var(--app-border)", opacity: 0.5 }} />
+                            ))}
                         </div>
-
-                        {loading ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {[1, 2].map(i => (
-                                    <motion.div key={i}
-                                        animate={{ opacity: [0.4, 0.7, 0.4] }}
-                                        transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.3 }}
-                                        style={{ height: 80, borderRadius: 18, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.04)" }}
-                                    />
-                                ))}
-                            </div>
-                        ) : rooms.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "60px 20px", borderRadius: 20, background: "rgba(255,255,255,0.01)", border: "1px dashed rgba(255,255,255,0.06)" }}>
-                                <div style={{ fontSize: 40, marginBottom: 14 }}>🎵</div>
-                                <p style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.25)" }}>Belum ada sesi aktif</p>
-                                <p onClick={() => setShowCreate(true)} style={{ margin: 0, fontSize: 13, color: "rgba(200,0,100,0.4)", cursor: "pointer" }}>
-                                    Buat yang pertama →
-                                </p>
-                            </div>
-                        ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {rooms.map((room, i) => {
-                                    const usersInRoom = allUsers.filter(u => u.currentRoom === room.id && u.status !== "offline");
-                                    return (
-                                        <RoomCard
-                                            key={room.id} room={room} usersInRoom={usersInRoom}
-                                            onClick={() => router.push(`/room/${room.id}`)} index={i}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </motion.div>
-                </div>
-
-                {/* ─── Users Sidebar ─── */}
-                <AnimatePresence>
-                    {showUsers && (
-                        <motion.aside
-                            initial={{ opacity: 0, x: 24, width: 0 }}
-                            animate={{ opacity: 1, x: 0, width: 268 }}
-                            exit={{ opacity: 0, x: 24, width: 0 }}
-                            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                            className="presence-sidebar"
-                            style={{ flexShrink: 0, overflow: "hidden", paddingTop: 40 }}
-                        >
-                            <div style={{
-                                width: 268,
-                                background: "rgba(12,5,10,0.8)",
-                                border: "1px solid rgba(255,255,255,0.05)",
-                                borderRadius: 20, padding: "20px 14px",
-                                position: "sticky", top: 78,
-                                backdropFilter: "blur(16px)",
-                            }}>
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                                    <div>
-                                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.65)" }}>Pengguna</p>
-                                        <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
-                                            {onlineUsers.length}/{orderedUsers.length} online
-                                        </p>
-                                    </div>
-                                    <button onClick={() => setShowUsers(false)} style={{ width: 28, height: 28, borderRadius: 8, border: "none", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <XMarkIcon style={{ width: 14, height: 14 }} />
-                                    </button>
-                                </div>
-
-                                {/* Online ratio bar */}
-                                <div style={{ height: 2, borderRadius: 2, background: "rgba(255,255,255,0.05)", marginBottom: 16, overflow: "hidden" }}>
-                                    <motion.div
-                                        animate={{ width: `${orderedUsers.length ? (onlineUsers.length / orderedUsers.length) * 100 : 0}%` }}
-                                        transition={{ duration: 0.6 }}
-                                        style={{ height: "100%", borderRadius: 2, background: "linear-gradient(90deg, #4ade80, #22d3ee)" }}
-                                    />
-                                </div>
-
-                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                    {orderedUsers.length === 0
-                                        ? <p style={{ fontSize: 13, color: "rgba(255,255,255,0.18)", textAlign: "center", padding: "20px 0", margin: 0 }}>Belum ada data</p>
-                                        : orderedUsers.map(u => <UserCard key={u.uid} u={u} isMe={u.uid === user?.uid} />)
-                                    }
-                                </div>
-                            </div>
-                        </motion.aside>
+                    ) : rooms.length === 0 ? (
+                        <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--app-bg-secondary)", borderRadius: 24, border: "2px dashed var(--app-border)" }}>
+                            <MusicalNoteIcon style={{ width: 48, height: 48, color: "var(--app-text-muted)", margin: "0 auto 16px", opacity: 0.3 }} />
+                            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--app-text-muted)" }}>Masih sepi nih, belum ada ruang aktif.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            {rooms.map((room, i) => (
+                                <RoomCard
+                                    key={room.id} room={room}
+                                    usersInRoom={allUsers.filter(u => u.currentRoom === room.id && u.status !== "offline")}
+                                    onClick={() => router.push(`/room/${room.id}`)} index={i}
+                                />
+                            ))}
+                        </div>
                     )}
-                </AnimatePresence>
-            </div>
+                </section>
+            </main>
 
-            {/* ── Mobile bottom nav ── */}
-            <div className="mobile-bottomnav" style={{
-                display: "none", position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30,
-                background: "rgba(8,4,8,0.97)", backdropFilter: "blur(20px)",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-                padding: "10px 24px 24px",
-                justifyContent: "space-around",
-            }}>
-                <button onClick={() => router.push("/dashboard")} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: "rgba(200,0,100,0.85)", padding: "4px 16px" }}>
-                    <MusicalNoteIcon style={{ width: 22, height: 22 }} />
-                    <span style={{ fontSize: 10, fontFamily: "inherit", fontWeight: 600 }}>Dashboard</span>
-                </button>
-                <button onClick={() => router.push("/profile")} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: "4px 16px" }}>
-                    <UserGroupIcon style={{ width: 22, height: 22 }} />
-                    <span style={{ fontSize: 10, fontFamily: "inherit", fontWeight: 600 }}>Profile</span>
-                </button>
-            </div>
+            {/* Presence Sidebar */}
+            <AnimatePresence>
+                {showUsers && (
+                    <motion.aside
+                        initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }}
+                        style={{
+                            position: "fixed", top: 64, right: 0, bottom: 0, width: 300, zIndex: 90,
+                            background: "var(--app-surface)", borderLeft: "1.5px solid var(--app-border)",
+                            padding: "24px", overflowY: "auto", boxShadow: "-10px 0 30px rgba(0,0,0,0.05)"
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Daftar Teman</h3>
+                            <button onClick={() => setShowUsers(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--app-text-muted)" }}>
+                                <XMarkIcon style={{ width: 22, height: 22 }} />
+                            </button>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {orderedUsers.map(u => <UserCard key={u.uid} u={u} isMe={u.uid === user?.uid} />)}
+                        </div>
+                    </motion.aside>
+                )}
+            </AnimatePresence>
 
-            {/* ── Create Room Modal ── */}
+            {/* Create Modal */}
             <AnimatePresence>
                 {showCreate && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={e => e.target === e.currentTarget && setShowCreate(false)}
-                        style={{
-                            position: "fixed", inset: 0, zIndex: 200,
-                            background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)",
-                            display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-                        }}
+                        style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
                     >
                         <motion.div
-                            initial={{ scale: 0.93, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.93, opacity: 0, y: 20 }}
-                            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-                            style={{
-                                width: "100%", maxWidth: 390, padding: "32px 28px",
-                                background: "rgba(12,5,9,0.98)",
-                                border: "1px solid rgba(255,255,255,0.07)",
-                                borderRadius: 24, boxShadow: "0 40px 80px rgba(0,0,0,0.7)",
-                                position: "relative", overflow: "hidden",
-                            }}
+                            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                            style={{ width: "100%", maxWidth: 400, background: "var(--app-surface)", border: "2px solid var(--app-border)", borderRadius: 28, padding: 32, position: "relative" }}
                         >
-                            {/* Top accent line */}
-                            <div style={{ position: "absolute", top: 0, left: "25%", right: "25%", height: 1, background: "linear-gradient(90deg, transparent, rgba(200,0,100,0.6), transparent)" }} />
+                            <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 900, textAlign: "center" }}>Bikin Ruang Musik</h2>
+                            <p style={{ margin: "0 0 24px", fontSize: 14, color: "var(--app-text-muted)", textAlign: "center", fontWeight: 600 }}>Tentukan nama ruang biar teman gampang nemunya!</p>
 
-                            <div style={{ fontSize: 36, marginBottom: 16, textAlign: "center" }}>🎵</div>
-                            <h2 style={{ margin: "0 0 7px", fontSize: 20, fontWeight: 800, color: "#fff", textAlign: "center" }}>Buat Sesi Baru</h2>
-                            <p style={{ margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
-                                Beri nama ruang dengerin kalian
-                            </p>
-
-                            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                                 <input
-                                    type="text"
-                                    placeholder="malam minggu sama savira..."
-                                    value={newRoomName}
-                                    onChange={e => setNewRoomName(e.target.value)}
+                                    type="text" placeholder="Contoh: Dengerin Lagu Galau..."
+                                    value={newRoomName} onChange={e => setNewRoomName(e.target.value)}
                                     autoFocus required
                                     style={{
-                                        width: "100%", padding: "14px 16px", boxSizing: "border-box",
-                                        background: "rgba(255,255,255,0.04)",
-                                        border: "1px solid rgba(255,255,255,0.08)",
-                                        borderRadius: 14, color: "#fff", fontSize: 14,
-                                        fontFamily: "inherit", outline: "none",
+                                        width: "100%", padding: "16px 20px", background: "var(--app-bg-secondary)",
+                                        border: "1.5px solid var(--app-border)", borderRadius: 16, color: "var(--app-text)",
+                                        fontSize: 15, fontWeight: 600, fontFamily: "var(--font-fredoka)", outline: "none"
                                     }}
-                                    onFocus={e => e.target.style.borderColor = "rgba(200,0,100,0.45)"}
-                                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
                                 />
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    <button type="button" onClick={() => setShowCreate(false)} style={{
-                                        flex: 1, height: 50, borderRadius: 14, cursor: "pointer",
-                                        background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                                        color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: 14,
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <button type="button" onClick={() => setShowCreate(false)} style={{ flex: 1, padding: 14, borderRadius: 14, background: "var(--app-bg-secondary)", border: "none", color: "var(--app-text-muted)", fontWeight: 700, cursor: "pointer" }}>Batal</button>
+                                    <button type="submit" disabled={creating || !newRoomName.trim()} style={{
+                                        flex: 2, padding: 14, borderRadius: 14, background: "var(--app-primary)", border: "none", color: "#fff",
+                                        fontWeight: 900, cursor: "pointer", boxShadow: "0 5px 15px var(--app-soft-accent)", opacity: creating ? 0.6 : 1
                                     }}>
-                                        Batal
+                                        {creating ? "Membuat..." : "Gas! →"}
                                     </button>
-                                    <motion.button
-                                        whileHover={!creating && newRoomName.trim() ? { scale: 1.02 } : {}}
-                                        whileTap={!creating && newRoomName.trim() ? { scale: 0.98 } : {}}
-                                        type="submit" disabled={creating || !newRoomName.trim()}
-                                        style={{
-                                            flex: 2, height: 50, borderRadius: 14,
-                                            cursor: creating || !newRoomName.trim() ? "not-allowed" : "pointer",
-                                            background: "linear-gradient(135deg, #c4005c, #8c004a)",
-                                            border: "none", color: "#fff", fontFamily: "inherit",
-                                            fontSize: 15, fontWeight: 700,
-                                            boxShadow: "0 4px 16px rgba(180,0,80,0.3)",
-                                            opacity: creating || !newRoomName.trim() ? 0.55 : 1,
-                                        }}
-                                    >
-                                        {creating ? "Membuat..." : "Yuk Mulai →"}
-                                    </motion.button>
                                 </div>
                             </form>
                         </motion.div>
@@ -611,11 +418,27 @@ export default function Dashboard() {
                 )}
             </AnimatePresence>
 
+            {/* Mobile Nav */}
+            <nav className="mobile-bottomnav" style={{
+                display: "none", position: "fixed", bottom: 0, left: 0, right: 0, height: 74,
+                background: "var(--app-surface)", borderTop: "1.5px solid var(--app-border)",
+                justifyContent: "space-around", alignItems: "center", zIndex: 100
+            }}>
+                <button onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", color: "var(--app-primary)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <MusicalNoteIcon style={{ width: 24, height: 24 }} />
+                    <span style={{ fontSize: 10, fontWeight: 800 }}>DASHBOARD</span>
+                </button>
+                <button onClick={() => router.push("/profile")} style={{ background: "none", border: "none", color: "var(--app-text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <UserIcon style={{ width: 24, height: 24 }} />
+                    <span style={{ fontSize: 10, fontWeight: 800 }}>PROFIL</span>
+                </button>
+            </nav>
+
             <style>{`
-                @keyframes spin { to { transform: rotate(360deg); } }
                 @media (max-width: 680px) {
                     .presence-sidebar { display: none !important; }
                     .mobile-bottomnav { display: flex !important; }
+                    main { padding-bottom: 100px !important; }
                 }
             `}</style>
         </div>

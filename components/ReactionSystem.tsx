@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaceSmileIcon, PaperAirplaneIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/outline';
+import { FaceSmileIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const REACTIONS = [
     { emoji: '🔥', label: 'Fire' },
@@ -36,10 +36,9 @@ interface MessageItem {
 export interface Props {
     roomId: string;
     userId: string;
-    bottomOffset?: number;
 }
 
-export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Props) {
+export default function ReactionSystem({ roomId, userId }: Props) {
     const [reactions, setReactions] = useState<ReactionItem[]>([]);
     const [messages, setMessages] = useState<MessageItem[]>([]);
     const [showMenu, setShowMenu] = useState(false);
@@ -50,7 +49,6 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
     useEffect(() => {
         if (!roomId) return;
 
-        // Reactions Listener
         const qR = query(collection(db, 'rooms', roomId, 'reactions'), orderBy('createdAt', 'desc'), limit(5));
         const unsubR = onSnapshot(qR, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
@@ -60,14 +58,13 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                     const rTime = data.createdAt?.toMillis ? data.createdAt.toMillis() : now;
 
                     if (now - rTime < 4000) {
-                        // BURST EFFECT: Create 6 local items for 1 doc
                         const burst: ReactionItem[] = Array.from({ length: 8 }).map((_, i) => {
-                            const type = Math.random(); // 0-0.3: left, 0.3-0.6: right, rest: bottom
+                            const type = Math.random();
                             let x = 50;
                             let y = 110;
-                            if (type < 0.25) { x = -10; y = Math.random() * 80 + 20; } // Left side
-                            else if (type < 0.5) { x = 110; y = Math.random() * 80 + 20; } // Right side
-                            else { x = Math.random() * 80 + 10; y = 110; } // Bottom
+                            if (type < 0.25) { x = -10; y = Math.random() * 80 + 20; }
+                            else if (type < 0.5) { x = 110; y = Math.random() * 80 + 20; }
+                            else { x = Math.random() * 80 + 10; y = 110; }
 
                             return {
                                 id: `${change.doc.id}-${i}`,
@@ -87,7 +84,6 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
             });
         });
 
-        // Messages Listener
         const qM = query(collection(db, 'rooms', roomId, 'messages'), orderBy('createdAt', 'desc'), limit(5));
         const unsubM = onSnapshot(qM, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
@@ -177,7 +173,7 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                     ))}
                 </AnimatePresence>
 
-                {/* Messages Float */}
+                {/* Messages Float — CUTE & BOLD FONT — Visibility Pink/White */}
                 <AnimatePresence>
                     {messages.map((m) => (
                         <motion.div
@@ -187,17 +183,20 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                             transition={{ duration: 6, ease: "linear" }}
                             style={{
                                 position: "absolute",
-                                background: "rgba(255,255,255,0.1)",
+                                background: "var(--app-primary)",
                                 backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.15)",
-                                borderRadius: "16px 16px 4px 16px",
-                                padding: "8px 16px",
+                                border: "2.5px solid #fff",
+                                borderRadius: "20px 20px 4px 20px",
+                                padding: "10px 18px",
                                 color: "#fff",
-                                fontSize: 13,
-                                fontWeight: 500,
-                                maxWidth: 200,
-                                boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+                                fontSize: 16,
+                                fontWeight: 800,
+                                fontFamily: "var(--font-fredoka), cursive",
+                                maxWidth: 220,
+                                boxShadow: "0 12px 30px rgba(0,0,0,0.3), 0 0 15px var(--app-primary)",
                                 pointerEvents: "none",
+                                textAlign: "center",
+                                letterSpacing: "0.02em",
                             }}
                         >
                             {m.text}
@@ -206,87 +205,95 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                 </AnimatePresence>
             </div>
 
-            {/* ─── Message Input (Top-Left/Center Area) ─── */}
+            {/* ─── Message Input (Top-Left Area) ─── */}
             <div className="message-input-area" style={{
-                position: "fixed", top: 70, left: 16, zIndex: 150,
+                position: "fixed", top: 80, left: 16, zIndex: 1000, // Very high z-index
                 width: "calc(100% - 100px)", maxWidth: 300,
+                pointerEvents: "auto", // Crucial for clickability
             }}>
-                <form onSubmit={sendMessage} style={{ position: "relative" }}>
+                <form onSubmit={sendMessage} style={{ position: "relative", pointerEvents: "auto" }}>
                     <input
                         type="text"
                         placeholder="Kirim pesan singkat..."
                         value={msgInput}
-                        onChange={(e) => setMsgInput(e.target.value.slice(0, 50))} // limit to 50 chars
+                        onChange={(e) => setMsgInput(e.target.value.slice(0, 50))}
                         style={{
-                            width: "100%", padding: "10px 40px 10px 16px",
-                            background: "rgba(10,5,8,0.4)", backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 20, color: "#fff", fontSize: 13,
-                            fontFamily: "inherit", outline: "none",
-                            boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-                            transition: "all 0.3s ease",
+                            width: "100%", padding: "12px 46px 12px 18px",
+                            background: "var(--app-surface)", backdropFilter: "blur(20px)",
+                            border: "2px solid var(--app-border)",
+                            borderRadius: 22, color: "var(--app-text)", fontSize: 14,
+                            fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
+                            outline: "none",
+                            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                            transition: "var(--theme-transition)",
+                            pointerEvents: "auto",
                         }}
                         onFocus={(e) => {
-                            e.target.style.background = "rgba(10,5,8,0.7)";
-                            e.target.style.borderColor = "rgba(200,0,100,0.4)";
+                            e.target.style.borderColor = "var(--app-primary)";
+                            e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
                         }}
                         onBlur={(e) => {
-                            e.target.style.background = "rgba(10,5,8,0.4)";
-                            e.target.style.borderColor = "rgba(255,255,255,0.1)";
+                            e.target.style.borderColor = "var(--app-border)";
+                            e.target.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
                         }}
                     />
                     <button
                         type="submit"
                         disabled={!msgInput.trim() || isSendingMsg}
                         style={{
-                            position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
-                            width: 28, height: 28, borderRadius: "50%",
-                            background: msgInput.trim() ? "linear-gradient(135deg, #c4005c, #8c004a)" : "rgba(255,255,255,0.1)",
+                            position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                            width: 32, height: 32, borderRadius: "50%",
+                            background: msgInput.trim() ? "var(--app-primary)" : "var(--app-border)",
                             border: "none", color: "#fff", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            opacity: msgInput.trim() ? 1 : 0.5,
+                            opacity: msgInput.trim() ? 1 : 0.6,
+                            transition: "all 0.3s ease",
+                            pointerEvents: "auto",
                         }}
                     >
-                        <PaperAirplaneIcon style={{ width: 14, height: 14 }} />
+                        <PaperAirplaneIcon style={{ width: 16, height: 16 }} />
                     </button>
                 </form>
             </div>
 
             {/* ─── Reaction Trigger (Top-Right Area) ─── */}
             <div className="reaction-trigger-area" style={{
-                position: "fixed", top: 70, right: 16, zIndex: 150,
+                position: "fixed", top: 80, right: 16, zIndex: 1000,
+                pointerEvents: "auto",
             }}>
-                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "auto" }}>
                     <motion.button
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setShowMenu(!showMenu)}
                         style={{
-                            width: 44, height: 44, borderRadius: "50%",
-                            background: showMenu ? "linear-gradient(135deg, #c4005c, #8c004a)" : "rgba(10,5,8,0.6)",
-                            backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(255,255,255,0.15)",
-                            color: "#fff", cursor: "pointer",
+                            width: 48, height: 48, borderRadius: "50%",
+                            background: showMenu ? "var(--app-primary)" : "var(--app-surface)",
+                            backdropFilter: "blur(20px)",
+                            border: "2px solid var(--app-border)",
+                            color: showMenu ? "#fff" : "var(--app-primary)", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+                            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                            transition: "var(--theme-transition)",
+                            pointerEvents: "auto",
                         }}
                     >
-                        {showMenu ? <XMarkIcon style={{ width: 20, height: 20 }} /> : <FaceSmileIcon style={{ width: 22, height: 22 }} />}
+                        {showMenu ? <XMarkIcon style={{ width: 22, height: 22 }} /> : <FaceSmileIcon style={{ width: 24, height: 24 }} />}
                     </motion.button>
 
-                    {/* Vertical Emoji List */}
                     <AnimatePresence>
                         {showMenu && (
                             <motion.div
                                 initial={{ opacity: 0, y: -10, scale: 0.8 }}
-                                animate={{ opacity: 1, y: 10, scale: 1 }}
+                                animate={{ opacity: 1, y: 12, scale: 1 }}
                                 exit={{ opacity: 0, y: -10, scale: 0.8 }}
                                 style={{
                                     position: "absolute", top: "100%", right: 0,
-                                    background: "rgba(10,5,8,0.8)", backdropFilter: "blur(20px)",
-                                    border: "1px solid rgba(255,255,255,0.1)",
-                                    borderRadius: 24, padding: "8px",
-                                    display: "flex", flexDirection: "column", gap: 6,
-                                    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                                    background: "var(--app-surface)", backdropFilter: "blur(24px)",
+                                    border: "2px solid var(--app-border)",
+                                    borderRadius: 28, padding: "10px",
+                                    display: "flex", flexDirection: "column", gap: 8,
+                                    boxShadow: "0 15px 40px rgba(0,0,0,0.2)",
+                                    pointerEvents: "auto",
                                 }}
                             >
                                 {REACTIONS.map((r, i) => (
@@ -295,14 +302,16 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        whileHover={{ scale: 1.2, x: -4 }}
+                                        whileHover={{ scale: 1.25, background: "var(--app-bg-secondary)" }}
                                         whileTap={{ scale: 0.8 }}
                                         onClick={() => sendReaction(r.emoji)}
                                         style={{
-                                            width: 42, height: 42, borderRadius: "50%",
-                                            background: "rgba(255,255,255,0.05)", border: "none",
-                                            fontSize: 20, cursor: "pointer",
+                                            width: 44, height: 44, borderRadius: "50%",
+                                            background: "transparent", border: "none",
+                                            fontSize: 22, cursor: "pointer",
                                             display: "flex", alignItems: "center", justifyContent: "center",
+                                            transition: "background 0.2s",
+                                            pointerEvents: "auto",
                                         }}
                                     >
                                         {r.emoji}
@@ -314,21 +323,12 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
                 </div>
             </div>
 
-            {/* Global Styles for Mobile Awareness */}
             <style>{`
                 @media (max-width: 700px) {
-                    .message-input-area { top: 64px !important; }
-                    .reaction-trigger-area { top: 64px !important; }
+                    .message-input-area { top: 72px !important; }
+                    .reaction-trigger-area { top: 72px !important; }
                 }
             `}</style>
         </>
-    );
-}
-
-function XMarkIcon({ style }: { style?: React.CSSProperties }) {
-    return (
-        <svg fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" style={style}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
     );
 }

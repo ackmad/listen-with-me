@@ -1,9 +1,95 @@
 @import "tailwindcss";
 
 :root {
-  --neon-pink: #FF0099;
-  --soft-pink: #FF66C4;
-  --bg-primary: #050505;
+  /* LIGHT MODE (04.00 – 18.00) */
+  --light-bg-primary: #FFF1F7;
+  --light-bg-secondary: #FFE4F0;
+  --light-surface: #FFFFFF;
+  --light-primary-pink: #EC4899;
+  --light-primary-hover: #DB2777;
+  --light-primary-active: #BE185D;
+  --light-soft-pink: #F9A8D4;
+  --light-soft-border: #FBCFE8;
+  --light-soft-accent: #FDA4AF;
+  --light-text-primary: #3B1F2B;
+  --light-text-secondary: #6B3E4E;
+  --light-text-muted: #9D6B7A;
+  --light-border-default: #F5C2D7;
+  --light-border-focus: #EC4899;
+  --light-green-indicator: #22C55E;
+  --light-progress-track: #FBCFE8;
+  --light-progress-fill: #EC4899;
+  --light-toast-bg: #FCE7F3;
+  --light-toast-text: #9D174D;
+  --light-toast-border: #F9A8D4;
+
+  /* DARK MODE (18.00 – 04.00) */
+  --dark-bg-primary: #0F0A12;
+  --dark-bg-secondary: #1A1120;
+  --dark-surface: #1F1325;
+  --dark-primary-pink: #F472B6;
+  --dark-primary-hover: #EC4899;
+  --dark-primary-active: #DB2777;
+  --dark-soft-pink: #F9A8D4;
+  --dark-soft-border: #3B1F2B;
+  --dark-soft-accent: rgba(244, 114, 182, 0.35);
+  --dark-text-primary: #FCE7F3;
+  --dark-text-secondary: #F9A8D4;
+  --dark-text-muted: #C08497;
+  --dark-border-default: #3B1F2B;
+  --dark-border-focus: #EC4899;
+  --dark-green-indicator: #22C55E;
+  --dark-progress-track: #3B1F2B;
+  --dark-progress-fill: #F472B6;
+  --dark-toast-bg: #2A1833;
+  --dark-toast-text: #F9A8D4;
+  --dark-toast-border: #EC4899;
+
+  /* Transition */
+  --theme-transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Base Variable mapping */
+body.light {
+  --app-bg: var(--light-bg-primary);
+  --app-bg-secondary: var(--light-bg-secondary);
+  --app-surface: var(--light-surface);
+  --app-primary: var(--light-primary-pink);
+  --app-primary-hover: var(--light-primary-hover);
+  --app-primary-active: var(--light-primary-active);
+  --app-text: var(--light-text-primary);
+  --app-text-secondary: var(--light-text-secondary);
+  --app-text-muted: var(--light-text-muted);
+  --app-border: var(--light-border-default);
+  --app-border-focus: var(--light-border-focus);
+  --app-indicator: var(--light-green-indicator);
+  --app-prog-track: var(--light-progress-track);
+  --app-prog-fill: var(--light-progress-fill);
+  --app-toast-bg: var(--light-toast-bg);
+  --app-toast-text: var(--light-toast-text);
+  --app-toast-border: var(--light-toast-border);
+  --app-soft-accent: var(--light-soft-accent);
+}
+
+body.dark {
+  --app-bg: var(--dark-bg-primary);
+  --app-bg-secondary: var(--dark-bg-secondary);
+  --app-surface: var(--dark-surface);
+  --app-primary: var(--dark-primary-pink);
+  --app-primary-hover: var(--dark-primary-hover);
+  --app-primary-active: var(--dark-primary-active);
+  --app-text: var(--dark-text-primary);
+  --app-text-secondary: var(--dark-text-secondary);
+  --app-text-muted: var(--dark-text-muted);
+  --app-border: var(--dark-border-default);
+  --app-border-focus: var(--dark-border-focus);
+  --app-indicator: var(--dark-green-indicator);
+  --app-prog-track: var(--dark-progress-track);
+  --app-prog-fill: var(--dark-progress-fill);
+  --app-toast-bg: var(--dark-toast-bg);
+  --app-toast-text: var(--dark-toast-text);
+  --app-toast-border: var(--dark-toast-border);
+  --app-soft-accent: var(--dark-soft-accent);
 }
 
 * {
@@ -15,13 +101,14 @@ html {
 }
 
 body {
-  background-color: #050505;
-  color: #ffffff;
+  background-color: var(--app-bg);
+  color: var(--app-text);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: var(--theme-transition);
 }
 
 /* Glass Card Effect */
