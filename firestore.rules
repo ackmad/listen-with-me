@@ -1,0 +1,49 @@
+// Firestore Security Rules for ListenWithMe
+// Paste these into Firebase Console → Firestore → Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === USERS ===
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles (for online presence display)
+      allow read: if request.auth != null;
+      // Users can only write their own profile
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // === ROOMS ===
+    match /rooms/{roomId} {
+      // Any authenticated user can read rooms (to see list and join)
+      allow read: if request.auth != null;
+      // Any authenticated user can create a room
+      allow create: if request.auth != null;
+      // Only the host can update room data (play/pause, currentSong, queue)
+      // Guests can also update to add themselves to participants
+      allow update: if request.auth != null;
+      // Only host can delete a room
+      allow delete: if request.auth != null && resource.data.hostId == request.auth.uid;
+
+      // === REQUESTS (subcollection) ===
+      match /requests/{requestId} {
+        // Host can read all requests
+        allow read: if request.auth != null;
+        // Any authenticated user can create a request (guests requesting songs)
+        allow create: if request.auth != null;
+        // Only host can delete/approve requests
+        allow delete: if request.auth != null;
+        allow update: if request.auth != null;
+      }
+
+      // === REACTIONS (subcollection) ===
+      match /reactions/{reactionId} {
+        // Anyone in room can read reactions
+        allow read: if request.auth != null;
+        // Any authenticated user can send a reaction
+        allow create: if request.auth != null;
+        allow delete: if request.auth != null;
+      }
+    }
+  }
+}
