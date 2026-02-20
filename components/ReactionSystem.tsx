@@ -93,13 +93,14 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     const mTime = data.createdAt?.toMillis ? data.createdAt.toMillis() : now;
 
                     if (now - mTime < 5000) {
-                        setMessages(prev => [...prev, {
-                            id: change.doc.id,
+                        const burstMsg: MessageItem[] = Array.from({ length: 4 }).map((_, i) => ({
+                            id: `${change.doc.id}-${i}`,
                             text: data.text,
                             userId: data.userId,
                             createdAt: data.createdAt,
-                            startX: Math.random() * 40 - 20,
-                        }]);
+                            startX: Math.random() * 80 - 40,
+                        }));
+                        setMessages(prev => [...prev, ...burstMsg]);
                     }
                 }
             });
@@ -175,28 +176,36 @@ export default function ReactionSystem({ roomId, userId }: Props) {
 
                 {/* Messages Float — CUTE & BOLD FONT — Visibility Pink/White */}
                 <AnimatePresence>
-                    {messages.map((m) => (
+                    {messages.map((m, idx) => (
                         <motion.div
                             key={m.id}
-                            initial={{ opacity: 0, scale: 0.8, y: "110vh", x: `${50 + m.startX}vw` }}
-                            animate={{ opacity: [0, 1, 1, 0], y: "-30vh" }}
-                            transition={{ duration: 6, ease: "linear" }}
+                            initial={{ opacity: 0, scale: 0.5, y: "110vh", x: `${50 + m.startX}vw` }}
+                            animate={{
+                                opacity: [0, 1, 1, 0],
+                                y: "-30vh",
+                                x: `${50 + m.startX + (idx % 2 === 0 ? 15 : -15)}vw`
+                            }}
+                            transition={{
+                                duration: 5 + Math.random() * 2,
+                                ease: "linear",
+                                delay: (idx % 4) * 0.2 // Small stagger for the burst
+                            }}
                             style={{
                                 position: "absolute",
                                 background: "var(--app-primary)",
                                 backdropFilter: "blur(12px)",
-                                border: "2.5px solid #fff",
-                                borderRadius: "20px 20px 4px 20px",
-                                padding: "10px 18px",
+                                border: "3px solid #fff",
+                                borderRadius: "24px 24px 4px 24px",
+                                padding: "14px 24px",
                                 color: "#fff",
-                                fontSize: 16,
-                                fontWeight: 800,
+                                fontSize: 24, // Bigger font
+                                fontWeight: 900, // Extra bold
                                 fontFamily: "var(--font-fredoka), cursive",
-                                maxWidth: 220,
-                                boxShadow: "0 12px 30px rgba(0,0,0,0.3), 0 0 15px var(--app-primary)",
+                                maxWidth: 280,
+                                boxShadow: "0 15px 35px rgba(0,0,0,0.3), 0 0 20px var(--app-primary)",
                                 pointerEvents: "none",
                                 textAlign: "center",
-                                letterSpacing: "0.02em",
+                                letterSpacing: "-0.01em",
                             }}
                         >
                             {m.text}
