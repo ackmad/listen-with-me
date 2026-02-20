@@ -1,17 +1,15 @@
-"use client";
-import { useState } from 'react';
-import { XMarkIcon, MagnifyingGlassIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
-import { PlayIcon } from '@heroicons/react/24/solid';
+import React, { useState } from 'react';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LOCAL_SONGS = [
     { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192 },
     { id: 'pp-02', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270 },
-    { id: 'pp-03', title: 'An Art Gallery Could Never Be As Unique As You', artist: 'mrld', url: '/music/paypay/AnArtGalleryCouldNeverBeAsUniqueAsYou-mrld.mp3', duration: 169 },
-    { id: 'pp-04', title: 'Anything You Want', artist: 'Reality Club', url: '/music/paypay/AnythingYouWant-RealityClub.mp3', duration: 237 },
-    { id: 'pp-05', title: 'Bimbang', artist: 'Melody', url: '/music/paypay/Bimbang-Melody.mp3', duration: 216 },
-    { id: 'pp-06', title: 'Blue Jeans', artist: 'Gangga Kusuma', url: '/music/paypay/BlueJeans-GanggaKusuma.mp3', duration: 225 },
-    { id: 'pp-07', title: "Nothing's Gonna Hurt You Baby", artist: 'Cigarettes After Sex', url: '/music/paypay/NothingsGonnaHurtYouBaby-CigarettesAfterSex.mp3', duration: 295 },
+    { id: 'pp-03', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613 },
+    { id: 'pp-04', title: 'An Art Gallery Could Never Be As Unique As You', artist: 'mrld', url: '/music/paypay/AnArtGalleryCouldNeverBeAsUniqueAsYou-mrld.mp3', duration: 169 },
+    { id: 'pp-05', title: 'Anything You Want', artist: 'Reality Club', url: '/music/paypay/AnythingYouWant-RealityClub.mp3', duration: 237 },
+    { id: 'pp-06', title: 'Bimbang', artist: 'Melody', url: '/music/paypay/Bimbang-Melody.mp3', duration: 216 },
+    { id: 'pp-07', title: 'Blue Jeans', artist: 'Gangga Kusuma', url: '/music/paypay/BlueJeans-GanggaKusuma.mp3', duration: 225 },
     { id: 'pp-08', title: 'Cinnamon Girl', artist: 'Lana Del Rey', url: '/music/paypay/CinnamonGirl-LanaDelRey.mp3', duration: 301 },
     { id: 'pp-09', title: 'Coffee', artist: 'Beabadoobee', url: '/music/paypay/Coffee-Beabadoobee.mp3', duration: 128 },
     { id: 'pp-10', title: 'Falling In Love', artist: 'Cigarettes After Sex', url: '/music/paypay/FallingInLove-CigarettesAfterSex.mp3', duration: 246 },
@@ -35,42 +33,60 @@ export const LOCAL_SONGS = [
     { id: 'pp-28', title: 'Maybe', artist: 'Gabriela Bee', url: '/music/paypay/Maybe-GabrielaBee.mp3', duration: 194 },
     { id: 'pp-29', title: 'Mine', artist: 'Petra Sihombing', url: '/music/paypay/Mine-PetraSihombing.mp3', duration: 224 },
     { id: 'pp-30', title: 'Mystery Of Love', artist: 'Sufjan Stevens', url: '/music/paypay/MysteryOfLove-SufjanStevens.mp3', duration: 249 },
+    { id: 'pp-31', title: "Nothing's Gonna Hurt You Baby", artist: 'Cigarettes After Sex', url: '/music/paypay/NothingsGonnaHurtYouBaby-CigarettesAfterSex.mp3', duration: 295 },
+    { id: 'pp-32', title: 'Not Strong Enough', artist: 'Boygenius', url: '/music/paypay/NotStrongEnough-Boygenius.mp3', duration: 235 },
+    { id: 'pp-33', title: 'One Call Away', artist: 'Charlie Puth', url: '/music/paypay/OneCallAway-CharliePuth.mp3', duration: 202 },
+    { id: 'pp-34', title: 'Ours To Keep', artist: 'Kendis', url: '/music/paypay/OursToKeep-Kendis.mp3', duration: 208 },
+    { id: 'pp-35', title: 'Que Sera Sera', artist: 'Doris Day', url: '/music/paypay/QueSeraSera-DorisDay.mp3', duration: 178 },
+    { id: 'pp-36', title: 'Right Where You Left Me', artist: 'Taylor Swift', url: '/music/paypay/RightWhereYouLeftMe-TaylorSwift.mp3', duration: 250 },
+    { id: 'pp-37', title: 'Sailor Song', artist: 'Gigi Perez', url: '/music/paypay/SailorSong-GigiPerez.mp3', duration: 212 },
+    { id: 'pp-38', title: 'Say Yes To Heaven', artist: 'Lana Del Rey', url: '/music/paypay/SayYesToHeaven-LanaDelRey.mp3', duration: 209 },
+    { id: 'pp-39', title: 'Scott Street', artist: 'Phoebe Bridgers', url: '/music/paypay/ScottStreet-PhoebeBridgers.mp3', duration: 305 },
+    { id: 'pp-40', title: 'Snowfall', artist: 'Oneheart', url: '/music/paypay/Snowfall-Oneheart.mp3', duration: 123 },
+    { id: 'pp-41', title: 'Someday I\'ll Get It', artist: 'Alek Olsen', url: '/music/paypay/SomedayIllGetIt-AlekOlsen.mp3', duration: 95 },
+    { id: 'pp-42', title: 'Sparks', artist: 'Coldplay', url: '/music/paypay/Sparks-Coldplay.mp3', duration: 226 },
+    { id: 'pp-43', title: 'The Story Of Us', artist: 'Taylor Swift', url: '/music/paypay/StoryOfUs-TaylorSwift.mp3', duration: 275 },
+    { id: 'pp-44', title: 'Stuck With U', artist: 'Ariana Grande', url: '/music/paypay/StuckWithU-ArianaGrande.mp3', duration: 226 },
+    { id: 'pp-45', title: 'Sunsetz', artist: 'Cigarettes After Sex', url: '/music/paypay/Sunsetz-CigarettesAfterSex.mp3', duration: 281 },
+    { id: 'pp-46', title: 'The Archer', artist: 'Taylor Swift', url: '/music/paypay/TheArcher-TaylorSwift.mp3', duration: 220 },
+    { id: 'pp-47', title: 'The Cut That Always Bleeds', artist: 'Conan Gray', url: '/music/paypay/TheCutThatAlwaysBleeds-ConanGray.mp3', duration: 243 },
+    { id: 'pp-48', title: 'The Way I Loved You', artist: 'Taylor Swift', url: '/music/paypay/TheWayILovedYou-TaylorSwift.mp3', duration: 245 },
+    { id: 'pp-49', title: 'This Is Me Trying', artist: 'Taylor Swift', url: '/music/paypay/ThisIsMeTrying-TaylorSwift.mp3', duration: 195 },
+    { id: 'pp-50', title: 'We Can\'t Be Friends', artist: 'Ariana Grande', url: '/music/paypay/WeCantBeFriends-ArianaGrande.mp3', duration: 229 },
+    { id: 'pp-51', title: 'When I Was Your Man', artist: 'Bruno Mars', url: '/music/paypay/WhenIWasYourMan-BrunoMars.mp3', duration: 214 },
+    { id: 'pp-52', title: 'Who Knows', artist: 'Daniel Caesar', url: '/music/paypay/WhoKnows-DanielCaesar.mp3', duration: 226 },
+    { id: 'pp-53', title: 'Wildflower', artist: 'Billie Eilish', url: '/music/paypay/Wildflower-BillieEilish.mp3', duration: 261 },
+    { id: 'pp-54', title: 'You Always', artist: 'Artist Unknown', url: '/music/paypay/YouAlways-ArtistUnknown.mp3', duration: 191 },
+    { id: 'pp-55', title: 'You Are Enough', artist: 'Sleeping At Last', url: '/music/paypay/YouAreEnough-SleepingAtLast.mp3', duration: 180 },
+    { id: 'pp-56', title: 'You\'re Gonna Live Forever in Me', artist: 'John Mayer', url: '/music/paypay/YoureGonnaLiveForeverInMe-JohnMayer.mp3', duration: 185 },
 ];
 
 export default function SongManager({ isOpen, onClose, onSongSelect }: {
-    isOpen: boolean;
-    onClose: () => void;
-    onSongSelect: (song: any) => void;
+    isOpen: boolean; onClose: () => void; onSongSelect: (song: any) => void;
 }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [hoveredId, setHoveredId] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
 
     const filtered = LOCAL_SONGS.filter(s =>
-        s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.artist.toLowerCase().includes(searchTerm.toLowerCase())
+        s.title.toLowerCase().includes(search.toLowerCase()) ||
+        s.artist.toLowerCase().includes(search.toLowerCase())
     );
-
-    const handleSelect = (song: any) => {
-        onSongSelect(song);
-        onClose();
-        setSearchTerm('');
-    };
 
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={(e) => e.target === e.currentTarget && onClose()}
-                    style={{
-                        position: "fixed", inset: 0, zIndex: 200,
-                        background: "rgba(0,0,0,0.5)",
-                        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                        display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-                    }}
-                >
+                <div style={{
+                    position: "fixed", inset: 0, zIndex: 3000,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    padding: 20, pointerEvents: "auto",
+                }}>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(12px)" }}
+                    />
+
                     <motion.div
                         initial={{ scale: 0.94, opacity: 0, y: 16 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -87,129 +103,69 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                             transition: "var(--theme-transition)",
                         }}
                     >
-                        {/* Header */}
-                        <div style={{
-                            padding: "24px 24px 18px",
-                            borderBottom: "1px solid var(--app-border)",
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
-                        }}>
-                            <div>
-                                <h2 style={{ margin: "0 0 3px", fontSize: 18, fontWeight: 800, color: "var(--app-text)" }}>
-                                    Pilih Lagunya
-                                </h2>
-                                <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>
-                                    {LOCAL_SONGS.length} lagu tersedia
-                                </p>
-                            </div>
-                            <button onClick={onClose} style={{
-                                width: 34, height: 34, borderRadius: "50%", border: "none",
-                                background: "var(--app-bg-secondary)", color: "var(--app-text-muted)",
-                                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                                transition: "all 0.2s",
-                            }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--app-primary)"; e.currentTarget.style.color = "#fff"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--app-bg-secondary)"; e.currentTarget.style.color = "var(--app-text-muted)"; }}
-                            >
-                                <XMarkIcon style={{ width: 16, height: 16 }} />
-                            </button>
-                        </div>
-
-                        {/* Search */}
-                        <div style={{ padding: "14px 18px 10px" }}>
+                        <div style={{ padding: "24px 24px 16px" }}>
+                            <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 900, fontFamily: "var(--font-fredoka)", color: "var(--app-text)", letterSpacing: "-0.01em" }}>Pilih Lagu 🎵</h2>
                             <div style={{ position: "relative" }}>
-                                <MagnifyingGlassIcon style={{
-                                    width: 16, height: 16, color: "var(--app-text-muted)",
-                                    position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
-                                    pointerEvents: "none",
-                                }} />
+                                <MagnifyingGlassIcon style={{ position: "absolute", left: 14, top: 12, width: 18, height: 18, color: "var(--app-text-muted)" }} />
                                 <input
-                                    type="text" placeholder="Cari lagu favorit..." value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    autoFocus
+                                    placeholder="Cari judul atau artis..."
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
                                     style={{
-                                        width: "100%", padding: "12px 14px 12px 40px",
+                                        width: "100%", padding: "12px 16px 12px 42px",
+                                        borderRadius: 16, border: "1.5px solid var(--app-border)",
                                         background: "var(--app-bg-secondary)",
-                                        border: "1.5px solid var(--app-border)",
-                                        borderRadius: 14, color: "var(--app-text)", fontSize: 14,
-                                        fontFamily: "var(--font-fredoka)", fontWeight: 600,
-                                        outline: "none", boxSizing: "border-box",
-                                        transition: "all 0.2s",
+                                        color: "var(--app-text)", fontSize: 14, fontWeight: 600,
+                                        outline: "none", transition: "all 0.2s"
                                     }}
-                                    onFocus={(e) => { e.target.style.borderColor = "var(--app-primary)"; e.target.style.boxShadow = "0 0 0 3px var(--app-soft-accent)"; }}
-                                    onBlur={(e) => { e.target.style.borderColor = "var(--app-border)"; e.target.style.boxShadow = "none"; }}
                                 />
                             </div>
                         </div>
 
-                        {/* Song List */}
-                        <div style={{ flex: 1, overflowY: "auto", padding: "0 14px 14px" }}>
+                        <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 24px" }}>
                             {filtered.length > 0 ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                    {filtered.map((song) => (
-                                        <div
-                                            key={song.id}
-                                            onClick={() => handleSelect(song)}
-                                            onMouseEnter={() => setHoveredId(song.id)}
-                                            onMouseLeave={() => setHoveredId(null)}
+                                    {filtered.map(s => (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => { onSongSelect(s); onClose(); }}
                                             style={{
-                                                display: "flex", alignItems: "center", gap: 12,
-                                                padding: "12px", borderRadius: 16, cursor: "pointer",
-                                                background: hoveredId === song.id ? "var(--app-bg-secondary)" : "transparent",
-                                                border: `1.5px solid ${hoveredId === song.id ? "var(--app-primary)" : "transparent"}`,
-                                                transition: "all 0.2s ease",
+                                                display: "flex", alignItems: "center", gap: 14,
+                                                padding: "12px 14px", borderRadius: 16, border: "none",
+                                                background: "none", textAlign: "left", cursor: "pointer",
+                                                transition: "all 0.2s"
+                                            }}
+                                            onMouseEnter={e => {
+                                                e.currentTarget.style.background = "var(--app-bg-secondary)";
+                                            }}
+                                            onMouseLeave={e => {
+                                                e.currentTarget.style.background = "none";
                                             }}
                                         >
                                             <div style={{
-                                                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                                                background: hoveredId === song.id ? "var(--app-primary)" : "var(--app-bg-secondary)",
-                                                display: "flex", alignItems: "center", justifyContent: "center",
-                                                color: hoveredId === song.id ? "#fff" : "var(--app-primary)",
-                                                transition: "all 0.2s",
-                                            }}>
-                                                {hoveredId === song.id
-                                                    ? <PlayIcon style={{ width: 16, height: 16, marginLeft: 2 }} />
-                                                    : <MusicalNoteIcon style={{ width: 16, height: 16 }} />
-                                                }
+                                                width: 44, height: 44, borderRadius: 12,
+                                                background: "var(--app-primary)", display: "flex",
+                                                alignItems: "center", justifyContent: "center", fontSize: 20
+                                            }}>🎵</div>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 800, color: "var(--app-text)" }}>{s.title}</p>
+                                                <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>{s.artist}</p>
                                             </div>
-                                            <div style={{ minWidth: 0, flex: 1 }}>
-                                                <p style={{
-                                                    margin: "0 0 3px", fontSize: 14, fontWeight: 800,
-                                                    color: hoveredId === song.id ? "var(--app-primary)" : "var(--app-text)",
-                                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                                                }}>
-                                                    {song.title}
-                                                </p>
-                                                <p style={{
-                                                    margin: 0, fontSize: 11, fontWeight: 600,
-                                                    color: "var(--app-text-muted)",
-                                                }}>
-                                                    {song.artist}
-                                                </p>
-                                            </div>
-                                            {hoveredId === song.id && (
-                                                <motion.span
-                                                    initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
-                                                    style={{
-                                                        fontSize: 11, fontWeight: 800, color: "#fff",
-                                                        padding: "4px 10px", borderRadius: 20,
-                                                        background: "var(--app-primary)",
-                                                        flexShrink: 0,
-                                                    }}
-                                                >
-                                                    Pilih
-                                                </motion.span>
-                                            )}
-                                        </div>
+                                            <span style={{ fontSize: 11, color: "var(--app-text-muted)", fontWeight: 700 }}>
+                                                {Math.floor(s.duration / 60)}:{String(s.duration % 60).padStart(2, '0')}
+                                            </span>
+                                        </button>
                                     ))}
                                 </div>
                             ) : (
-                                <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--app-text-muted)" }}>
-                                    <MusicalNoteIcon style={{ width: 40, height: 40, margin: "0 auto 12px", display: "block", opacity: 0.3 }} />
-                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Lagunya nggak ketemu 😅</p>
+                                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                                    <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600 }}>Lagu tidak ditemukan 🥺</p>
                                 </div>
                             )}
                         </div>
                     </motion.div>
-                </motion.div>
+                </div>
             )}
         </AnimatePresence>
     );

@@ -17,6 +17,7 @@ import {
     useBroadcastPresence, useAllPresence, formatLastSeen, getInitials,
     type UserPresence,
 } from "@/hooks/usePresence";
+import { LOCAL_SONGS } from "@/components/SongManager";
 
 // ─── Status Dot ──────────────────────────────────────────────────────────
 function StatusDot({ status }: { status: UserPresence["status"] }) {
@@ -300,6 +301,12 @@ export default function Dashboard() {
                     <p style={{ margin: 0, fontSize: 16, color: "var(--app-text-muted)", fontWeight: 600 }}>
                         {rooms.length > 0 ? `Ada ${rooms.length} ruang seru yang sedang mendengarkan! ✨` : "Mulai ruang musik pertamamu hari ini."}
                     </p>
+                    <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+                        <div style={{ padding: "6px 12px", borderRadius: 12, background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)", fontSize: 12, fontWeight: 800, color: "var(--app-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+                            <MusicalNoteIcon style={{ width: 14, height: 14 }} />
+                            {LOCAL_SONGS.length} Lagu Tersedia
+                        </div>
+                    </div>
                 </motion.div>
 
                 {/* Create Button Large */}
