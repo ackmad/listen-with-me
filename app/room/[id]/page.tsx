@@ -279,6 +279,7 @@ function RoomInner() {
     const [roomUsers, setRoomUsers] = useState<UserPresence[]>([]);
     const [showSongs, setShowSongs] = useState(false);
     const [mobileTab, setMobileTab] = useState<"queue" | "requests" | "users">("queue");
+    const [showDrawer, setShowDrawer] = useState(false);
 
     const [isSyncing, setIsSyncing] = useState(false);
     const [needsInteraction, setNeedsInteraction] = useState(false);
@@ -796,12 +797,12 @@ function RoomInner() {
                 </aside>
             </div>
 
-            {/* Mobile Tab Bar */}
+            {/* Mobile Bottom Tab Bar */}
             <div className="mobile-tabbar" style={{
                 position: "fixed", bottom: 0, left: 0, right: 0, height: 80,
                 background: "var(--app-surface)", borderTop: "1.5px solid var(--app-border)",
                 display: "none", alignItems: "center", justifyContent: "space-around",
-                padding: "0 10px", zIndex: 40,
+                padding: "0 10px", zIndex: 1000,
                 transition: "var(--theme-transition)",
             }}>
                 {[
@@ -809,11 +810,19 @@ function RoomInner() {
                     { id: "requests", icon: PlusIcon, label: "Request" },
                     { id: "users", icon: UsersIcon, label: "Teman" },
                 ].map(t => (
-                    <button key={t.id} onClick={() => { setMobileTab(t.id as any); if (t.id === "requests") setShowSongs(true); }}
+                    <button key={t.id}
+                        onClick={() => {
+                            if (t.id === "requests") {
+                                setShowSongs(true);
+                            } else {
+                                setMobileTab(t.id as any);
+                                setShowDrawer(true);
+                            }
+                        }}
                         style={{
                             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                             background: "none", border: "none",
-                            color: mobileTab === t.id ? "var(--app-primary)" : "var(--app-text-muted)",
+                            color: showDrawer && mobileTab === t.id ? "var(--app-primary)" : "var(--app-text-muted)",
                             transition: "all 0.2s", cursor: "pointer"
                         }}>
                         <t.icon style={{ width: 22, height: 22 }} />
@@ -821,6 +830,77 @@ function RoomInner() {
                     </button>
                 ))}
             </div>
+
+            {/* Mobile Drawer Popup */}
+            <AnimatePresence>
+                {showDrawer && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowDrawer(false)}
+                            style={{
+                                position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+                                backdropFilter: "blur(4px)", zIndex: 1100
+                            }}
+                        />
+                        {/* Drawer */}
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            style={{
+                                position: "fixed", bottom: 0, left: 0, right: 0,
+                                background: "var(--app-surface)",
+                                borderTop: "2px solid var(--app-border)",
+                                borderRadius: "32px 32px 0 0",
+                                padding: "24px 20px 40px",
+                                maxHeight: "80vh", overflowY: "auto",
+                                zIndex: 1200,
+                                boxShadow: "0 -10px 40px rgba(0,0,0,0.3)"
+                            }}
+                        >
+                            {/* Handle */}
+                            <div style={{
+                                width: 40, height: 4, background: "var(--app-border)",
+                                borderRadius: 2, margin: "0 auto 24px"
+                            }} />
+
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
+                                </h3>
+                                <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 8, borderRadius: "50%", color: "var(--app-text-muted)" }}>
+                                    <XMarkIcon style={{ width: 20, height: 20 }} />
+                                </button>
+                            </div>
+
+                            {mobileTab === "queue" ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                    {room?.queue?.length > 0 ? (
+                                        room.queue.map((s: any, i: number) => (
+                                            <QueueItem key={`${s.id}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.id === s.id} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} />
+                                        ))
+                                    ) : (
+                                        <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
+                                            <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                    {roomUsersSorted.map(u => (
+                                        <RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Reactions & Mobile Popups Overlay */}
             <ReactionSystem roomId={rId} userId={user?.uid || ""} />
