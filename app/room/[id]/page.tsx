@@ -318,12 +318,12 @@ function RoomInner() {
     }, [rId, authDone, user, router]);
 
     useEffect(() => {
-        if (!rId || !isHost) return;
+        if (!rId) return;
         const q = query(collection(db, "rooms", rId, "requests"), orderBy("createdAt", "desc"));
         return onSnapshot(q, (snap) => {
             setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         }, (err) => console.warn("Requests:", err.message));
-    }, [rId, isHost]);
+    }, [rId]);
 
     const lastSongUrl = useRef<string | null>(null);
     useEffect(() => {
@@ -404,7 +404,6 @@ function RoomInner() {
         });
     };
     const skipNext = async () => {
-        if (!isHost || !room.queue?.length) return;
         const next = room.queue[0];
         await updateDoc(doc(db, "rooms", rId), {
             currentSong: next, queue: room.queue.slice(1),
@@ -416,26 +415,28 @@ function RoomInner() {
 
     const handleSongSelect = async (song: any) => {
         if (!rId || !user) return;
+        const songWithId = { ...song, queueId: `${song.id}-${Date.now()}` };
         if (isHost) {
-            await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(song) });
+            await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songWithId) });
             toast("Lagu ditambahkan ke antrian 🎵", "success");
         } else {
             await addDoc(collection(db, "rooms", rId, "requests"), {
-                ...song, requestedBy: displayName, requesterId: user.uid,
+                ...songWithId, requestedBy: displayName, requesterId: user.uid,
                 createdAt: serverTimestamp(),
+                status: "pending"
             });
             toast("Request dikirim ke host 💌", "info");
         }
     };
 
     const approveRequest = async (req: any) => {
-        const { id, requestedBy, requesterId, createdAt, ...songData } = req;
+        const { id, requestedBy, requesterId, createdAt, status, ...songData } = req;
         await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songData) });
-        await deleteDoc(doc(db, "rooms", rId, "requests", req.id));
+        await updateDoc(doc(db, "rooms", rId, "requests", req.id), { status: "approved" });
         toast(`"${req.title}" disetujui! ✅`, "success");
     };
     const rejectRequest = async (req: any) => {
-        await deleteDoc(doc(db, "rooms", rId, "requests", req.id));
+        await updateDoc(doc(db, "rooms", rId, "requests", req.id), { status: "rejected" });
         toast(`Request "${req.title}" ditolak`, "error");
     };
     const playFromQueue = async (song: any) => {
@@ -748,25 +749,31 @@ function RoomInner() {
                         </div>
                     </div>
 
-                    {/* Queue Section */}
+                    {/* Main Sidebar Content Area (Scrollable) */}
                     <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
-                        {/* Requests for Host */}
+                        {/* Requests Section for Everyone */}
                         <AnimatePresence>
-                            {isHost && requests.length > 0 && (
+                            {requests.length > 0 && (
                                 <div style={{ marginBottom: 24 }}>
-                                    <p style={{ fontSize: 11, fontWeight: 800, color: "var(--app-primary)", textTransform: "uppercase", margin: "0 0 12px 4px", letterSpacing: "0.05em" }}>🎯 Request Masuk</p>
+                                    <p style={{ fontSize: 11, fontWeight: 800, color: "var(--app-primary)", textTransform: "uppercase", margin: "0 0 12px 4px", letterSpacing: "0.05em" }}>🎯 Request Lagu</p>
                                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                         {requests.map(req => (
                                             <motion.div key={req.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                                                style={{ padding: "12px", background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-primary)", borderRadius: 16 }}>
+                                                style={{ padding: "12px", background: "var(--app-bg-secondary)", border: `1.5px solid ${req.status === 'pending' ? 'var(--app-primary)' : 'var(--app-border)'}`, borderRadius: 16 }}>
                                                 <div style={{ marginBottom: 10 }}>
                                                     <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: "var(--app-text)" }}>{req.title}</p>
                                                     <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 600 }}>dari {req.requestedBy}</p>
                                                 </div>
-                                                <div style={{ display: "flex", gap: 8 }}>
-                                                    <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 10, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", padding: "6px" }}>Setujui</button>
-                                                    <button onClick={() => rejectRequest(req)} style={{ borderRadius: 10, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>Tolak</button>
-                                                </div>
+                                                {isHost && req.status === "pending" ? (
+                                                    <div style={{ display: "flex", gap: 8 }}>
+                                                        <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 10, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", padding: "6px" }}>Setujui</button>
+                                                        <button onClick={() => rejectRequest(req)} style={{ borderRadius: 10, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>Tolak</button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: req.status === 'approved' ? 'var(--app-indicator)' : req.status === 'rejected' ? '#ef4444' : 'var(--app-text-muted)' }}>
+                                                        {req.status === 'approved' ? '✅ Disetujui' : req.status === 'rejected' ? '❌ Ditolak' : '⏳ Menunggu'}
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         ))}
                                     </div>
@@ -784,7 +791,7 @@ function RoomInner() {
                         {room?.queue?.length > 0 ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                                 {room.queue.map((s: any, i: number) => (
-                                    <QueueItem key={`${s.id}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.id === s.id} onPlay={() => playFromQueue(s)} />
+                                    <QueueItem key={`${s.queueId}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.queueId === s.queueId} onPlay={() => playFromQueue(s)} />
                                 ))}
                             </div>
                         ) : (
@@ -807,17 +814,13 @@ function RoomInner() {
             }}>
                 {[
                     { id: "queue", icon: QueueListIcon, label: "Antrian" },
-                    { id: "requests", icon: PlusIcon, label: "Request" },
+                    { id: "requests", icon: MusicalNoteIcon, label: "Requests" },
                     { id: "users", icon: UsersIcon, label: "Teman" },
                 ].map(t => (
                     <button key={t.id}
                         onClick={() => {
-                            if (t.id === "requests") {
-                                setShowSongs(true);
-                            } else {
-                                setMobileTab(t.id as any);
-                                setShowDrawer(true);
-                            }
+                            setMobileTab(t.id as any);
+                            setShowDrawer(true);
                         }}
                         style={{
                             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
@@ -871,7 +874,7 @@ function RoomInner() {
 
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
+                                    {mobileTab === "queue" ? "Antrian Lagu" : mobileTab === "requests" ? "Request Lagu" : "Teman Mendengar"}
                                 </h3>
                                 <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 8, borderRadius: "50%", color: "var(--app-text-muted)" }}>
                                     <XMarkIcon style={{ width: 20, height: 20 }} />
@@ -882,11 +885,38 @@ function RoomInner() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                     {room?.queue?.length > 0 ? (
                                         room.queue.map((s: any, i: number) => (
-                                            <QueueItem key={`${s.id}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.id === s.id} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} />
+                                            <QueueItem key={`${s.queueId}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.queueId === s.queueId} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} />
                                         ))
                                     ) : (
                                         <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
                                             <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : mobileTab === "requests" ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                    {requests.length > 0 ? (
+                                        requests.map(req => (
+                                            <div key={req.id} style={{ padding: "16px", background: "var(--app-bg-secondary)", border: `1.5px solid ${req.status === 'pending' ? 'var(--app-primary)' : 'var(--app-border)'}`, borderRadius: 20 }}>
+                                                <div style={{ marginBottom: 12 }}>
+                                                    <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 800, color: "var(--app-text)" }}>{req.title}</p>
+                                                    <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>dari {req.requestedBy}</p>
+                                                </div>
+                                                {isHost && req.status === "pending" ? (
+                                                    <div style={{ display: "flex", gap: 10 }}>
+                                                        <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 12, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", padding: "10px" }}>Setujui</button>
+                                                        <button onClick={() => rejectRequest(req)} style={{ borderRadius: 12, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 13, cursor: "pointer", padding: "10px 16px" }}>Tolak</button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", color: req.status === 'approved' ? 'var(--app-indicator)' : req.status === 'rejected' ? '#ef4444' : 'var(--app-text-muted)' }}>
+                                                        {req.status === 'approved' ? '✅ Disetujui' : req.status === 'rejected' ? '❌ Ditolak' : '⏳ Menunggu Host'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
+                                            <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Belum ada request</p>
                                         </div>
                                     )}
                                 </div>
