@@ -21,7 +21,7 @@ interface ReactionItem {
     duration: number;
 }
 
-interface Props {
+export interface Props {
     roomId: string;
     userId: string;
     // How much bottom offset to apply (e.g. for mobile tab bar clearance)
@@ -116,14 +116,16 @@ export default function ReactionSystem({ roomId, userId, bottomOffset = 0 }: Pro
             </div>
 
             {/* Reaction pill — positioned ABOVE mobile tab bar */}
-            <div style={{
-                position: "fixed",
-                bottom: pillBottom,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 45,
-                pointerEvents: "auto",
-            }}>
+            <div
+                data-reaction-pill
+                style={{
+                    position: "fixed",
+                    bottom: pillBottom,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 45,
+                    pointerEvents: "auto",
+                }}>
                 <div style={{
                     display: "flex", alignItems: "center", gap: 4,
                     padding: "6px 12px",

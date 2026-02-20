@@ -4,9 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { updateProfile, updatePassword, signOut } from 'firebase/auth';
-import { motion } from 'framer-motion';
-import { UserCircleIcon, ShieldCheckIcon, MusicalNoteIcon, HeartIcon, ArrowLeftIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { updateProfile, updatePassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    UserCircleIcon, ShieldCheckIcon, MusicalNoteIcon,
+    HeartIcon, ArrowLeftIcon, ArrowRightOnRectangleIcon,
+    CheckIcon
+} from '@heroicons/react/24/outline';
+import { getInitials } from '@/hooks/usePresence';
 
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
@@ -14,28 +19,31 @@ export default function ProfilePage() {
     const [newPassword, setNewPassword] = useState('');
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [savedSuccessfully, setSavedSuccessfully] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+        return onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 if (userDoc.exists()) {
                     setUsername(userDoc.data().username || currentUser.displayName || '');
+                } else {
+                    setUsername(currentUser.displayName || '');
                 }
             } else {
-                router.push('/login');
+                router.push('/');
             }
             setLoading(false);
         });
-        return () => unsubscribe();
     }, [router]);
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         setIsSaving(true);
+        setSavedSuccessfully(false);
 
         try {
             await updateProfile(user, { displayName: username });
@@ -44,10 +52,11 @@ export default function ProfilePage() {
             if (newPassword) {
                 await updatePassword(user, newPassword);
             }
-            alert('Profile updated successfully, Babe! ✨');
+            setSavedSuccessfully(true);
+            setTimeout(() => setSavedSuccessfully(false), 3000);
         } catch (error: any) {
             console.error(error);
-            alert('Failed to update profile: ' + error.message);
+            alert('Gagal update profile: ' + error.message);
         } finally {
             setIsSaving(false);
         }
@@ -55,142 +64,241 @@ export default function ProfilePage() {
 
     const handleLogout = async () => {
         await signOut(auth);
-        router.push('/login');
+        router.push('/');
     };
 
     if (loading) return (
-        <div className="flex h-screen items-center justify-center bg-[#050505] text-[#FF0099] font-bold tracking-widest animate-pulse">
-            PREPARING YOUR ACCESS...
+        <div style={{
+            minHeight: "100vh", background: "#0a0508",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 20, color: "#fff"
+        }}>
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                style={{
+                    width: 38, height: 38, borderRadius: "50%",
+                    border: "3px solid rgba(200,0,100,0.1)",
+                    borderTopColor: "#c4005c",
+                }}
+            />
+            <p style={{ color: "rgba(255,180,200,0.3)", fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                Memuat profilmu...
+            </p>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#050505] text-[#EAEAEA] font-sans relative overflow-x-hidden p-6 md:p-12">
-            <div className="radial-spotlight absolute inset-0 pointer-events-none" />
-            <div className="noise-bg" />
+        <div style={{
+            minHeight: "100vh", background: "#0a0508", color: "#EAEAEA",
+            fontFamily: "var(--font-geist-sans), sans-serif",
+            position: "relative", overflowX: "hidden",
+            padding: "clamp(20px, 5vw, 60px) 20px",
+        }}>
+            {/* Ambient Background */}
+            <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+                <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 600, height: 600, background: "radial-gradient(ellipse, rgba(160,0,80,0.08) 0%, transparent 70%)" }} />
+                <div style={{ position: "absolute", bottom: "10%", left: "5%", width: 450, height: 450, background: "radial-gradient(ellipse, rgba(60,0,140,0.06) 0%, transparent 60%)" }} />
+            </div>
 
-            {/* Back Button */}
-            <header className="max-w-6xl mx-auto mb-12 flex justify-between items-center relative z-10">
-                <button
-                    onClick={() => router.push('/dashboard')}
-                    className="group flex items-center gap-2 p-3 rounded-full border border-white/10 hover:border-[#FF0099] text-gray-400 hover:text-[#FF0099] transition-all bg-[#0A0A0A]/50 backdrop-blur-md"
-                >
-                    <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Back to Lounge</span>
-                </button>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 p-3 px-6 rounded-full border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all bg-red-900/10 backdrop-blur-md font-bold text-xs uppercase tracking-widest"
-                >
-                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                    Logout
-                </button>
-            </header>
+            <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1 }}>
 
-            <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 relative z-10">
-                {/* Left Side: ID Card */}
-                <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex flex-col items-center justify-center text-center p-12 rounded-[40px] bg-glass border border-white/5 shadow-2xl relative overflow-hidden group"
-                >
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#FF0099] via-[#FF66C4] to-[#5B21B6]" />
+                {/* Header Nav */}
+                <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 44 }}>
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        style={{
+                            display: "flex", alignItems: "center", gap: 8, padding: "10px 18px",
+                            borderRadius: 24, background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 13,
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = "#e0608a"}
+                        onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
+                    >
+                        <ArrowLeftIcon style={{ width: 16, height: 16 }} /> Kembali ke Dashboard
+                    </button>
 
-                    <div className="relative mb-8">
-                        <div className="w-40 h-40 rounded-full border-4 border-[#FF0099] shadow-[0_0_30px_rgba(255,0,153,0.4)] overflow-hidden bg-[#111]">
-                            <img
-                                src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${user?.uid}`}
-                                alt="Avatar"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                        <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="absolute -bottom-2 -right-2 bg-[#FF0099] p-3 rounded-full shadow-lg"
-                        >
-                            <UserCircleIcon className="w-6 h-6 text-white" />
-                        </motion.div>
-                    </div>
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            display: "flex", alignItems: "center", gap: 8, padding: "10px 18px",
+                            borderRadius: 24, background: "rgba(200,0,100,0.06)",
+                            border: "1px solid rgba(200,0,100,0.15)",
+                            color: "rgba(220,80,130,0.9)", cursor: "pointer", fontSize: 13, fontWeight: 700,
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = "rgba(200,0,100,0.12)"}
+                        onMouseLeave={e => e.currentTarget.style.background = "rgba(200,0,100,0.06)"}
+                    >
+                        <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} /> Logout
+                    </button>
+                </header>
 
-                    <h2 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">
-                        {username || 'Anonymous Vibe'}
-                    </h2>
-                    <p className="text-[#FF66C4] font-medium tracking-widest text-sm uppercase mb-8">
-                        {user?.email}
-                    </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
 
-                    <div className="grid grid-cols-2 gap-4 w-full">
-                        <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 border border-white/5 text-center group-hover:border-[#FF0099]/20 transition-all">
-                            <MusicalNoteIcon className="w-6 h-6 text-[#FF0099] mx-auto mb-2" />
-                            <p className="text-2xl font-black text-white">12</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Rooms Joined</p>
-                        </div>
-                        <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 border border-white/5 text-center group-hover:border-[#FF66C4]/20 transition-all">
-                            <HeartIcon className="w-6 h-6 text-[#FF66C4] mx-auto mb-2" />
-                            <p className="text-2xl font-black text-white">450</p>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Vibes Shared</p>
-                        </div>
-                    </div>
-                </motion.div>
+                    {/* Left: Identity Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        style={{
+                            padding: "48px 32px", borderRadius: 32,
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+                            boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+                            position: "relative", overflow: "hidden"
+                        }}
+                    >
+                        {/* Top Accent */}
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #c4005c, #8c004a)" }} />
 
-                {/* Right Side: Settings */}
-                <motion.div
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="p-10 rounded-[40px] bg-glass border border-white/5 shadow-2xl flex flex-col justify-center"
-                >
-                    <div className="flex items-center gap-3 mb-10">
-                        <div className="p-2 rounded-xl bg-[#FF0099]/10 text-[#FF0099]">
-                            <ShieldCheckIcon className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white tracking-tight">Identity Settings</h3>
-                    </div>
-
-                    <form onSubmit={handleUpdateProfile} className="space-y-8">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-[#FF66C4] uppercase tracking-[0.2em] pl-2">Username</label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-6 py-5 bg-[#050505]/80 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#FF0099] focus:ring-1 focus:ring-[#FF0099] transition-all placeholder:text-gray-600 shadow-inner"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-[#FF66C4] uppercase tracking-[0.2em] pl-2">Security</label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full px-6 py-5 bg-[#050505]/80 border border-white/10 rounded-2xl text-white focus:outline-none focus:border-[#FF0099] focus:ring-1 focus:ring-[#FF0099] transition-all placeholder:text-gray-600 shadow-inner"
-                                placeholder="Edit Password"
-                            />
+                        <div style={{ position: "relative", marginBottom: 28 }}>
+                            <div style={{
+                                width: 140, height: 140, borderRadius: "50%",
+                                border: "4px solid rgba(200,0,100,0.3)",
+                                padding: 6, background: "rgba(0,0,0,0.2)",
+                                overflow: "hidden"
+                            }}>
+                                <div style={{
+                                    width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
+                                    background: "linear-gradient(135deg, #220010, #0a0508)",
+                                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, fontWeight: 900
+                                }}>
+                                    {getInitials(username) || "U"}
+                                </div>
+                            </div>
+                            <motion.div
+                                animate={{ scale: [1, 1.15, 1] }}
+                                transition={{ duration: 2.5, repeat: Infinity }}
+                                style={{
+                                    position: "absolute", bottom: 2, right: 2,
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: "#c4005c", border: "4px solid #0a0508",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    color: "#fff"
+                                }}
+                            >
+                                <HeartIcon style={{ width: 18, height: 18 }} />
+                            </motion.div>
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={isSaving}
-                            className="w-full py-5 bg-[#FF0099] hover:bg-[#D90082] text-white font-black text-lg rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(255,0,153,0.4)] disabled:opacity-50 flex items-center justify-center gap-3"
-                        >
-                            {isSaving ? (
-                                <div className="h-6 w-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <>Save Changes ✨</>
-                            )}
-                        </button>
-                    </form>
+                        <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 800, color: "#fff" }}>
+                            {username || 'Pecinta Musik'}
+                        </h2>
+                        <p style={{ margin: "0 0 32px", fontSize: 13, color: "rgba(220,100,150,0.6)", fontWeight: 600, letterSpacing: "0.05em" }}>
+                            {user?.email}
+                        </p>
 
-                    <p className="mt-8 text-center text-xs text-gray-600 uppercase tracking-widest">
-                        Last vibe update: Just now
-                    </p>
-                </motion.div>
-            </main>
+                        <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                            <div style={{ padding: "20px 12px", borderRadius: 20, background: "rgba(10,5,8,0.5)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                                <MusicalNoteIcon style={{ width: 22, height: 22, color: "rgba(200,0,100,0.5)", margin: "0 auto 8px" }} />
+                                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff" }}>Akrab</p>
+                                <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", fontWeight: 700 }}>Status</p>
+                            </div>
+                            <div style={{ padding: "20px 12px", borderRadius: 20, background: "rgba(10,5,8,0.5)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                                <ShieldCheckIcon style={{ width: 22, height: 22, color: "rgba(74,222,128,0.5)", margin: "0 auto 8px" }} />
+                                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff" }}>Terverifikasi</p>
+                                <p style={{ margin: 0, fontSize: 10, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", fontWeight: 700 }}>Akses</p>
+                            </div>
+                        </div>
+                    </motion.div>
 
-            <footer className="mt-20 text-center text-[10px] tracking-[0.3em] text-white/10 uppercase">
-                Glow Up Your Experience • ListenWithMe
-            </footer>
+                    {/* Right: Settings Form */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        style={{
+                            padding: "40px 32px", borderRadius: 32,
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            display: "flex", flexDirection: "column", justifyContent: "center",
+                            boxShadow: "0 20px 40px rgba(0,0,0,0.3)"
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 36 }}>
+                            <div style={{
+                                width: 40, height: 40, borderRadius: 12, background: "rgba(200,0,100,0.1)",
+                                display: "flex", alignItems: "center", justifyContent: "center", color: "#c4005c"
+                            }}>
+                                <ShieldCheckIcon style={{ width: 22, height: 22 }} />
+                            </div>
+                            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#fff" }}>Ubah Identitas</h3>
+                        </div>
+
+                        <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                <label style={{ fontSize: 11, fontWeight: 700, color: "rgba(220,100,150,0.6)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Nama Tampilan</label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    style={{
+                                        padding: "16px 20px", borderRadius: 16, background: "rgba(0,0,0,0.3)",
+                                        border: "1px solid rgba(255,255,255,0.08)", color: "#fff",
+                                        fontSize: 15, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = "rgba(200,0,100,0.4)"}
+                                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+                                />
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                <label style={{ fontSize: 11, fontWeight: 700, color: "rgba(220,100,150,0.6)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Kata Sandi Baru (Opsional)</label>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="Isi jika ingin ganti sandi"
+                                    style={{
+                                        padding: "16px 20px", borderRadius: 16, background: "rgba(0,0,0,0.3)",
+                                        border: "1px solid rgba(255,255,255,0.08)", color: "#fff",
+                                        fontSize: 15, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = "rgba(200,0,100,0.4)"}
+                                    onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.08)"}
+                                />
+                            </div>
+
+                            <div style={{ marginTop: 8 }}>
+                                <motion.button
+                                    whileHover={!isSaving ? { scale: 1.02, y: -2 } : {}}
+                                    whileTap={!isSaving ? { scale: 0.98 } : {}}
+                                    type="submit"
+                                    disabled={isSaving}
+                                    style={{
+                                        width: "100%", padding: "18px", borderRadius: 16,
+                                        background: savedSuccessfully ? "#10b981" : "linear-gradient(135deg, #c4005c, #8c004a)",
+                                        color: "#fff", border: "none", cursor: isSaving ? "not-allowed" : "pointer",
+                                        fontSize: 15, fontWeight: 800, fontFamily: "inherit",
+                                        boxShadow: "0 8px 24px rgba(180,0,80,0.3)",
+                                        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                                        transition: "background 0.3s ease"
+                                    }}
+                                >
+                                    {isSaving ? (
+                                        <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", animation: "spin 0.8s linear infinite" }} />
+                                    ) : savedSuccessfully ? (
+                                        <><CheckIcon style={{ width: 20, height: 20 }} /> Tersimpan!</>
+                                    ) : (
+                                        "Simpan Perubahan ✨"
+                                    )}
+                                </motion.button>
+                            </div>
+                        </form>
+                    </motion.div>
+                </div>
+
+                <footer style={{ marginTop: 60, textAlign: "center", opacity: 0.1, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                    Glow Up Your Experience • ListenWithMe
+                </footer>
+            </div>
+
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @media (max-width: 600px) {
+                    h2 { font-size: 20px !important; }
+                }
+            `}</style>
         </div>
     );
 }
