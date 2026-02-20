@@ -6,7 +6,7 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import {
     doc, onSnapshot, updateDoc, arrayUnion, arrayRemove,
-    collection, addDoc, deleteDoc, query, orderBy, serverTimestamp, getDoc,
+    collection, addDoc, deleteDoc, query, orderBy, serverTimestamp, getDoc, runTransaction,
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -219,7 +219,7 @@ function RoomUserCard({ u, isHost, isMe }: { u: UserPresence; isHost: boolean; i
 }
 
 // ─── Queue Item ───────────────────────────────────────────────────────────
-function QueueItem({ song, isHost, isActive, onPlay }: { song: any; isHost: boolean; isActive: boolean; onPlay: () => void }) {
+function QueueItem({ song, isHost, isActive, onPlay, onRemove }: { song: any; isHost: boolean; isActive: boolean; onPlay: () => void; onRemove?: () => void }) {
     const [hov, setHov] = useState(false);
     return (
         <div
@@ -228,8 +228,9 @@ function QueueItem({ song, isHost, isActive, onPlay }: { song: any; isHost: bool
             style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 12,
                 background: isActive ? "var(--app-bg-secondary)" : hov ? "var(--app-surface)" : "transparent",
-                border: `1px solid ${isActive ? "var(--app-primary)" : hov ? "var(--app-border)" : "transparent"}`,
+                border: `1.5px solid ${isActive ? "var(--app-primary)" : hov ? "var(--app-border)" : "transparent"}`,
                 cursor: isHost ? "pointer" : "default", transition: "all 0.2s ease", minHeight: 48,
+                position: "relative",
             }}
         >
             <div style={{
@@ -245,19 +246,37 @@ function QueueItem({ song, isHost, isActive, onPlay }: { song: any; isHost: bool
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
                 <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 700, color: isActive ? "var(--app-primary)" : "var(--app-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{song.title}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 500 }}>{song.artist}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {song.artist} {song.requestedBy ? `• dari ${song.requestedBy}` : ""}
+                </p>
             </div>
-            {isActive && (
-                <div style={{ display: "flex", gap: 2, alignItems: "flex-end", flexShrink: 0 }}>
-                    {[1, 2, 3].map(i => (
-                        <motion.div key={i}
-                            animate={{ height: [4, 12, 4] }}
-                            transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
-                            style={{ width: 3, background: "var(--app-primary)", borderRadius: 2 }}
-                        />
-                    ))}
-                </div>
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                {isHost && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onRemove?.(); }}
+                        style={{
+                            padding: 6, borderRadius: 8, border: "none", background: "transparent",
+                            color: "var(--app-text-muted)", cursor: "pointer", transition: "all 0.2s",
+                            display: hov ? "flex" : "none",
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}
+                        onMouseLeave={e => e.currentTarget.style.color = "var(--app-text-muted)"}
+                    >
+                        <XMarkIcon style={{ width: 16, height: 16 }} />
+                    </button>
+                )}
+                {isActive && (
+                    <div style={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
+                        {[1, 2, 3].map(i => (
+                            <motion.div key={i}
+                                animate={{ height: [4, 12, 4] }}
+                                transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
+                                style={{ width: 3, background: "var(--app-primary)", borderRadius: 2 }}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -275,7 +294,6 @@ function RoomInner() {
     const [authDone, setAuthDone] = useState(false);
     const [room, setRoom] = useState<any>(null);
     const [isHost, setIsHost] = useState(false);
-    const [requests, setRequests] = useState<any[]>([]);
     const [roomUsers, setRoomUsers] = useState<UserPresence[]>([]);
     const [showSongs, setShowSongs] = useState(false);
     const [mobileTab, setMobileTab] = useState<"queue" | "requests" | "users">("queue");
@@ -317,13 +335,7 @@ function RoomInner() {
         }, (err) => console.warn("Room:", err.message));
     }, [rId, authDone, user, router]);
 
-    useEffect(() => {
-        if (!rId) return;
-        const q = query(collection(db, "rooms", rId, "requests"), orderBy("createdAt", "desc"));
-        return onSnapshot(q, (snap) => {
-            setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        }, (err) => console.warn("Requests:", err.message));
-    }, [rId]);
+
 
     const lastSongUrl = useRef<string | null>(null);
     useEffect(() => {
@@ -378,23 +390,32 @@ function RoomInner() {
     }, [room?.isPlaying, room?.startedAt, isHost]);
 
     const handleAudioEnded = useCallback(async () => {
-        if (!isHost || !rId) return;
-        const snap = await getDoc(doc(db, "rooms", rId));
-        const data = snap.data();
-        if (!data) return;
-        const queue: any[] = data.queue || [];
-        if (queue.length === 0) {
-            await updateDoc(doc(db, "rooms", rId), { currentSong: null, isPlaying: false });
-            return;
+        if (!rId) return;
+        try {
+            await runTransaction(db, async (transaction) => {
+                const roomRef = doc(db, "rooms", rId);
+                const snap = await transaction.get(roomRef);
+                const data = snap.data();
+                if (!data) return;
+
+                // Sync check: only advance if the finished song is still currentSong
+                if (data.currentSong?.url !== audioRef.current?.src) return;
+
+                const queue: any[] = data.queue || [];
+                if (queue.length === 0) {
+                    transaction.update(roomRef, { currentSong: null, isPlaying: false });
+                } else {
+                    const next = queue[0];
+                    transaction.update(roomRef, {
+                        currentSong: next, queue: queue.slice(1),
+                        isPlaying: true, startedAt: serverTimestamp(),
+                    });
+                }
+            });
+        } catch (err) {
+            console.warn("Queue Advance Error:", err);
         }
-        const next = queue[0];
-        await updateDoc(doc(db, "rooms", rId), {
-            currentSong: next, queue: queue.slice(1),
-            isPlaying: true, startedAt: serverTimestamp(),
-        });
-        setSongsPlayed(p => p + 1);
-        toast(`▶ Sekarang: ${next.title}`, "info");
-    }, [isHost, rId, toast]);
+    }, [rId]);
 
     const togglePlay = async () => {
         if (!isHost) return;
@@ -415,30 +436,23 @@ function RoomInner() {
 
     const handleSongSelect = async (song: any) => {
         if (!rId || !user) return;
-        const songWithId = { ...song, queueId: `${song.id}-${Date.now()}` };
-        if (isHost) {
-            await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songWithId) });
-            toast("Lagu ditambahkan ke antrian 🎵", "success");
-        } else {
-            await addDoc(collection(db, "rooms", rId, "requests"), {
-                ...songWithId, requestedBy: displayName, requesterId: user.uid,
-                createdAt: serverTimestamp(),
-                status: "pending"
-            });
-            toast("Request dikirim ke host 💌", "info");
-        }
+        const songWithId = {
+            ...song,
+            queueId: `${song.id}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            requestedBy: displayName,
+            requesterId: user.uid
+        };
+        await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songWithId) });
+        toast("Lagu ditambahkan ke antrian 🎵", "success");
     };
 
-    const approveRequest = async (req: any) => {
-        const { id, requestedBy, requesterId, createdAt, status, ...songData } = req;
-        await updateDoc(doc(db, "rooms", rId), { queue: arrayUnion(songData) });
-        await updateDoc(doc(db, "rooms", rId, "requests", req.id), { status: "approved" });
-        toast(`"${req.title}" disetujui! ✅`, "success");
+    const removeFromQueue = async (song: any) => {
+        if (!isHost || !rId) return;
+        await updateDoc(doc(db, "rooms", rId), { queue: arrayRemove(song) });
+        toast("Lagu dihapus dari antrian", "info");
     };
-    const rejectRequest = async (req: any) => {
-        await updateDoc(doc(db, "rooms", rId, "requests", req.id), { status: "rejected" });
-        toast(`Request "${req.title}" ditolak`, "error");
-    };
+
+
     const playFromQueue = async (song: any) => {
         if (!isHost) return;
         await updateDoc(doc(db, "rooms", rId), {
@@ -751,35 +765,7 @@ function RoomInner() {
 
                     {/* Main Sidebar Content Area (Scrollable) */}
                     <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
-                        {/* Requests Section for Everyone */}
-                        <AnimatePresence>
-                            {requests.length > 0 && (
-                                <div style={{ marginBottom: 24 }}>
-                                    <p style={{ fontSize: 11, fontWeight: 800, color: "var(--app-primary)", textTransform: "uppercase", margin: "0 0 12px 4px", letterSpacing: "0.05em" }}>🎯 Request Lagu</p>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                        {requests.map(req => (
-                                            <motion.div key={req.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                                                style={{ padding: "12px", background: "var(--app-bg-secondary)", border: `1.5px solid ${req.status === 'pending' ? 'var(--app-primary)' : 'var(--app-border)'}`, borderRadius: 16 }}>
-                                                <div style={{ marginBottom: 10 }}>
-                                                    <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 800, color: "var(--app-text)" }}>{req.title}</p>
-                                                    <p style={{ margin: 0, fontSize: 11, color: "var(--app-text-muted)", fontWeight: 600 }}>dari {req.requestedBy}</p>
-                                                </div>
-                                                {isHost && req.status === "pending" ? (
-                                                    <div style={{ display: "flex", gap: 8 }}>
-                                                        <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 10, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", padding: "6px" }}>Setujui</button>
-                                                        <button onClick={() => rejectRequest(req)} style={{ borderRadius: 10, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 12, cursor: "pointer", padding: "6px 12px" }}>Tolak</button>
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: req.status === 'approved' ? 'var(--app-indicator)' : req.status === 'rejected' ? '#ef4444' : 'var(--app-text-muted)' }}>
-                                                        {req.status === 'approved' ? '✅ Disetujui' : req.status === 'rejected' ? '❌ Ditolak' : '⏳ Menunggu'}
-                                                    </div>
-                                                )}
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </AnimatePresence>
+
 
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                             <QueueListIcon style={{ width: 14, height: 14, color: "var(--app-text-muted)" }} />
@@ -789,9 +775,16 @@ function RoomInner() {
                         </div>
 
                         {room?.queue?.length > 0 ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 {room.queue.map((s: any, i: number) => (
-                                    <QueueItem key={`${s.queueId}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.queueId === s.queueId} onPlay={() => playFromQueue(s)} />
+                                    <QueueItem
+                                        key={`${s.queueId}-${i}`}
+                                        song={s}
+                                        isHost={isHost}
+                                        isActive={room.currentSong?.queueId === s.queueId}
+                                        onPlay={() => playFromQueue(s)}
+                                        onRemove={() => removeFromQueue(s)}
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -814,13 +807,17 @@ function RoomInner() {
             }}>
                 {[
                     { id: "queue", icon: QueueListIcon, label: "Antrian" },
-                    { id: "requests", icon: MusicalNoteIcon, label: "Requests" },
+                    { id: "add", icon: PlusIcon, label: "Tambah" },
                     { id: "users", icon: UsersIcon, label: "Teman" },
                 ].map(t => (
                     <button key={t.id}
                         onClick={() => {
-                            setMobileTab(t.id as any);
-                            setShowDrawer(true);
+                            if (t.id === "add") {
+                                setShowSongs(true);
+                            } else {
+                                setMobileTab(t.id as any);
+                                setShowDrawer(true);
+                            }
                         }}
                         style={{
                             flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
@@ -874,7 +871,7 @@ function RoomInner() {
 
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    {mobileTab === "queue" ? "Antrian Lagu" : mobileTab === "requests" ? "Request Lagu" : "Teman Mendengar"}
+                                    {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
                                 </h3>
                                 <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 8, borderRadius: "50%", color: "var(--app-text-muted)" }}>
                                     <XMarkIcon style={{ width: 20, height: 20 }} />
@@ -885,38 +882,18 @@ function RoomInner() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                                     {room?.queue?.length > 0 ? (
                                         room.queue.map((s: any, i: number) => (
-                                            <QueueItem key={`${s.queueId}-${i}`} song={s} isHost={isHost} isActive={room.currentSong?.queueId === s.queueId} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} />
+                                            <QueueItem
+                                                key={`${s.queueId}-${i}`}
+                                                song={s}
+                                                isHost={isHost}
+                                                isActive={room.currentSong?.queueId === s.queueId}
+                                                onPlay={() => { playFromQueue(s); setShowDrawer(false); }}
+                                                onRemove={() => removeFromQueue(s)}
+                                            />
                                         ))
                                     ) : (
                                         <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
                                             <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : mobileTab === "requests" ? (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                    {requests.length > 0 ? (
-                                        requests.map(req => (
-                                            <div key={req.id} style={{ padding: "16px", background: "var(--app-bg-secondary)", border: `1.5px solid ${req.status === 'pending' ? 'var(--app-primary)' : 'var(--app-border)'}`, borderRadius: 20 }}>
-                                                <div style={{ marginBottom: 12 }}>
-                                                    <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 800, color: "var(--app-text)" }}>{req.title}</p>
-                                                    <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>dari {req.requestedBy}</p>
-                                                </div>
-                                                {isHost && req.status === "pending" ? (
-                                                    <div style={{ display: "flex", gap: 10 }}>
-                                                        <button onClick={() => approveRequest(req)} style={{ flex: 1, borderRadius: 12, border: "none", background: "var(--app-primary)", color: "#fff", fontWeight: 800, fontSize: 13, cursor: "pointer", padding: "10px" }}>Setujui</button>
-                                                        <button onClick={() => rejectRequest(req)} style={{ borderRadius: 12, border: "1.5px solid var(--app-border)", background: "transparent", color: "var(--app-text-muted)", fontSize: 13, cursor: "pointer", padding: "10px 16px" }}>Tolak</button>
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", color: req.status === 'approved' ? 'var(--app-indicator)' : req.status === 'rejected' ? '#ef4444' : 'var(--app-text-muted)' }}>
-                                                        {req.status === 'approved' ? '✅ Disetujui' : req.status === 'rejected' ? '❌ Ditolak' : '⏳ Menunggu Host'}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
-                                            <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Belum ada request</p>
                                         </div>
                                     )}
                                 </div>
