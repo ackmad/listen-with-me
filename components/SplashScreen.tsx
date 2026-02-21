@@ -6,21 +6,17 @@ export default function SplashScreen() {
     const [show, setShow] = useState(false);
 
     useEffect(() => {
-        const hasSeen = sessionStorage.getItem("hasSeenSplash");
-        if (!hasSeen) {
-            setShow(true);
-            // Auto hide after video duration or reasonable time
-            // Assuming video is around 3-5 seconds
-            const timer = setTimeout(() => {
-                handleFinish();
-            }, 6000);
-            return () => clearTimeout(timer);
-        }
+        setShow(true);
+        // Auto hide after video duration or reasonable time
+        // Assuming video is around 3-5 seconds
+        const timer = setTimeout(() => {
+            handleFinish();
+        }, 6000);
+        return () => clearTimeout(timer);
     }, []);
 
     const handleFinish = () => {
         setShow(false);
-        sessionStorage.setItem("hasSeenSplash", "true");
     };
 
     return (
