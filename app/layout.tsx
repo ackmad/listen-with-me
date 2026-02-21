@@ -21,7 +21,11 @@ export const metadata: Metadata = {
   title: "ListenWithMe | Sync & Vibe",
   description: "Share music in real-time. Personal vibe space.",
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/images/logo-listenWithMe.png",
   },
 };
 
