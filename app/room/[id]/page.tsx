@@ -605,8 +605,8 @@ function RoomInner() {
                     <h1 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--app-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {room?.name || "Memuat..."}
                     </h1>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 2 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--app-indicator)" }} />
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 2 }}>
+                        <img src="/images/logo-listenWithMe.png" alt="Logo" style={{ width: 14, height: 14, objectFit: "contain" }} />
                         <span style={{ fontSize: 10, color: "var(--app-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700 }}>
                             {isHost ? "👑 Host" : "Tamu"}{sessionMinutes > 0 ? ` · ${sessionMinutes}m` : ""}
                         </span>

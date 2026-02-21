@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Fredoka } from "next/font/google";
 import "./globals.css";
 import React from "react";
 import ThemeManager from "@/components/ThemeManager";
+import SplashScreen from "@/components/SplashScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${fredoka.variable} antialiased selection:bg-[#FF0099] selection:text-white`}
       >
         <ThemeManager />
+        <SplashScreen />
         {children}
       </body>
     </html>

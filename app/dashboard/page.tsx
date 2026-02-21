@@ -260,12 +260,12 @@ export default function Dashboard() {
             }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{
-                        width: 32, height: 32, borderRadius: 10,
-                        background: "var(--app-primary)",
+                        width: 32, height: 32, borderRadius: 8,
+                        overflow: "hidden",
+                        background: "var(--app-bg-secondary)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 4px 12px var(--app-soft-accent)",
                     }}>
-                        <MusicalNoteIcon style={{ width: 16, height: 16, color: "#fff" }} />
+                        <img src="/images/logo-listenWithMe.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                     </div>
                     <h1 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: "var(--app-primary)" }}>ListenWithMe</h1>
                 </div>

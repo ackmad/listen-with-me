@@ -64,11 +64,15 @@ export default function LoginPage() {
       >
         <div style={{ textAlign: "center", marginBottom: 44 }}>
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{ fontSize: 44, marginBottom: 16 }}
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            style={{ marginBottom: 24, display: "flex", justifyContent: "center" }}
           >
-            🎧
+            <img
+              src="/images/logo-listenWithMe.png"
+              alt="ListenWithMe Logo"
+              style={{ width: 80, height: "auto", objectFit: "contain" }}
+            />
           </motion.div>
           <h1 style={{
             margin: "0 0 10px", fontSize: 32, fontWeight: 900, letterSpacing: "-0.02em",
