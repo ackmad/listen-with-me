@@ -31,7 +31,28 @@ interface MessageItem {
     userId: string;
     createdAt: any;
     startX: number;
+    color: string;
 }
+
+// ─── Helper: Unique Color for User ──────────────────────────────────────────
+const USER_COLORS = [
+    '#EC4899', // Pink
+    '#8B5CF6', // Purple
+    '#3B82F6', // Blue
+    '#10B981', // Green
+    '#F59E0B', // Amber
+    '#EF4444', // Red
+    '#06B6D4', // Cyan
+];
+
+const getUserColor = (uid: string) => {
+    if (!uid) return USER_COLORS[0];
+    let hash = 0;
+    for (let i = 0; i < uid.length; i++) {
+        hash = uid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+};
 
 export interface Props {
     roomId: string;
@@ -98,7 +119,8 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                             text: data.text,
                             userId: data.userId,
                             createdAt: data.createdAt,
-                            startX: Math.random() * 90 - 45, // Wider spread
+                            startX: 10 + Math.random() * 80, // Better horizontal distribution (10-90vw)
+                            color: getUserColor(data.userId),
                         }));
                         setMessages(prev => [...prev, ...burstMsg]);
                     }
@@ -119,7 +141,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
             }));
             setMessages(prev => prev.filter(m => {
                 const t = m.createdAt?.toMillis ? m.createdAt.toMillis() : now;
-                return now - t < 6500;
+                return now - t < 12000; // Longer cleanup for slower animation
             }));
         }, 1500);
         return () => clearInterval(interval);
@@ -174,47 +196,48 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     ))}
                 </AnimatePresence>
 
-                {/* Messages Float — CUTE & BOLD FONT — Visibility Pink/White */}
+                {/* Messages Float — SMOOTH & COLORFUL */}
                 <AnimatePresence>
                     {messages.map((m, idx) => (
                         <motion.div
                             key={m.id}
                             initial={{
                                 opacity: 0,
-                                scale: 0.3,
-                                y: "115vh",
-                                x: `${50 + m.startX}vw`,
-                                rotate: Math.random() * 40 - 20
+                                scale: 0.5,
+                                y: "110vh",
+                                x: `${m.startX}vw`,
+                                rotate: Math.random() * 20 - 10
                             }}
                             animate={{
                                 opacity: [0, 1, 1, 0],
-                                y: "-40vh",
-                                x: `${50 + m.startX + (Math.random() * 60 - 30)}vw`,
-                                rotate: Math.random() * 60 - 30,
-                                scale: [0.3, 1.2, 1, 0.8]
+                                y: "-30vh",
+                                x: `${m.startX + (Math.random() * 20 - 10)}vw`, // Gentle horizontal drift
+                                scale: [0.5, 1, 1, 0.7],
+                                rotate: Math.random() * 30 - 15,
                             }}
                             transition={{
-                                duration: 4.5 + Math.random() * 3,
-                                ease: "easeOut",
-                                delay: (idx % 8) * 0.15 // Randomized stagger for 8 items
+                                duration: 8 + Math.random() * 4, // Very slow float (8-12 seconds)
+                                ease: "linear", // Move at constant speed to hide "lag"
+                                delay: (idx % 8) * 0.2
                             }}
                             style={{
                                 position: "absolute",
-                                background: "var(--app-primary)",
-                                backdropFilter: "blur(14px)",
-                                border: "3px solid #fff",
-                                borderRadius: "24px 24px 8px 24px",
-                                padding: "16px 28px",
+                                background: m.color,
+                                backdropFilter: "blur(10px)",
+                                border: "2px solid rgba(255,255,255,0.8)",
+                                borderRadius: "20px 20px 4px 20px",
+                                padding: "10px 18px",
                                 color: "#fff",
-                                fontSize: 26, // Even bigger for impact
-                                fontWeight: 900,
+                                fontSize: 18, // Smaller for better fit
+                                fontWeight: 800,
                                 fontFamily: "var(--font-fredoka), cursive",
-                                maxWidth: 320,
-                                boxShadow: "0 18px 45px rgba(0,0,0,0.35), 0 0 25px var(--app-primary)",
+                                maxWidth: 260,
+                                boxShadow: `0 10px 30px rgba(0,0,0,0.2), 0 0 15px ${m.color}66`,
                                 pointerEvents: "none",
                                 textAlign: "center",
                                 letterSpacing: "-0.01em",
-                                whiteSpace: "nowrap"
+                                whiteSpace: "normal", // Allow wrapping for long messages
+                                zIndex: 10,
                             }}
                         >
                             {m.text}
