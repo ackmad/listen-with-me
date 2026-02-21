@@ -4,6 +4,7 @@ import "./globals.css";
 import React from "react";
 import ThemeManager from "@/components/ThemeManager";
 import SplashScreen from "@/components/SplashScreen";
+import VersionBadge from "@/components/VersionBadge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeManager />
         <SplashScreen />
         {children}
+        <VersionBadge />
       </body>
     </html>
   );
