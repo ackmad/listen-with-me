@@ -20,6 +20,9 @@ const fredoka = Fredoka({
 export const metadata: Metadata = {
   title: "ListenWithMe | Sync & Vibe",
   description: "Share music in real-time. Personal vibe space.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
