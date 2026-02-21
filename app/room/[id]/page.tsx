@@ -320,7 +320,11 @@ function RoomInner() {
     }, [router]);
 
     const displayName = user?.displayName || user?.email?.split("@")[0] || "User";
-    useBroadcastPresence(user?.uid ?? null, displayName, user?.photoURL ?? null, { activity: "Sedang di room", currentRoom: rId });
+    useBroadcastPresence(user?.uid ?? null, displayName, user?.photoURL ?? null, {
+        activity: "Sedang di room",
+        currentRoom: rId,
+        currentRoomName: room?.name
+    });
 
     const handleRoomPresence = useCallback((users: UserPresence[]) => setRoomUsers(users), []);
     useRoomPresence(rId, handleRoomPresence);

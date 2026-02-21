@@ -7,10 +7,9 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import {
     HomeIcon,
-    MusicalNoteIcon,
     UserCircleIcon,
     ArrowRightStartOnRectangleIcon
-} from '@heroicons/react/24/outline'; // Adjust import based on installed icon lib
+} from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
 
@@ -20,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const handleLogout = async () => {
         await signOut(auth);
-        router.push('/login');
+        router.push('/');
     };
 
     const navItems = [
@@ -29,12 +28,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
 
     return (
-        <div className="flex min-h-screen bg-[#0F0F0F] text-[#EAEAEA]">
-            {/* Sidebar */}
-            <aside className="w-64 border-r border-[#222] hidden md:flex flex-col p-6 fixed h-full bg-[#151515]">
+        <div className="flex min-h-screen" style={{ background: "var(--app-bg)", color: "var(--app-text)", transition: "var(--theme-transition)" }}>
+            {/* Sidebar Desktop */}
+            <aside className="hidden md:flex flex-col w-64 fixed h-full p-6"
+                style={{
+                    background: "var(--app-surface)",
+                    borderRight: "1.5px solid var(--app-border)",
+                    zIndex: 50,
+                    transition: "var(--theme-transition)"
+                }}>
                 <div className="mb-10 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#FF2E93] shadow-[0_0_10px_#FF2E93]" />
-                    <h1 className="text-xl font-bold tracking-tight">ListenWithMe</h1>
+                    <img src="/images/logo-listenWithMe.png" alt="Logo" className="w-8 h-8 object-contain" />
+                    <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--app-primary)" }}>ListenWithMe</h1>
                 </div>
 
                 <nav className="flex-1 space-y-2">
@@ -46,18 +51,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Link key={item.name} href={item.href}>
                                 <div
                                     className={clsx(
-                                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group",
+                                        "flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer relative group",
                                         isActive
-                                            ? "bg-[#FF2E93]/10 text-[#FF2E93] border border-[#FF2E93]/20"
-                                            : "text-gray-400 hover:bg-[#222] hover:text-white"
+                                            ? "text-white shadow-[0_8px_20px_var(--app-soft-accent)]"
+                                            : "text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-bg-secondary)]"
                                     )}
+                                    style={{
+                                        background: isActive ? "var(--app-primary)" : "transparent",
+                                    }}
                                 >
-                                    <Icon className={clsx("w-6 h-6", isActive && "text-[#FF2E93]")} />
-                                    <span className="font-medium">{item.name}</span>
+                                    <Icon className={clsx("w-6 h-6 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-[var(--app-text-muted)]")} />
+                                    <span className="font-bold text-sm tracking-wide uppercase">{item.name}</span>
                                     {isActive && (
                                         <motion.div
-                                            layoutId="active-indicator"
-                                            className="absolute left-0 w-1 h-8 bg-[#FF2E93] rounded-r-full"
+                                            layoutId="active-pill"
+                                            className="absolute left-[-2px] w-1.5 h-8 bg-white rounded-r-full"
+                                            style={{ zIndex: 10 }}
                                         />
                                     )}
                                 </div>
@@ -68,33 +77,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#FF2E93] transition-colors mt-auto"
+                    className="flex items-center gap-3 px-4 py-3 transition-colors mt-auto font-bold opacity-70 hover:opacity-100"
+                    style={{ color: "var(--app-text-muted)" }}
                 >
                     <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
-                    <span className="font-medium">Logout</span>
+                    <span>Logout</span>
                 </button>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-8 overflow-y-auto">
+            {/* On mobile, we want padding to be 0 or small for "full" look. On desktop, we offset for sidebar */}
+            <main className="flex-1 md:ml-64 min-h-screen relative overflow-x-hidden">
                 {children}
             </main>
 
-            {/* Mobile Nav (Bottom) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#151515] border-t border-[#222] p-4 flex justify-around">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
-                    return (
-                        <Link key={item.name} href={item.href}>
-                            <div className={clsx("flex flex-col items-center gap-1", isActive ? "text-[#FF2E93]" : "text-gray-400")}>
-                                <Icon className="w-6 h-6" />
-                                <span className="text-xs">{item.name}</span>
-                            </div>
-                        </Link>
-                    )
-                })}
-            </div>
+            {/* Mobile Bottom Navigation - Using the one from dashboard/page.tsx or replacing it here */}
+            {/* The user wants full atas bawah, so we ensure this nav doesn't crowd too much or we match the design */}
         </div>
     );
 }

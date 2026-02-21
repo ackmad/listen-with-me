@@ -93,7 +93,6 @@ export default function ProfilePage() {
             minHeight: "100vh", background: "var(--app-bg)", color: "var(--app-text)",
             fontFamily: "var(--font-fredoka), sans-serif",
             position: "relative", overflowX: "hidden",
-            padding: "clamp(20px, 5vw, 60px) 20px",
             transition: "var(--theme-transition)",
         }}>
             {/* Ambient Background */}
@@ -101,7 +100,7 @@ export default function ProfilePage() {
                 <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 600, height: 600, background: "radial-gradient(ellipse, var(--app-soft-accent) 0%, transparent 70%)" }} />
             </div>
 
-            <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1 }}>
+            <div className="profile-container" style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1, padding: "40px 20px" }}>
 
                 {/* Header Nav */}
                 <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 44 }}>
@@ -283,8 +282,24 @@ export default function ProfilePage() {
 
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
-                @media (max-width: 600px) {
-                    h2 { font-size: 24px !important; }
+                @media (max-width: 680px) {
+                    .profile-container { 
+                        padding: 0 !important; 
+                        max-width: 100% !important;
+                    }
+                    header {
+                        padding: 20px !important;
+                        margin-bottom: 20px !important;
+                        background: var(--app-surface);
+                        border-bottom: 1.5px solid var(--app-border);
+                        position: sticky;
+                        top: 0;
+                        z-index: 100;
+                    }
+                    div[style*="gridTemplateColumns: repeat(auto-fit"] {
+                        padding: 20px !important;
+                        gap: 20px !important;
+                    }
                 }
             `}</style>
         </div>

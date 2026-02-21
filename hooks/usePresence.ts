@@ -11,8 +11,10 @@ export interface UserPresence {
     status: PresenceStatus;
     activity: string; // e.g. "Sedang di room", "Melihat dashboard"
     currentRoom: string | null;
+    currentRoomName?: string | null;
     lastSeen: number; // unix ms
     photoURL?: string | null;
+    email?: string | null;
 }
 
 // ── Broadcast own presence to RTDB ──────────────────────────────────────────
@@ -20,13 +22,13 @@ export function useBroadcastPresence(
     uid: string | null,
     displayName: string | null,
     photoURL?: string | null,
-    extraFields?: Partial<Pick<UserPresence, "activity" | "currentRoom">>
+    extraFields?: Partial<Pick<UserPresence, "activity" | "currentRoom" | "currentRoomName">>
 ) {
     const presenceRef = useRef<DatabaseReference | null>(null);
     const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const write = useCallback(
-        (status: PresenceStatus, extra?: typeof extraFields) => {
+        (status: PresenceStatus, extra?: Partial<UserPresence>) => {
             if (!uid || !presenceRef.current) return;
             const data: Record<string, unknown> = {
                 uid,
@@ -34,6 +36,7 @@ export function useBroadcastPresence(
                 status,
                 activity: extra?.activity ?? extraFields?.activity ?? "Aktif",
                 currentRoom: extra?.currentRoom ?? extraFields?.currentRoom ?? null,
+                currentRoomName: extra?.currentRoomName ?? extraFields?.currentRoomName ?? null,
                 lastSeen: Date.now(),
                 ...(photoURL !== undefined && { photoURL }),
             };
@@ -49,15 +52,10 @@ export function useBroadcastPresence(
         // Set online immediately
         write("online");
 
-        // On disconnect → mark offline
-        onDisconnect(presenceRef.current).set({
-            uid,
-            displayName: displayName || "User",
+        // On disconnect → mark offline, but RETAIN currentRoom for "Still listening" indicator
+        onDisconnect(presenceRef.current).update({
             status: "offline",
-            activity: "Offline",
-            currentRoom: null,
             lastSeen: Date.now(),
-            photoURL: photoURL ?? null,
         });
 
         // Idle detection: 3 min inactivity → idle
@@ -81,8 +79,8 @@ export function useBroadcastPresence(
 
     // Allow callers to update activity/room info dynamically
     const updateActivity = useCallback(
-        (activity: string, currentRoom: string | null = null) => {
-            write("online", { activity, currentRoom });
+        (activity: string, currentRoom: string | null = null, currentRoomName: string | null = null) => {
+            write("online", { activity, currentRoom, currentRoomName });
         },
         [write]
     );
@@ -90,7 +88,53 @@ export function useBroadcastPresence(
     return { updateActivity };
 }
 
-// ── Watch all users' presence ────────────────────────────────────────────────
+// ── Merged Presence: Registerd Firestore Users + RTDB Status ──────────────────
+import { collection, onSnapshot as onSnapshotFS, query as queryFS } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useState } from "react";
+
+export function useMergedPresence(onUpdate: (users: UserPresence[]) => void) {
+    useEffect(() => {
+        const presenceRef = ref(rtdb, "presence");
+        const usersRef = collection(db, "users");
+
+        let rtdbData: Record<string, UserPresence> = {};
+        let fsData: any[] = [];
+
+        const mergeAndSend = () => {
+            const merged = fsData.map(fsUser => {
+                const presence = rtdbData[fsUser.id];
+                return {
+                    uid: fsUser.id,
+                    displayName: fsUser.username || fsUser.displayName || "User",
+                    email: fsUser.email || null,
+                    status: (presence?.status as PresenceStatus) ?? "offline",
+                    activity: presence?.activity ?? "Offline",
+                    currentRoom: presence?.currentRoom ?? null,
+                    currentRoomName: presence?.currentRoomName ?? null,
+                    lastSeen: presence?.lastSeen ?? fsUser.lastSeen ?? 0,
+                    photoURL: fsUser.photoURL ?? presence?.photoURL ?? null,
+                };
+            });
+            onUpdate(merged);
+        };
+
+        // Watch Firestore Users
+        const unsubFS = onSnapshotFS(usersRef, (snap) => {
+            fsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            mergeAndSend();
+        });
+
+        // Watch RTDB Presence
+        const unsubRTDB = onValue(presenceRef, (snap) => {
+            rtdbData = snap.val() ?? {};
+            mergeAndSend();
+        });
+
+        return () => { unsubFS(); unsubRTDB(); };
+    }, [onUpdate]);
+}
+
 export function useAllPresence(
     onUpdate: (users: UserPresence[]) => void
 ) {
@@ -104,6 +148,7 @@ export function useAllPresence(
                 status: (u.status as PresenceStatus) ?? "offline",
                 activity: u.activity ?? "",
                 currentRoom: u.currentRoom ?? null,
+                currentRoomName: u.currentRoomName ?? null,
                 lastSeen: u.lastSeen ?? 0,
                 photoURL: u.photoURL ?? null,
             }));
