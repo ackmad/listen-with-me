@@ -247,48 +247,14 @@ export default function Dashboard() {
     const [deleteCodeError, setDeleteCodeError] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Aesthetics states
-    const [timeMode, setTimeMode] = useState<number>(0);
-    const [modeToast, setModeToast] = useState("");
     const [showSyncGlow, setShowSyncGlow] = useState(false);
 
     useEffect(() => {
-        // Init time mode logic matching CSS names
-        const savedMode = localStorage.getItem("theme-mode");
-        if (savedMode) {
-            const index = ["morning", "afternoon", "evening", "night"].indexOf(savedMode);
-            setTimeMode(index >= 0 ? index : 0);
-            document.documentElement.setAttribute("data-theme", savedMode);
-        } else {
-            const h = new Date().getHours();
-            const initMode = (h >= 4 && h < 11) ? 0 : (h >= 11 && h < 15) ? 1 : (h >= 15 && h < 18) ? 2 : 3;
-            setTimeMode(initMode);
-            const modes = ["morning", "afternoon", "evening", "night"];
-            document.documentElement.setAttribute("data-theme", modes[initMode]);
-        }
-
         // Simulate micro-interaction sync after a bit
         const t = setTimeout(() => setShowSyncGlow(true), 3500);
         const t2 = setTimeout(() => setShowSyncGlow(false), 8500);
         return () => { clearTimeout(t); clearTimeout(t2); };
     }, []);
-
-    const handleCycleTime = () => {
-        const next = (timeMode + 1) % 4;
-        setTimeMode(next);
-        const modes = ["morning", "afternoon", "evening", "night"];
-        document.documentElement.setAttribute("data-theme", modes[next]);
-        localStorage.setItem("theme-mode", modes[next]);
-
-        const toasts = [
-            "Pagi yang tenang 🌅",
-            "Cerahnya siang ini ☀️",
-            "Sekarang suasananya sore ya 🌆",
-            "Mode malam aktif, waktunya lagu yang pelan 🌙"
-        ];
-        setModeToast(toasts[next]);
-        setTimeout(() => setModeToast(""), 2500);
-    };
 
     useEffect(() => {
         return onAuthStateChanged(auth, (u) => {
@@ -400,19 +366,8 @@ export default function Dashboard() {
                 </AnimatePresence>
             </div>
 
-            {/* Mode Toast Overlay */}
-            <AnimatePresence>
-                {modeToast && (
-                    <motion.div initial={{ opacity: 0, y: -20, x: "-50%" }} animate={{ opacity: 1, y: 0, x: "-50%" }} exit={{ opacity: 0, scale: 0.9, x: "-50%" }} style={{
-                        position: "fixed", top: 80, left: "50%", zIndex: 300,
-                        background: "rgba(0,0,0,0.6)", color: "#fff", padding: "10px 20px", borderRadius: 20,
-                        backdropFilter: "blur(10px)", fontSize: 13, fontWeight: 700, pointerEvents: "none",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
-                    }}>
-                        {modeToast}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+
 
             {/* Header */}
             <header style={{
@@ -450,14 +405,7 @@ export default function Dashboard() {
                         <span className="hidden sm:inline">{onlineUsers.length} Online</span>
                         <span className="sm:hidden">{onlineUsers.length}</span>
                     </button>
-                    <button onClick={handleCycleTime} style={{
-                        width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--border-soft)",
-                        background: "var(--bg-secondary)", color: "var(--text-primary)",
-                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                        transition: "all 0.2s"
-                    }}>
-                        <span style={{ fontSize: 16 }}>{timeMode === 0 ? "🌅" : timeMode === 1 ? "☀️" : timeMode === 2 ? "🌆" : "🌙"}</span>
-                    </button>
+
                     <button onClick={() => router.push("/profile")} style={{
                         width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--border-soft)",
                         background: "var(--bg-secondary)", color: "var(--text-muted)",

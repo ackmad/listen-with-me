@@ -1,26 +1,38 @@
 "use client";
 import { useEffect } from "react";
 
+/**
+ * Automatically applies the correct visual theme based on current local time.
+ * Runs on every page load and updates every minute.
+ *
+ * Time ranges (local time):
+ *   05:00 – 10:59  → morning
+ *   11:00 – 14:59  → afternoon
+ *   15:00 – 18:59  → evening
+ *   19:00 – 04:59  → night
+ */
+function getThemeForHour(hour: number): string {
+    if (hour >= 5 && hour < 11) return "morning";
+    if (hour >= 11 && hour < 15) return "afternoon";
+    if (hour >= 15 && hour < 19) return "evening";
+    return "night"; // 19:00 – 04:59
+}
+
 export default function ThemeManager() {
     useEffect(() => {
-        const updateTheme = () => {
+        const applyTheme = () => {
             const hour = new Date().getHours();
-            // Light Mode: 04.00 – 18.00
-            const isLight = hour >= 4 && hour < 18;
-
-            if (isLight) {
-                document.body.classList.add('light');
-                document.body.classList.remove('dark');
-            } else {
-                document.body.classList.add('dark');
-                document.body.classList.remove('light');
-            }
+            const theme = getThemeForHour(hour);
+            document.documentElement.setAttribute("data-theme", theme);
         };
 
-        updateTheme();
-        // Check every minute if the theme needs to change
-        const interval = setInterval(updateTheme, 60000);
+        // Apply immediately on page load / refresh
+        applyTheme();
+
+        // Re-check every 60 seconds in case hour rolls over while on the page
+        const interval = setInterval(applyTheme, 60_000);
         return () => clearInterval(interval);
     }, []);
+
     return null;
 }

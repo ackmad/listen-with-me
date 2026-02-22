@@ -945,12 +945,17 @@ function RoomInner() {
                             inset: 0,
                             pointerEvents: "none",
                             zIndex: 100,
-                            background: "radial-gradient(circle at center, rgba(255,110,181,0.12), transparent 70%)",
+                            background: "radial-gradient(circle at center, rgba(255,110,181,0.10), transparent 65%)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center"
                         }}
                     >
+                        {/* Sparkle dots around center */}
+                        <div className="night-sparkle" style={{ top: "38%", left: "42%", animationDelay: "0.1s" }} />
+                        <div className="night-sparkle" style={{ top: "36%", left: "58%", animationDelay: "0.35s" }} />
+                        <div className="night-sparkle" style={{ top: "62%", left: "45%", animationDelay: "0.2s" }} />
+                        <div className="night-sparkle" style={{ top: "60%", left: "55%", animationDelay: "0.5s" }} />
                         <motion.span
                             initial={{ y: 10, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}

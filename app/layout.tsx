@@ -41,14 +41,15 @@ export default function RootLayout({
       >
         <ThemeManager />
 
-        {/* Night Sky Global Wrapper */}
+        {/* Night Sky — 3-Layer Parallax (only transform+opacity animated, zero repaint) */}
         <div className="night-sky-layer">
-          <div className="twinkling-stars twinkle-1"></div>
-          <div className="twinkling-stars twinkle-2"></div>
-          <div className="twinkling-stars twinkle-3"></div>
-          <div className="meteor" style={{ animationDelay: '5s', animationDuration: '6s', top: '-10%', left: '70%' }}></div>
-          <div className="meteor" style={{ animationDelay: '12s', animationDuration: '8s', top: '0%', left: '85%' }}></div>
-          <div className="meteor" style={{ animationDelay: '20s', animationDuration: '10s', top: '-5%', left: '95%' }}></div>
+          <div className="night-nebula"></div>
+          <div className="star-layer star-far"></div>
+          <div className="star-layer star-mid"></div>
+          <div className="star-layer star-near"></div>
+          <div className="meteor" style={{ animationDelay: '10s', animationDuration: '7s', top: '-8%', left: '88%' }}></div>
+          <div className="meteor" style={{ animationDelay: '18s', animationDuration: '9s', top: '-12%', left: '72%' }}></div>
+          <div className="meteor" style={{ animationDelay: '27s', animationDuration: '11s', top: '-2%', left: '96%' }}></div>
         </div>
 
         <div className="main-content">

@@ -1,5 +1,6 @@
-"use client";
-import packageJson from "../package.json";
+// Server Component — no "use client" needed, runs at build time
+// Reads version directly from package.json at build time
+import { version } from "../package.json";
 
 export default function VersionBadge() {
     return (
@@ -15,7 +16,7 @@ export default function VersionBadge() {
             pointerEvents: "none",
             letterSpacing: "0.1em"
         }}>
-            v{packageJson.version}
+            v{version}
         </div>
     );
 }
