@@ -305,6 +305,7 @@ function RoomInner() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [needsInteraction, setNeedsInteraction] = useState(false);
     const syncTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [showPerfectSync, setShowPerfectSync] = useState(false);
 
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -474,7 +475,17 @@ function RoomInner() {
                 if (syncTimeout.current) clearTimeout(syncTimeout.current);
                 syncTimeout.current = setTimeout(() => setIsSyncing(false), 6000);
             }
-            const fn = () => { tryPlay(); setIsSyncing(false); if (syncTimeout.current) clearTimeout(syncTimeout.current); };
+            const fn = () => {
+                tryPlay();
+                setIsSyncing(false);
+                if (syncTimeout.current) clearTimeout(syncTimeout.current);
+
+                // Trigger perfect sync glow when it successfully catches up
+                if (!isHost && room?.isPlaying) {
+                    setShowPerfectSync(true);
+                    setTimeout(() => setShowPerfectSync(false), 2000);
+                }
+            };
             audio.addEventListener("canplay", fn, { once: true });
             return () => audio.removeEventListener("canplay", fn);
         }
@@ -670,7 +681,7 @@ function RoomInner() {
     );
 
     const desktopPlayerContent = (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--bg-primary)", overflow: "hidden" }}>
+        <div className="room-player-panel" style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--bg-primary)", overflow: "hidden" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 40px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: lyrics && lyrics.length > 0 ? 60 : 0, width: "100%", maxWidth: lyrics && lyrics.length > 0 ? 1100 : 800, justifyContent: "center", transition: "all 0.5s ease" }}>
 
@@ -807,7 +818,7 @@ function RoomInner() {
     };
 
     const mobilePlayerView = (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px 60px", background: "var(--bg-primary)" }}>
+        <div className="room-player-panel" style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px 60px", background: "var(--bg-primary)" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 {/* Large Apple-style disc */}
                 <motion.div
@@ -857,7 +868,7 @@ function RoomInner() {
     );
 
     const mobileLyricsView = (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--bg-primary)", overflow: "hidden" }}>
+        <div className="room-player-panel" style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--bg-primary)", overflow: "hidden" }}>
             {/* Small header for lyrics view */}
             <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -883,7 +894,7 @@ function RoomInner() {
     );
 
     return (
-        <div style={{
+        <div className="room-page" style={{
             height: "100vh", overflow: "hidden", background: "var(--bg-primary)", color: "var(--text-primary)",
             fontFamily: "var(--font-geist-sans), sans-serif",
             display: "flex", flexDirection: "column",
@@ -908,11 +919,58 @@ function RoomInner() {
                         }
                     }
                 }}
-                onCanPlay={() => { setIsSyncing(false); if (syncTimeout.current) clearTimeout(syncTimeout.current); }}
+                onCanPlay={() => {
+                    setIsSyncing(false);
+                    if (syncTimeout.current) clearTimeout(syncTimeout.current);
+
+                    if (!isHost && room?.isPlaying && !isSyncing) {
+                        setShowPerfectSync(true);
+                        setTimeout(() => setShowPerfectSync(false), 2000);
+                    }
+                }}
                 onEnded={handleAudioEnded}
                 onError={() => setIsSyncing(false)}
                 preload="auto"
             />
+
+            <AnimatePresence>
+                {showPerfectSync && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.8 }}
+                        style={{
+                            position: "fixed",
+                            inset: 0,
+                            pointerEvents: "none",
+                            zIndex: 100,
+                            background: "radial-gradient(circle at center, rgba(255,110,181,0.12), transparent 70%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}
+                    >
+                        <motion.span
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ delay: 0.2, duration: 0.6 }}
+                            style={{
+                                color: "rgba(255,110,181,0.9)",
+                                fontSize: 13,
+                                fontWeight: 700,
+                                fontFamily: "var(--font-fredoka)",
+                                letterSpacing: "0.05em",
+                                filter: "drop-shadow(0 0 8px rgba(255,110,181,0.4))",
+                                marginTop: "120px"
+                            }}
+                        >
+                            Langitnya lagi cantik ya 🌙
+                        </motion.span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {(isSyncing || needsInteraction) && (
@@ -993,11 +1051,11 @@ function RoomInner() {
                     </div>
 
                     {/* Mobile Content */}
-                    <div className="mobile-view" style={{ flex: 1, display: "none", flexDirection: "column", overflow: "hidden", background: "var(--bg-primary)" }}>
+                    <div className="mobile-view room-player-panel" style={{ flex: 1, display: "none", flexDirection: "column", overflow: "hidden", background: "var(--bg-primary)" }}>
 
 
                         {/* Mobile Tab Switcher (Lagu / Lirik) */}
-                        <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "center", background: "var(--bg-primary)" }}>
+                        <div className="room-player-panel" style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "center", background: "var(--bg-primary)" }}>
                             <div style={{
                                 display: "flex",
                                 background: "var(--bg-secondary)",

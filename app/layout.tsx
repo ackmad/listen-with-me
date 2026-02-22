@@ -40,9 +40,22 @@ export default function RootLayout({
         className={`${geistSans.variable} ${fredoka.variable} antialiased selection:bg-[#FF0099] selection:text-white`}
       >
         <ThemeManager />
-        <SplashScreen />
-        {children}
-        <VersionBadge />
+
+        {/* Night Sky Global Wrapper */}
+        <div className="night-sky-layer">
+          <div className="twinkling-stars twinkle-1"></div>
+          <div className="twinkling-stars twinkle-2"></div>
+          <div className="twinkling-stars twinkle-3"></div>
+          <div className="meteor" style={{ animationDelay: '5s', animationDuration: '6s', top: '-10%', left: '70%' }}></div>
+          <div className="meteor" style={{ animationDelay: '12s', animationDuration: '8s', top: '0%', left: '85%' }}></div>
+          <div className="meteor" style={{ animationDelay: '20s', animationDuration: '10s', top: '-5%', left: '95%' }}></div>
+        </div>
+
+        <div className="main-content">
+          <SplashScreen />
+          {children}
+          <VersionBadge />
+        </div>
       </body>
     </html>
   );
