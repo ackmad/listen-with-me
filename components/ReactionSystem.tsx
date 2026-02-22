@@ -249,7 +249,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
             {/* ─── Message Input (Top-Left Area) ─── */}
             <div className="message-input-area" style={{
                 position: "fixed", top: 80, left: 16, zIndex: 1000, // Very high z-index
-                width: "calc(100% - 100px)", maxWidth: 300,
+                width: "calc(100% - 80px)", maxWidth: 420, // Diperbesar
                 pointerEvents: "auto", // Crucial for clickability
             }}>
                 <form onSubmit={sendMessage} style={{ position: "relative", pointerEvents: "auto" }}>
@@ -259,13 +259,13 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         value={msgInput}
                         onChange={(e) => setMsgInput(e.target.value.slice(0, 50))}
                         style={{
-                            width: "100%", padding: "12px 46px 12px 18px",
+                            width: "100%", padding: "16px 54px 16px 24px",
                             background: "var(--app-surface)", backdropFilter: "blur(20px)",
                             border: "2px solid var(--app-border)",
-                            borderRadius: 22, color: "var(--app-text)", fontSize: 14,
+                            borderRadius: 28, color: "var(--app-text)", fontSize: 16,
                             fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
                             outline: "none",
-                            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
                             transition: "var(--theme-transition)",
                             pointerEvents: "auto",
                         }}
@@ -283,7 +283,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         disabled={!msgInput.trim() || isSendingMsg}
                         style={{
                             position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-                            width: 32, height: 32, borderRadius: "50%",
+                            width: 36, height: 36, borderRadius: "50%",
                             background: msgInput.trim() ? "var(--app-primary)" : "var(--app-border)",
                             border: "none", color: "#fff", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -292,7 +292,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                             pointerEvents: "auto",
                         }}
                     >
-                        <PaperAirplaneIcon style={{ width: 16, height: 16 }} />
+                        <PaperAirplaneIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
                     </button>
                 </form>
             </div>
@@ -306,29 +306,27 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     <motion.button
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setShowMenu(!showMenu)}
+                        className="reaction-toggle-btn"
                         style={{
                             width: 48, height: 48, borderRadius: "50%",
-                            background: showMenu ? "var(--app-primary)" : "var(--app-surface)",
-                            backdropFilter: "blur(20px)",
-                            border: "2px solid var(--app-border)",
-                            color: showMenu ? "#fff" : "var(--app-primary)", cursor: "pointer",
+                            color: showMenu ? "var(--app-primary)" : "var(--app-text-muted)", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
                             transition: "var(--theme-transition)",
                             pointerEvents: "auto",
                         }}
                     >
-                        {showMenu ? <XMarkIcon style={{ width: 22, height: 22 }} /> : <FaceSmileIcon style={{ width: 24, height: 24 }} />}
+                        {showMenu ? <XMarkIcon style={{ width: 28, height: 28 }} /> : <FaceSmileIcon style={{ width: 28, height: 28 }} />}
                     </motion.button>
 
                     <AnimatePresence>
                         {showMenu && (
                             <motion.div
-                                initial={{ opacity: 0, y: -10, scale: 0.8 }}
-                                animate={{ opacity: 1, y: 12, scale: 1 }}
-                                exit={{ opacity: 0, y: -10, scale: 0.8 }}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="reaction-menu-popup"
                                 style={{
-                                    position: "absolute", top: "100%", right: 0,
+                                    position: "absolute", right: 0,
                                     background: "var(--app-surface)", backdropFilter: "blur(24px)",
                                     border: "2px solid var(--app-border)",
                                     borderRadius: 28, padding: "10px",
@@ -363,11 +361,40 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     </AnimatePresence>
                 </div>
             </div>
-
             <style>{`
-                @media (max-width: 700px) {
-                    .message-input-area { top: 72px !important; }
-                    .reaction-trigger-area { top: 72px !important; }
+                .reaction-toggle-btn {
+                    background: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+                .reaction-menu-popup {
+                    top: 100%;
+                    margin-top: 12px;
+                }
+                @media (max-width: 1024px) {
+                    .message-input-area { 
+                        top: auto !important; 
+                        bottom: 96px !important; 
+                        width: calc(100% - 80px) !important; 
+                        left: 16px !important; 
+                    }
+                    .reaction-trigger-area { 
+                        top: auto !important; 
+                        bottom: 96px !important; 
+                        right: 16px !important; 
+                    }
+                    .reaction-toggle-btn {
+                        background: var(--app-surface) !important;
+                        border: 1.5px solid var(--app-border) !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+                        width: 48px !important; height: 48px !important;
+                    }
+                    .reaction-menu-popup {
+                        top: auto !important;
+                        bottom: 100% !important;
+                        margin-bottom: 16px !important;
+                        margin-top: 0 !important;
+                    }
                 }
             `}</style>
         </>

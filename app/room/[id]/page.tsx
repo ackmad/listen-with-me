@@ -217,7 +217,7 @@ function RoomUserCard({ u, isHost, isMe }: { u: UserPresence; isHost: boolean; i
 }
 
 // ─── Queue Item ───────────────────────────────────────────────────────────
-function QueueItem({ song, isHost, isActive, onPlay, onRemove }: { song: any; isHost: boolean; isActive: boolean; onPlay: () => void; onRemove?: () => void }) {
+function QueueItem({ song, isHost, isActive, index, onPlay, onRemove }: { song: any; isHost: boolean; isActive: boolean; index?: number; onPlay: () => void; onRemove?: () => void }) {
     const [hov, setHov] = useState(false);
     return (
         <div
@@ -231,6 +231,11 @@ function QueueItem({ song, isHost, isActive, onPlay, onRemove }: { song: any; is
                 position: "relative",
             }}
         >
+            {index !== undefined && (
+                <div style={{ width: 20, textAlign: "center", fontSize: 13, fontWeight: 800, color: "var(--app-text-muted)", opacity: hov || isActive ? 1 : 0.6 }}>
+                    {index}
+                </div>
+            )}
             <div style={{
                 width: 34, height: 34, borderRadius: 10, flexShrink: 0,
                 background: isActive ? "var(--app-primary)" : "var(--app-bg-secondary)",
@@ -316,7 +321,15 @@ function RoomInner() {
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [activeView, setActiveView] = useState<"player" | "lyrics">("player");
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isMobileScreen, setIsMobileScreen] = useState(false);
     const [showImmersiveQueue, setShowImmersiveQueue] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobileScreen(window.innerWidth <= 1024);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     useEffect(() => {
         const handleFSChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -326,11 +339,21 @@ function RoomInner() {
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
+            document.documentElement.requestFullscreen().then(() => {
+                if (window.screen?.orientation && window.innerWidth <= 1024) {
+                    (window.screen.orientation as any).lock('landscape').catch(() => {
+                        console.warn("Auto-landscape lock not supported by browser, falling back to CSS.");
+                    });
+                }
+            }).catch(err => {
                 console.error(`Error attempting to enable full-screen mode: ${err.message}`);
             });
         } else {
-            document.exitFullscreen();
+            document.exitFullscreen().then(() => {
+                if (window.screen?.orientation && (window.screen.orientation as any).unlock) {
+                    (window.screen.orientation as any).unlock();
+                }
+            }).catch(() => { });
         }
     };
 
@@ -478,6 +501,22 @@ function RoomInner() {
 
     const togglePlay = async () => {
         if (!isHost) return;
+
+        // If no song is playing and no song is selected, but queue is not empty, play first song
+        if (!room?.isPlaying && !room?.currentSong) {
+            if (room?.queue?.length > 0) {
+                const next = room.queue[0];
+                await updateDoc(doc(db, "rooms", rId), {
+                    currentSong: next || null,
+                    queue: room.queue.slice(1),
+                    isPlaying: true,
+                    startedAt: serverTimestamp(),
+                });
+                setSongsPlayed(p => p + 1);
+            }
+            return;
+        }
+
         const newIsPlaying = !room.isPlaying;
         const currentPos = audioRef.current?.currentTime || 0;
 
@@ -603,7 +642,7 @@ function RoomInner() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                     {room?.queue?.length > 0 ? (
                         room.queue.map((s: any, i: number) => (
-                            <QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} onPlay={() => playFromQueue(s)} onRemove={() => removeFromQueue(s)} />
+                            <QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} index={i + 1} onPlay={() => playFromQueue(s)} onRemove={() => removeFromQueue(s)} />
                         ))
                     ) : (
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20, gap: 12 }}>
@@ -623,26 +662,32 @@ function RoomInner() {
     const desktopPlayerContent = (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--app-bg)", overflow: "hidden" }}>
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 40px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 60, width: "100%", maxWidth: 1100 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: lyrics && lyrics.length > 0 ? 60 : 0, width: "100%", maxWidth: lyrics && lyrics.length > 0 ? 1100 : 800, justifyContent: "center", transition: "all 0.5s ease" }}>
 
                     {/* Disc Section */}
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
                         <div style={{ position: "relative", marginBottom: 40 }}>
                             <motion.div
-                                animate={room?.isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                                transition={room?.isPlaying ? { duration: 12, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+                                animate={room?.isPlaying && room?.currentSong ? { rotate: 360 } : { rotate: 0 }}
+                                transition={room?.isPlaying && room?.currentSong ? { duration: 12, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
                                 style={{
-                                    width: 320, height: 320, borderRadius: "50%",
+                                    width: lyrics && lyrics.length > 0 ? 320 : 460,
+                                    height: lyrics && lyrics.length > 0 ? 320 : 460,
+                                    borderRadius: "50%",
                                     background: "var(--app-surface)",
                                     border: "6px solid var(--app-border)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     boxShadow: room?.isPlaying ? "0 0 60px var(--app-soft-accent)" : "0 20px 50px rgba(0,0,0,0.15)",
+                                    transition: "width 0.5s ease, height 0.5s ease"
                                 }}
                             >
                                 <div style={{
-                                    width: 80, height: 80, borderRadius: "50%",
+                                    width: lyrics && lyrics.length > 0 ? 80 : 120,
+                                    height: lyrics && lyrics.length > 0 ? 80 : 120,
+                                    borderRadius: "50%",
                                     background: "var(--app-bg-secondary)", border: "3px solid var(--app-border)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
+                                    transition: "width 0.5s ease, height 0.5s ease"
                                 }}>
                                     <MusicalNoteIcon style={{ width: 32, height: 32, color: room?.currentSong ? "var(--app-primary)" : "var(--app-text-muted)" }} />
                                 </div>
@@ -656,6 +701,17 @@ function RoomInner() {
                             <p style={{ margin: "0 0 32px", fontSize: 18, color: "var(--app-primary)", fontWeight: 700 }}>
                                 {room?.currentSong?.artist || (isHost ? "Klik Request untuk mulai!" : "Menunggu host...")}
                             </p>
+
+                            {/* Progress Area (Desktop) */}
+                            <div style={{ width: "100%", maxWidth: 400, margin: "0 auto 32px" }}>
+                                <div style={{ height: 6, background: "rgba(255,255,255,0.05)", borderRadius: 3, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${progress}%`, background: "var(--app-primary)", borderRadius: 3, transition: "width 0.1s linear" }} />
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)" }}>{formatTime(currentTime)}</span>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)" }}>{formatTime(duration)}</span>
+                                </div>
+                            </div>
 
                             {/* Controls */}
                             <div style={{ display: "flex", alignItems: "center", gap: 24, justifyContent: "center" }}>
@@ -675,17 +731,19 @@ function RoomInner() {
                         </div>
                     </div>
 
-                    {/* Inline Lyrics Section */}
-                    <div style={{ flex: 1, paddingLeft: 40, borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
-                        <LyricsPanel
-                            lyrics={lyrics}
-                            activeIndex={activeIndex}
-                            autoScrollEnabled={true}
-                            setAutoScrollEnabled={() => { }}
-                            isDarkMode={isDarkMode}
-                            isDesktopInline={true}
-                        />
-                    </div>
+                    {/* Inline Lyrics Section (Conditional) */}
+                    {lyrics && lyrics.length > 0 && (
+                        <div style={{ flex: 1, paddingLeft: 40, borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
+                            <LyricsPanel
+                                lyrics={lyrics}
+                                activeIndex={activeIndex}
+                                autoScrollEnabled={true}
+                                setAutoScrollEnabled={() => { }}
+                                isDarkMode={isDarkMode}
+                                isDesktopInline={true}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -778,7 +836,7 @@ function RoomInner() {
 
     return (
         <div style={{
-            minHeight: "100vh", background: "var(--app-bg)", color: "var(--app-text)",
+            height: "100vh", overflow: "hidden", background: "var(--app-bg)", color: "var(--app-text)",
             fontFamily: "var(--font-geist-sans), sans-serif",
             display: "flex", flexDirection: "column",
             transition: "var(--theme-transition)",
@@ -856,7 +914,6 @@ function RoomInner() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <button
                         onClick={toggleFullscreen}
-                        className="desktop-only-btn"
                         style={{
                             padding: 10, background: "var(--app-bg-secondary)",
                             borderRadius: "50%", border: "none", color: "var(--app-text)",
@@ -889,27 +946,7 @@ function RoomInner() {
 
                     {/* Mobile Content */}
                     <div className="mobile-view" style={{ flex: 1, display: "none", flexDirection: "column", overflow: "hidden", background: "var(--app-bg)" }}>
-                        {/* Mobile Shared Top Area (Chat Input) - Stays visible */}
-                        <div style={{ padding: "12px 20px", background: "var(--app-surface)", borderBottom: "1.5px solid var(--app-border)" }}>
-                            <div style={{
-                                display: "flex", alignItems: "center", gap: 12,
-                                background: "var(--app-bg-secondary)",
-                                padding: "8px 16px", borderRadius: 24,
-                                border: "1.5px solid var(--app-border)"
-                            }}>
-                                <input
-                                    placeholder="Kirim pesan singkat..."
-                                    style={{
-                                        flex: 1, background: "none", border: "none",
-                                        color: "var(--app-text)", fontSize: 13, fontWeight: 600,
-                                        outline: "none"
-                                    }}
-                                />
-                                <button style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
-                                    <ChatBubbleOvalLeftIcon style={{ width: 18, height: 18, color: "var(--app-primary)" }} />
-                                </button>
-                            </div>
-                        </div>
+
 
                         {/* Mobile Tab Switcher (Lagu / Lirik) */}
                         <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "center", background: "var(--app-bg)" }}>
@@ -1111,7 +1148,7 @@ function RoomInner() {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                @media (max-width: 1023px) {
+                @media (max-width: 1024px) {
                     .desktop-view { display: none !important; }
                     .mobile-view { display: flex !important; }
                     .mobile-tabbar { display: flex !important; }
@@ -1119,6 +1156,23 @@ function RoomInner() {
                     .sm-hidden { display: none; }
                     .mobile-view-toggle { display: block !important; }
                     .desktop-only-btn { display: none !important; }
+                }
+                @media (max-width: 1024px) and (orientation: portrait) {
+                    .mobile-fullscreen-force-landscape {
+                        transform: rotate(90deg) !important;
+                        transform-origin: top left !important;
+                        width: 100vh !important;
+                        height: 100vw !important;
+                        position: absolute !important;
+                        top: 0 !important;
+                        left: 100% !important;
+                    }
+                }
+                @media (max-width: 1024px) and (orientation: landscape) {
+                    .mobile-fullscreen-force-landscape {
+                        width: 100vw !important;
+                        height: 100vh !important;
+                    }
                 }
                 @media (min-width: 1024px) {
                     .desktop-view { display: flex !important; }
@@ -1131,11 +1185,11 @@ function RoomInner() {
                 }
             ` }} />
 
-            <SongManager isOpen={showSongs} onClose={() => setShowSongs(false)} onSongSelect={handleSongSelect} />
+            <SongManager isOpen={showSongs} onClose={() => setShowSongs(false)} onSongSelect={handleSongSelect} onAddRandom={addRandomSongs} />
 
             {/* Immersive View Overlay */}
             <AnimatePresence>
-                {isFullscreen && (
+                {isFullscreen && !isMobileScreen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -1264,6 +1318,8 @@ function RoomInner() {
                             </motion.button>
                         </div>
 
+
+
                         {/* Queue Popup - Repositioned to be above bottom bar */}
                         <AnimatePresence>
                             {showImmersiveQueue && (
@@ -1295,12 +1351,13 @@ function RoomInner() {
                                     <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
                                         {room?.queue?.length > 0 ? (
                                             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                                {room.queue.map((s: any) => (
+                                                {room.queue.map((s: any, i: number) => (
                                                     <QueueItem
                                                         key={s.queueId}
                                                         song={s}
                                                         isHost={isHost}
                                                         isActive={false}
+                                                        index={i + 1}
                                                         onPlay={() => playFromQueue(s)}
                                                         onRemove={() => removeFromQueue(s)}
                                                     />
@@ -1343,7 +1400,7 @@ function RoomInner() {
                                         display: "flex", alignItems: "center", justifyContent: "center",
                                         position: "relative",
                                         animation: "room-spin 12s linear infinite",
-                                        animationPlayState: room?.isPlaying ? "running" : "paused",
+                                        animationPlayState: room?.isPlaying && room?.currentSong ? "running" : "paused",
                                         willChange: "transform"
                                     }}
                                 >
@@ -1369,7 +1426,7 @@ function RoomInner() {
                                 */}
                                 <motion.div
                                     initial={false}
-                                    animate={{ rotate: room?.isPlaying ? 0 : -32 }}
+                                    animate={{ rotate: room?.isPlaying && room?.currentSong ? 0 : -32 }}
                                     transition={{ type: "spring", stiffness: 45, damping: 12 }}
                                     style={{
                                         position: "absolute",
@@ -1387,26 +1444,70 @@ function RoomInner() {
                                 />
                             </div>
 
-                            {/* Lyrics "Box" Section - Positioned top-rightish as in the image */}
+                            {/* Song Info & Lyrics Section - Positioned right side, parallel to disc */}
                             <div style={{
                                 position: "absolute",
-                                top: 120,
-                                right: 100,
-                                width: "clamp(300px, 30vw, 450px)",
-                                bottom: 140,
+                                right: "clamp(40px, 8vw, 120px)",
+                                width: "clamp(300px, 35vw, 500px)",
+                                height: "min(680px, 46vw)", // Sejajar (vertikal sama) dengan piringan
                                 display: "flex",
                                 flexDirection: "column",
+                                justifyContent: "center",
                                 zIndex: 10
                             }}>
-                                <LyricsPanel
-                                    lyrics={lyrics}
-                                    activeIndex={activeIndex}
-                                    autoScrollEnabled={true}
-                                    setAutoScrollEnabled={() => { }}
-                                    isDarkMode={true}
-                                    isDesktopInline={true}
-                                    isImmersive={true}
-                                />
+                                {/* Song Title & Artist Header */}
+                                <div style={{
+                                    marginBottom: 32,
+                                    paddingLeft: 24, // Agak indent agar sejajar lirik
+                                    borderLeft: "4px solid var(--app-primary)"
+                                }}>
+                                    <motion.h2
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        key={room?.currentSong?.title}
+                                        style={{
+                                            margin: "0 0 10px 0",
+                                            fontSize: "clamp(32px, 3vw, 44px)",
+                                            fontWeight: 900,
+                                            color: "#fff",
+                                            lineHeight: 1.1,
+                                            letterSpacing: "-1.5px",
+                                            fontFamily: "var(--font-geist-sans)" // Font tegas
+                                        }}
+                                    >
+                                        {room?.currentSong?.title || "Belum ada lagu"}
+                                    </motion.h2>
+                                    <motion.p
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.1 }}
+                                        key={room?.currentSong?.artist}
+                                        style={{
+                                            margin: 0,
+                                            fontSize: "clamp(18px, 1.5vw, 22px)",
+                                            fontWeight: 600,
+                                            color: "var(--app-primary)",
+                                            letterSpacing: "0.5px",
+                                            fontFamily: "var(--font-fredoka)", // Font beda (lebih fun/tebal)
+                                            opacity: 0.9
+                                        }}
+                                    >
+                                        {room?.currentSong?.artist || "Standby..."}
+                                    </motion.p>
+                                </div>
+
+                                {/* Lyrics Panel */}
+                                <div style={{ flex: 1, minHeight: 0, overflow: "hidden", position: "relative" }}>
+                                    <LyricsPanel
+                                        lyrics={lyrics}
+                                        activeIndex={activeIndex}
+                                        autoScrollEnabled={true}
+                                        setAutoScrollEnabled={() => { }}
+                                        isDarkMode={true}
+                                        isDesktopInline={true}
+                                        isImmersive={true}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -1478,6 +1579,143 @@ function RoomInner() {
                                 </motion.button>
                             </div>
                         </div>
+                    </motion.div>
+                )}
+
+                {isFullscreen && isMobileScreen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="mobile-fullscreen-force-landscape"
+                        style={{
+                            position: "fixed", inset: 0, zIndex: 10000,
+                            background: "#eff4f8", // Warna netral terang seperti referensi image kaset
+                            color: "#1a1a1a",
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            overflow: "hidden",
+                            padding: "20px 30px"
+                        }}
+                    >
+                        {/* Top Right User Active & Close */}
+                        <div style={{ position: "absolute", top: 20, right: 20, display: "flex", alignItems: "center", gap: 12, zIndex: 100 }}>
+                            <div style={{ display: "flex" }}>
+                                {roomUsersSorted.slice(0, 3).map((u, i) => (
+                                    <div
+                                        key={u.uid}
+                                        onClick={() => toast(u.displayName, "info")}
+                                        style={{
+                                            position: "relative", cursor: "pointer",
+                                            marginLeft: i === 0 ? 0 : -10,
+                                            border: "2px solid #eff4f8", borderRadius: "50%"
+                                        }}
+                                    >
+                                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#ccc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                            {u.photoURL ? <img src={u.photoURL} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: 12, fontWeight: 900 }}>{getInitials(u.displayName)}</span>}
+                                        </div>
+                                        {u.status === "online" && (
+                                            <div style={{ position: "absolute", bottom: -2, right: -2, width: 10, height: 10, borderRadius: "50%", background: "var(--app-primary)", border: "2px solid #eff4f8" }} />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={toggleFullscreen} style={{ background: "rgba(0,0,0,0.05)", borderRadius: "50%", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}>
+                                <ArrowsPointingInIcon style={{ width: 20, height: 20, color: "#1a1a1a" }} />
+                            </button>
+                        </div>
+
+                        {/* Left Side: Info & Lyrics */}
+                        <div style={{ width: "42%", display: "flex", flexDirection: "column", height: "100%", justifyContent: "center", position: "relative", zIndex: 10 }}>
+                            <h2 style={{ fontSize: "clamp(24px, 4vh, 32px)", fontWeight: 900, margin: "0 0 4px", fontFamily: "var(--font-geist-sans)", letterSpacing: "-1px" }}>
+                                {room?.currentSong?.title || "Belum ada lagu"}
+                            </h2>
+                            <p style={{ fontSize: "clamp(14px, 2.5vh, 18px)", color: "rgba(0,0,0,0.5)", fontWeight: 600, margin: "0 0 16px" }}>
+                                {room?.currentSong?.artist || "Standby..."}
+                            </p>
+
+                            {/* Controls & Queue Button */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                                <button onClick={togglePlay} style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(0,0,0,0.08)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                                    {room?.isPlaying ? <PauseIcon style={{ width: 20, height: 20 }} /> : <PlayIcon style={{ width: 20, height: 20, marginLeft: 2 }} />}
+                                </button>
+                                <button onClick={skipNext} disabled={!isHost || !room?.queue?.length} style={{ width: 36, height: 36, borderRadius: "50%", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isHost ? "pointer" : "default", opacity: isHost ? 1 : 0.3 }}>
+                                    <ForwardIcon style={{ width: 18, height: 18, color: "rgba(0,0,0,0.5)" }} />
+                                </button>
+
+                                <div style={{ width: 1, height: 24, background: "rgba(0,0,0,0.1)", margin: "0 8px" }} />
+
+                                <button onClick={() => setShowSongs(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                                    <QueueListIcon style={{ width: 18, height: 18, color: "rgba(0,0,0,0.5)" }} />
+                                </button>
+                            </div>
+
+                            {/* Lyrics mini panel */}
+                            <div style={{ flex: 1, minHeight: 0, overflow: "hidden", position: "relative" }}>
+                                <LyricsPanel
+                                    lyrics={lyrics}
+                                    activeIndex={activeIndex}
+                                    autoScrollEnabled={true}
+                                    setAutoScrollEnabled={() => { }}
+                                    isDarkMode={false}
+                                    isDesktopInline={true}
+                                    isImmersive={false}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Right Side: Cassette Tape Image and Animations */}
+                        <div style={{ width: "55%", height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5%", position: "relative" }}>
+                            <div style={{
+                                width: "100%",
+                                maxWidth: 600,
+                                aspectRatio: "1.58 / 1", // Rasio kaset pada umumnya
+                                background: `url('/images/kasetpita.png') center/contain no-repeat`,
+                                position: "relative",
+                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.2))"
+                            }}>
+                                {/* 
+                                TUTORIAL CUSTOMIZE POSISI PITA KASET:
+                                - left (Pita Kiri) atau right (Pita Kanan) mengatur pergeseran X.
+                                - top mengatur pergeseran Y (tinggi rendah).
+                                - width mengatur besaran pitanya.
+                                Ubahlah persentasenya misal "25.5%" agar pas dengan lubang bolongan di gambar kasetpita.png Anda. 
+                                */}
+
+                                {/* Left Tape */}
+                                <motion.div
+                                    animate={{ rotate: room?.isPlaying && room?.currentSong ? 360 : 0 }}
+                                    transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                                    style={{
+                                        position: "absolute",
+                                        left: "26.5%",  // <=== GESER KIRI/KANAN PITA KIRI DISINI
+                                        top: "40.5%",   // <=== GESER ATAS/BAWAH PITA KIRI DISINI
+                                        width: "16%",   // <=== ATUR UKURAN PITA KIRI DISINI
+                                        aspectRatio: "1/1",
+                                        background: `url('/images/pita.png') center/contain no-repeat`,
+                                        transformOrigin: "center center",
+                                        willChange: "transform"
+                                    }}
+                                />
+
+                                {/* Right Tape */}
+                                <motion.div
+                                    animate={{ rotate: room?.isPlaying && room?.currentSong ? 360 : 0 }}
+                                    transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                                    style={{
+                                        position: "absolute",
+                                        right: "26.5%", // <=== GESER KIRI/KANAN PITA KANAN DISINI
+                                        top: "40.5%",   // <=== GESER ATAS/BAWAH PITA KANAN DISINI
+                                        width: "16%",   // <=== ATUR UKURAN PITA KANAN DISINI
+                                        aspectRatio: "1/1",
+                                        background: `url('/images/pita.png') center/contain no-repeat`,
+                                        transformOrigin: "center center",
+                                        willChange: "transform"
+                                    }}
+                                />
+                            </div>
+                        </div>
+
                     </motion.div>
                 )}
             </AnimatePresence>

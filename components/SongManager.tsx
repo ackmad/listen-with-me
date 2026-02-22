@@ -90,8 +90,8 @@ export const LOCAL_SONGS = [
 ];
 
 
-export default function SongManager({ isOpen, onClose, onSongSelect }: {
-    isOpen: boolean; onClose: () => void; onSongSelect: (song: any) => void;
+export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom }: {
+    isOpen: boolean; onClose: () => void; onSongSelect: (song: any) => void; onAddRandom?: () => void;
 }) {
     const [search, setSearch] = useState("");
 
@@ -133,7 +133,25 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                         }}
                     >
                         <div style={{ padding: "24px 24px 16px" }}>
-                            <h2 style={{ margin: "0 0 16px", fontSize: 20, fontWeight: 900, fontFamily: "var(--font-fredoka)", color: "var(--app-text)", letterSpacing: "-0.01em" }}>Pilih Lagu 🎵</h2>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, fontFamily: "var(--font-fredoka)", color: "var(--app-text)", letterSpacing: "-0.01em" }}>Pilih Lagu 🎵</h2>
+                                {onAddRandom && (
+                                    <button
+                                        onClick={onAddRandom}
+                                        style={{
+                                            padding: "6px 12px", borderRadius: 12, border: "none",
+                                            background: "var(--app-primary)", color: "#fff",
+                                            fontSize: 11, fontWeight: 900, cursor: "pointer",
+                                            boxShadow: "0 4px 12px var(--app-soft-accent)",
+                                            transition: "all 0.2s"
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                                    >
+                                        🎲 RANDOM 5
+                                    </button>
+                                )}
+                            </div>
                             <div style={{ position: "relative" }}>
                                 <MagnifyingGlassIcon style={{ position: "absolute", left: 14, top: 12, width: 18, height: 18, color: "var(--app-text-muted)" }} />
                                 <input
@@ -158,7 +176,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                                     {filtered.map(s => (
                                         <button
                                             key={s.id}
-                                            onClick={() => { onSongSelect(s); onClose(); }}
+                                            onClick={() => { onSongSelect(s); }}
                                             style={{
                                                 display: "flex", alignItems: "center", gap: 14,
                                                 padding: "12px 14px", borderRadius: 16, border: "none",
@@ -209,6 +227,21 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                                     <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600 }}>Lagu tidak ditemukan 🥺</p>
                                 </div>
                             )}
+                        </div>
+
+                        <div style={{ padding: "12px 24px 24px", textAlign: "center" }}>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    width: "100%", padding: "14px", borderRadius: 16, border: "none",
+                                    background: "var(--app-bg-secondary)", color: "var(--app-text)",
+                                    fontSize: 14, fontWeight: 800, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = "var(--app-border)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "var(--app-bg-secondary)"}
+                            >
+                                Tutup
+                            </button>
                         </div>
                     </motion.div>
                 </div>
