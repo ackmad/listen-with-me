@@ -9,7 +9,7 @@ export default function VersionBadge() {
             right: "10px",
             fontSize: "10px",
             fontWeight: 800,
-            color: "var(--app-text-muted)",
+            color: "var(--text-muted)",
             opacity: 0.5,
             zIndex: 9000,
             pointerEvents: "none",

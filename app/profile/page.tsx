@@ -69,20 +69,20 @@ export default function ProfilePage() {
 
     if (loading) return (
         <div style={{
-            minHeight: "100vh", background: "var(--app-bg)",
+            minHeight: "100vh", background: "var(--bg-primary)",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            gap: 20, color: "var(--app-text)"
+            gap: 20, color: "var(--text-primary)"
         }}>
             <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 style={{
                     width: 38, height: 38, borderRadius: "50%",
-                    border: "3px solid var(--app-border)",
-                    borderTopColor: "var(--app-primary)",
+                    border: "3px solid var(--border-soft)",
+                    borderTopColor: "var(--accent-primary)",
                 }}
             />
-            <p style={{ color: "var(--app-text-muted)", fontSize: 13, fontWeight: 700, fontFamily: "var(--font-fredoka)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 700, fontFamily: "var(--font-fredoka)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
                 Memuat profilmu...
             </p>
         </div>
@@ -90,14 +90,14 @@ export default function ProfilePage() {
 
     return (
         <div style={{
-            minHeight: "100vh", background: "var(--app-bg)", color: "var(--app-text)",
+            minHeight: "100vh", background: "var(--bg-primary)", color: "var(--text-primary)",
             fontFamily: "var(--font-fredoka), sans-serif",
             position: "relative", overflowX: "hidden",
             transition: "var(--theme-transition)",
         }}>
             {/* Ambient Background */}
             <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-                <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 600, height: 600, background: "radial-gradient(ellipse, var(--app-soft-accent) 0%, transparent 70%)" }} />
+                <div style={{ position: "absolute", top: "-10%", right: "-5%", width: 600, height: 600, background: "radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%)" }} />
             </div>
 
             <div className="profile-container" style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1, padding: "40px 20px" }}>
@@ -108,13 +108,13 @@ export default function ProfilePage() {
                         onClick={() => router.push('/dashboard')}
                         style={{
                             display: "flex", alignItems: "center", gap: 8, padding: "10px 20px",
-                            borderRadius: 24, background: "var(--app-bg-secondary)",
-                            border: "1.5px solid var(--app-border)",
-                            color: "var(--app-text-secondary)", cursor: "pointer", fontSize: 13, fontWeight: 800,
+                            borderRadius: 24, background: "var(--bg-secondary)",
+                            border: "1.5px solid var(--border-soft)",
+                            color: "var(--text-secondary)", cursor: "pointer", fontSize: 13, fontWeight: 800,
                             transition: "all 0.2s"
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.color = "var(--app-primary)"; e.currentTarget.style.borderColor = "var(--app-primary)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = "var(--app-text-secondary)"; e.currentTarget.style.borderColor = "var(--app-border)"; }}
+                        onMouseEnter={e => { e.currentTarget.style.color = "var(--accent-primary)"; e.currentTarget.style.borderColor = "var(--accent-primary)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.borderColor = "var(--border-soft)"; }}
                     >
                         <ArrowLeftIcon style={{ width: 16, height: 16 }} /> Dashboard
                     </button>
@@ -123,13 +123,13 @@ export default function ProfilePage() {
                         onClick={handleLogout}
                         style={{
                             display: "flex", alignItems: "center", gap: 8, padding: "10px 20px",
-                            borderRadius: 24, background: "var(--app-bg-secondary)",
-                            border: "1.5px solid var(--app-border)",
-                            color: "var(--app-text-muted)", cursor: "pointer", fontSize: 13, fontWeight: 800,
+                            borderRadius: 24, background: "var(--bg-secondary)",
+                            border: "1.5px solid var(--border-soft)",
+                            color: "var(--text-muted)", cursor: "pointer", fontSize: 13, fontWeight: 800,
                             transition: "all 0.2s"
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.background = "var(--app-primary)"; e.currentTarget.style.color = "#fff"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "var(--app-bg-secondary)"; e.currentTarget.style.color = "var(--app-text-muted)"; }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "var(--accent-primary)"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-secondary)"; e.currentTarget.style.color = "var(--text-muted)"; }}
                     >
                         <ArrowRightOnRectangleIcon style={{ width: 16, height: 16 }} /> Keluar
                     </button>
@@ -143,8 +143,8 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, x: 0 }}
                         style={{
                             padding: "48px 32px", borderRadius: 32,
-                            background: "var(--app-surface)",
-                            border: "1.5px solid var(--app-border)",
+                            background: "var(--bg-card)",
+                            border: "1.5px solid var(--border-soft)",
                             display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
                             boxShadow: "0 20px 40px rgba(0,0,0,0.05)",
                             position: "relative", overflow: "hidden"
@@ -153,12 +153,12 @@ export default function ProfilePage() {
                         <div style={{ position: "relative", marginBottom: 32 }}>
                             <div style={{
                                 width: 150, height: 150, borderRadius: "50%",
-                                border: "4px solid var(--app-soft-accent)",
-                                padding: 8, background: "var(--app-bg-secondary)",
+                                border: "4px solid var(--accent-glow)",
+                                padding: 8, background: "var(--bg-secondary)",
                             }}>
                                 <div style={{
                                     width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
-                                    background: "var(--app-primary)", color: "#fff",
+                                    background: "var(--accent-primary)", color: "#fff",
                                     display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, fontWeight: 900
                                 }}>
                                     {getInitials(username) || "U"}
@@ -170,7 +170,7 @@ export default function ProfilePage() {
                                 style={{
                                     position: "absolute", bottom: 5, right: 5,
                                     width: 40, height: 40, borderRadius: "50%",
-                                    background: "var(--app-primary)", border: "4px solid var(--app-surface)",
+                                    background: "var(--accent-primary)", border: "4px solid var(--bg-card)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     color: "#fff"
                                 }}
@@ -179,23 +179,23 @@ export default function ProfilePage() {
                             </motion.div>
                         </div>
 
-                        <h2 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 900, color: "var(--app-text)" }}>
+                        <h2 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 900, color: "var(--text-primary)" }}>
                             {username || 'Pecinta Musik'}
                         </h2>
-                        <p style={{ margin: "0 0 32px", fontSize: 14, color: "var(--app-text-muted)", fontWeight: 700 }}>
+                        <p style={{ margin: "0 0 32px", fontSize: 14, color: "var(--text-muted)", fontWeight: 700 }}>
                             {user?.email}
                         </p>
 
                         <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                            <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)" }}>
-                                <MusicalNoteIcon style={{ width: 24, height: 24, color: "var(--app-primary)", margin: "0 auto 8px" }} />
-                                <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--app-text)" }}>Akrab</p>
-                                <p style={{ margin: 0, fontSize: 10, color: "var(--app-text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Status</p>
+                            <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)" }}>
+                                <MusicalNoteIcon style={{ width: 24, height: 24, color: "var(--accent-primary)", margin: "0 auto 8px" }} />
+                                <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--text-primary)" }}>Akrab</p>
+                                <p style={{ margin: 0, fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Status</p>
                             </div>
-                            <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)" }}>
-                                <ShieldCheckIcon style={{ width: 24, height: 24, color: "var(--app-indicator)", margin: "0 auto 8px" }} />
-                                <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--app-text)" }}>Aktif</p>
-                                <p style={{ margin: 0, fontSize: 10, color: "var(--app-text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Akses</p>
+                            <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)" }}>
+                                <ShieldCheckIcon style={{ width: 24, height: 24, color: "var(--accent-indicator)", margin: "0 auto 8px" }} />
+                                <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--text-primary)" }}>Aktif</p>
+                                <p style={{ margin: 0, fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Akses</p>
                             </div>
                         </div>
                     </motion.div>
@@ -206,64 +206,63 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, x: 0 }}
                         style={{
                             padding: "48px 32px", borderRadius: 32,
-                            background: "var(--app-surface)",
-                            border: "1.5px solid var(--app-border)",
+                            background: "var(--bg-card)",
+                            border: "1.5px solid var(--border-soft)",
                             display: "flex", flexDirection: "column", justifyContent: "center",
                             boxShadow: "0 20px 40px rgba(0,0,0,0.05)"
                         }}
                     >
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
-                            <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "var(--app-text)" }}>Ubah Profil</h3>
+                            <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "var(--text-primary)" }}>Ubah Profil</h3>
                         </div>
 
                         <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                <label style={{ fontSize: 12, fontWeight: 800, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Nama Kamu</label>
+                                <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Nama Kamu</label>
                                 <input
                                     type="text"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     style={{
-                                        padding: "18px 24px", borderRadius: 18, background: "var(--app-bg-secondary)",
-                                        border: "1.5px solid var(--app-border)", color: "var(--app-text)",
+                                        padding: "18px 24px", borderRadius: 18, background: "var(--bg-secondary)",
+                                        border: "1.5px solid var(--border-soft)", color: "var(--text-primary)",
                                         fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
                                     }}
-                                    onFocus={e => { e.target.style.borderColor = "var(--app-primary)"; e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)"; }}
-                                    onBlur={e => { e.target.style.borderColor = "var(--app-border)"; e.target.style.boxShadow = "none"; }}
+                                    onFocus={e => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.boxShadow = "var(--shadow-soft)"; }}
+                                    onBlur={e => { e.target.style.borderColor = "var(--border-soft)"; e.target.style.boxShadow = "none"; }}
                                 />
                             </div>
 
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                <label style={{ fontSize: 12, fontWeight: 800, color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Sandi Baru (Opsional)</label>
+                                <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Sandi Baru (Opsional)</label>
                                 <input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="Kosongkan jika tidak ganti"
                                     style={{
-                                        padding: "18px 24px", borderRadius: 18, background: "var(--app-bg-secondary)",
-                                        border: "1.5px solid var(--app-border)", color: "var(--app-text)",
+                                        padding: "18px 24px", borderRadius: 18, background: "var(--bg-secondary)",
+                                        border: "1.5px solid var(--border-soft)", color: "var(--text-primary)",
                                         fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
                                     }}
-                                    onFocus={e => { e.target.style.borderColor = "var(--app-primary)"; e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)"; }}
-                                    onBlur={e => { e.target.style.borderColor = "var(--app-border)"; e.target.style.boxShadow = "none"; }}
+                                    onFocus={e => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.boxShadow = "var(--shadow-soft)"; }}
+                                    onBlur={e => { e.target.style.borderColor = "var(--border-soft)"; e.target.style.boxShadow = "none"; }}
                                 />
                             </div>
 
                             <div style={{ marginTop: 12 }}>
                                 <motion.button
-                                    whileHover={!isSaving ? { scale: 1.02, y: -2, boxShadow: "0 10px 20px var(--app-soft-accent)" } : {}}
+                                    whileHover={!isSaving ? { scale: 1.02, y: -2, boxShadow: "var(--shadow-strong)" } : {}}
                                     whileTap={!isSaving ? { scale: 0.98 } : {}}
                                     type="submit"
                                     disabled={isSaving}
                                     style={{
                                         width: "100%", padding: "20px", borderRadius: 20,
-                                        background: savedSuccessfully ? "var(--app-indicator)" : "var(--app-primary)",
-                                        color: "#fff", border: "none", cursor: isSaving ? "not-allowed" : "pointer",
-                                        fontSize: 16, fontWeight: 900, fontFamily: "inherit",
-                                        boxShadow: "0 6px 15px var(--app-soft-accent)",
-                                        display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-                                        transition: "all 0.4s ease"
+                                        background: savedSuccessfully ? "#22C55E" : "var(--accent-primary)",
+                                        border: "none", color: "#fff", cursor: isSaving ? "not-allowed" : "pointer",
+                                        fontSize: 15, fontWeight: 800, opacity: isSaving ? 0.7 : 1, transition: "all 0.3s",
+                                        boxShadow: "var(--shadow-soft)",
+                                        display: "flex", alignItems: "center", justifyContent: "center", gap: 12
                                     }}
                                 >
                                     {isSaving ? (
@@ -290,8 +289,8 @@ export default function ProfilePage() {
                     header {
                         padding: 20px !important;
                         margin-bottom: 20px !important;
-                        background: var(--app-surface);
-                        border-bottom: 1.5px solid var(--app-border);
+                        background: var(--bg-card);
+                        border-bottom: 1.5px solid var(--border-soft);
                         position: sticky;
                         top: 0;
                         z-index: 100;

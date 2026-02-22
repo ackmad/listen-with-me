@@ -40,7 +40,7 @@ export default function LoginPage() {
       minHeight: "100vh",
       display: "flex", alignItems: "center", justifyContent: "center",
       fontFamily: "var(--font-fredoka), sans-serif",
-      background: "var(--app-bg)",
+      background: "var(--bg-primary)",
       position: "relative", overflow: "hidden",
       padding: 24,
       transition: "var(--theme-transition)",
@@ -50,7 +50,7 @@ export default function LoginPage() {
         <div style={{
           position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)",
           width: 800, height: 600,
-          background: "radial-gradient(circle, var(--app-soft-accent) 0%, transparent 70%)",
+          background: "var(--ambient-gradient)",
         }} />
       </div>
 
@@ -76,18 +76,18 @@ export default function LoginPage() {
           </motion.div>
           <h1 style={{
             margin: "0 0 10px", fontSize: 32, fontWeight: 900, letterSpacing: "-0.02em",
-            color: "var(--app-text)"
+            color: "var(--text-primary)"
           }}>
             Selamat Datang
           </h1>
-          <p style={{ margin: 0, fontSize: 16, color: "var(--app-text-muted)", fontWeight: 600 }}>
+          <p style={{ margin: 0, fontSize: 16, color: "var(--text-muted)", fontWeight: 600 }}>
             Masuk untuk mendengarkan lagu bareng!
           </p>
         </div>
 
         <div style={{
-          background: "var(--app-surface)",
-          border: "2.5px solid var(--app-border)",
+          background: "var(--bg-card)",
+          border: "2.5px solid var(--border-soft)",
           borderRadius: 32, padding: "36px 32px",
           boxShadow: "0 20px 50px rgba(0,0,0,0.06)",
           position: "relative", overflow: "hidden",
@@ -98,7 +98,7 @@ export default function LoginPage() {
               <label style={{
                 display: "block", fontSize: 12, fontWeight: 800,
                 letterSpacing: "0.05em", textTransform: "uppercase",
-                color: "var(--app-text-muted)", marginBottom: 10, paddingLeft: 4
+                color: "var(--text-muted)", marginBottom: 10, paddingLeft: 4
               }}>Email</label>
               <input
                 type="email"
@@ -108,18 +108,18 @@ export default function LoginPage() {
                 required
                 style={{
                   width: "100%", padding: "16px 20px",
-                  background: "var(--app-bg-secondary)",
-                  border: "2px solid var(--app-border)",
-                  borderRadius: 18, color: "var(--app-text)", fontSize: 15,
+                  background: "var(--bg-secondary)",
+                  border: "2px solid var(--border-soft)",
+                  borderRadius: 18, color: "var(--text-primary)", fontSize: 15,
                   fontWeight: 600, fontFamily: "inherit", outline: "none",
                   boxSizing: "border-box", transition: "all 0.2s",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "var(--app-primary)";
-                  e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
+                  e.target.style.borderColor = "var(--accent-primary)";
+                  e.target.style.boxShadow = "var(--shadow-soft)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "var(--app-border)";
+                  e.target.style.borderColor = "var(--border-soft)";
                   e.target.style.boxShadow = "none";
                 }}
               />
@@ -129,7 +129,7 @@ export default function LoginPage() {
               <label style={{
                 display: "block", fontSize: 12, fontWeight: 800,
                 letterSpacing: "0.05em", textTransform: "uppercase",
-                color: "var(--app-text-muted)", marginBottom: 10, paddingLeft: 4
+                color: "var(--text-muted)", marginBottom: 10, paddingLeft: 4
               }}>Kata Sandi</label>
               <input
                 type="password"
@@ -139,18 +139,18 @@ export default function LoginPage() {
                 required
                 style={{
                   width: "100%", padding: "16px 20px",
-                  background: "var(--app-bg-secondary)",
-                  border: "2px solid var(--app-border)",
-                  borderRadius: 18, color: "var(--app-text)", fontSize: 15,
+                  background: "var(--bg-secondary)",
+                  border: "2px solid var(--border-soft)",
+                  borderRadius: 18, color: "var(--text-primary)", fontSize: 15,
                   fontWeight: 600, fontFamily: "inherit", outline: "none",
                   boxSizing: "border-box", transition: "all 0.2s",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = "var(--app-primary)";
-                  e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
+                  e.target.style.borderColor = "var(--accent-primary)";
+                  e.target.style.boxShadow = "var(--shadow-soft)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = "var(--app-border)";
+                  e.target.style.borderColor = "var(--border-soft)";
                   e.target.style.boxShadow = "none";
                 }}
               />
@@ -175,18 +175,18 @@ export default function LoginPage() {
             </AnimatePresence>
 
             <motion.button
-              whileHover={!isLoading ? { scale: 1.02, y: -2, boxShadow: "0 8px 20px var(--app-soft-accent)" } : {}}
+              whileHover={!isLoading ? { scale: 1.02, y: -2, boxShadow: "var(--shadow-strong)" } : {}}
               whileTap={!isLoading ? { scale: 0.98 } : {}}
               type="submit"
               disabled={isLoading}
               style={{
-                marginTop: 8, padding: "18px",
-                background: "var(--app-primary)",
-                color: "#fff", fontWeight: 900, fontSize: 16,
-                border: "none", borderRadius: 18, cursor: isLoading ? "not-allowed" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                boxShadow: "0 6px 20px var(--app-soft-accent)",
-                transition: "all 0.3s ease", fontFamily: "inherit",
+                padding: "18px",
+                background: "var(--accent-primary)",
+                border: "none", color: "#fff", fontSize: 16, fontWeight: 900,
+                cursor: isLoading ? "not-allowed" : "pointer", transition: "all 0.3s ease",
+                opacity: isLoading ? 0.7 : 1, marginTop: 16,
+                boxShadow: "var(--shadow-soft)",
+                fontFamily: "inherit",
               }}
             >
               {isLoading ? (
@@ -200,7 +200,7 @@ export default function LoginPage() {
 
         <p style={{
           textAlign: "center", marginTop: 40, fontSize: 12,
-          color: "var(--app-text-muted)", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase"
+          color: "var(--text-muted)", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase"
         }}>
           ✦ ListenWithMe ✦
         </p>

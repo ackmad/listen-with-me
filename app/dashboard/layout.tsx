@@ -28,18 +28,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
 
     return (
-        <div className="flex min-h-screen" style={{ background: "var(--app-bg)", color: "var(--app-text)", transition: "var(--theme-transition)" }}>
+        <div className="flex min-h-screen" style={{ background: "var(--bg-primary)", color: "var(--text-primary)", transition: "var(--theme-transition)" }}>
             {/* Sidebar Desktop */}
             <aside className="hidden md:flex flex-col w-64 fixed h-full p-6"
                 style={{
-                    background: "var(--app-surface)",
-                    borderRight: "1.5px solid var(--app-border)",
+                    background: "var(--bg-sidebar)",
+                    borderRight: "1.5px solid var(--border-primary)",
                     zIndex: 50,
                     transition: "var(--theme-transition)"
                 }}>
                 <div className="mb-10 flex items-center gap-3">
                     <img src="/images/logo-listenWithMe.png" alt="Logo" className="w-8 h-8 object-contain" />
-                    <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--app-primary)" }}>ListenWithMe</h1>
+                    <h1 className="text-xl font-black tracking-tight" style={{ color: "var(--accent-primary)" }}>ListenWithMe</h1>
                 </div>
 
                 <nav className="flex-1 space-y-2">
@@ -53,14 +53,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     className={clsx(
                                         "flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer relative group",
                                         isActive
-                                            ? "text-white shadow-[0_8px_20px_var(--app-soft-accent)]"
-                                            : "text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-bg-secondary)]"
+                                            ? "text-white shadow-[0_8px_20px_var(--accent-glow)]"
+                                            : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]"
                                     )}
                                     style={{
-                                        background: isActive ? "var(--app-primary)" : "transparent",
+                                        background: isActive ? "var(--accent-primary)" : "transparent",
                                     }}
                                 >
-                                    <Icon className={clsx("w-6 h-6 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-[var(--app-text-muted)]")} />
+                                    <Icon className={clsx("w-6 h-6 transition-transform duration-300 group-hover:scale-110", isActive ? "text-white" : "text-[var(--text-muted)]")} />
                                     <span className="font-bold text-sm tracking-wide uppercase">{item.name}</span>
                                     {isActive && (
                                         <motion.div
@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 px-4 py-3 transition-colors mt-auto font-bold opacity-70 hover:opacity-100"
-                    style={{ color: "var(--app-text-muted)" }}
+                    style={{ color: "var(--text-muted)" }}
                 >
                     <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
                     <span>Logout</span>

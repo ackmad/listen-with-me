@@ -1,99 +1,169 @@
 @import "tailwindcss";
 
 :root {
-  /* LIGHT MODE (04.00 – 18.00) */
-  --light-bg-primary: #FFF1F7;
-  --light-bg-secondary: #FFE4F0;
-  --light-surface: #FFFFFF;
-  --light-primary-pink: #EC4899;
-  --light-primary-hover: #DB2777;
-  --light-primary-active: #BE185D;
-  --light-soft-pink: #F9A8D4;
-  --light-soft-border: #FBCFE8;
-  --light-soft-accent: #FDA4AF;
-  --light-text-primary: #3B1F2B;
-  --light-text-secondary: #6B3E4E;
-  --light-text-muted: #9D6B7A;
-  --light-border-default: #F5C2D7;
-  --light-border-focus: #EC4899;
-  --light-green-indicator: #22C55E;
-  --light-progress-track: #FBCFE8;
-  --light-progress-fill: #EC4899;
-  --light-toast-bg: #FCE7F3;
-  --light-toast-text: #9D174D;
-  --light-toast-border: #F9A8D4;
+  --bg-primary: #FFF8FC;
+  --bg-secondary: #FFFDFE;
+  --bg-sidebar: #FFEAF5;
+  --bg-card: #FFFFFF;
+  --bg-navbar: #FFFFFF;
 
-  /* DARK MODE (18.00 – 04.00) */
-  --dark-bg-primary: #0F0A12;
-  --dark-bg-secondary: #1A1120;
-  --dark-surface: #1F1325;
-  --dark-primary-pink: #F472B6;
-  --dark-primary-hover: #EC4899;
-  --dark-primary-active: #DB2777;
-  --dark-soft-pink: #F9A8D4;
-  --dark-soft-border: #3B1F2B;
-  --dark-soft-accent: rgba(244, 114, 182, 0.35);
-  --dark-text-primary: #FCE7F3;
-  --dark-text-secondary: #F9A8D4;
-  --dark-text-muted: #C08497;
-  --dark-border-default: #3B1F2B;
-  --dark-border-focus: #EC4899;
-  --dark-green-indicator: #22C55E;
-  --dark-progress-track: #3B1F2B;
-  --dark-progress-fill: #F472B6;
-  --dark-toast-bg: #2A1833;
-  --dark-toast-text: #F9A8D4;
-  --dark-toast-border: #EC4899;
+  --text-primary: #3A2A35;
+  --text-secondary: #6E4E61;
+  --text-muted: #9D7B8F;
+  --text-inverse: #FFFFFF;
 
-  /* Transition */
-  --theme-transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  --accent-primary: #EC4899;
+  --accent-hover: #DB2777;
+  --accent-soft: #FCE7F3;
+  --accent-glow: rgba(236, 72, 153, 0.25);
+
+  --border-soft: #F5D6E8;
+  --border-strong: #EC4899;
+
+  --shadow-soft: 0 10px 30px rgba(236, 72, 153, 0.08);
+  --shadow-strong: 0 15px 40px rgba(236, 72, 153, 0.15);
+
+  --ambient-gradient: radial-gradient(circle at center, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
 }
 
-/* Base Variable mapping */
-body.light {
-  --app-bg: var(--light-bg-primary);
-  --app-bg-secondary: var(--light-bg-secondary);
-  --app-surface: var(--light-surface);
-  --app-primary: var(--light-primary-pink);
-  --app-primary-hover: var(--light-primary-hover);
-  --app-primary-active: var(--light-primary-active);
-  --app-text: var(--light-text-primary);
-  --app-text-secondary: var(--light-text-secondary);
-  --app-text-muted: var(--light-text-muted);
-  --app-border: var(--light-border-default);
-  --app-border-focus: var(--light-border-focus);
-  --app-indicator: var(--light-green-indicator);
-  --app-prog-track: var(--light-progress-track);
-  --app-prog-fill: var(--light-progress-fill);
-  --app-toast-bg: var(--light-toast-bg);
-  --app-toast-text: var(--light-toast-text);
-  --app-toast-border: var(--light-toast-border);
-  --app-soft-accent: var(--light-soft-accent);
+/* 🌅 MODE 0 — PAGI (04:00–10:59) */
+[data-theme="morning"] {
+  --bg-primary: #FFF8FC;
+  --bg-secondary: #FFFDFE;
+  --bg-sidebar: #FFEAF5;
+  --bg-navbar: #FFFFFF;
+  --bg-card: #FFFFFF;
+
+  --text-primary: #3A2A35;
+  --text-secondary: #6E4E61;
+  --text-muted: #9D7B8F;
+  --text-inverse: #FFFFFF;
+
+  --accent-primary: #EC4899;
+  --accent-hover: #DB2777;
+  --accent-soft: #FCE7F3;
+  --accent-glow: rgba(236, 72, 153, 0.25);
+
+  --border-soft: #F5D6E8;
+  --border-strong: #EC4899;
+
+  --shadow-soft: 0 10px 30px rgba(236, 72, 153, 0.08);
+  --shadow-strong: 0 15px 40px rgba(236, 72, 153, 0.15);
+
+  --ambient-gradient: radial-gradient(circle at center, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
 }
 
-body.dark {
-  --app-bg: var(--dark-bg-primary);
-  --app-bg-secondary: var(--dark-bg-secondary);
-  --app-surface: var(--dark-surface);
-  --app-primary: var(--dark-primary-pink);
-  --app-primary-hover: var(--dark-primary-hover);
-  --app-primary-active: var(--dark-primary-active);
-  --app-text: var(--dark-text-primary);
-  --app-text-secondary: var(--dark-text-secondary);
-  --app-text-muted: var(--dark-text-muted);
-  --app-border: var(--dark-border-default);
-  --app-border-focus: var(--dark-border-focus);
-  --app-indicator: var(--dark-green-indicator);
-  --app-prog-track: var(--dark-progress-track);
-  --app-prog-fill: var(--dark-progress-fill);
-  --app-toast-bg: var(--dark-toast-bg);
-  --app-toast-text: var(--dark-toast-text);
-  --app-toast-border: var(--dark-toast-border);
-  --app-soft-accent: var(--dark-soft-accent);
+/* ☀️ MODE 1 — SIANG (11:00–14:59) */
+[data-theme="afternoon"] {
+  --bg-primary: #FDFBFF;
+  --bg-secondary: #FFFFFF;
+  --bg-sidebar: #F3E8FF;
+  --bg-navbar: #FFFFFF;
+  --bg-card: #FFFFFF;
+
+  --text-primary: #2D1F2F;
+  --text-secondary: #5C4B5F;
+  --text-muted: #8C7A90;
+  --text-inverse: #FFFFFF;
+
+  --accent-primary: #A855F7;
+  --accent-hover: #9333EA;
+  --accent-soft: #F3E8FF;
+  --accent-glow: rgba(168, 85, 247, 0.25);
+
+  --border-soft: #E9D5FF;
+  --border-strong: #A855F7;
+
+  --shadow-soft: 0 10px 25px rgba(168, 85, 247, 0.08);
+  --shadow-strong: 0 15px 35px rgba(168, 85, 247, 0.15);
+
+  --ambient-gradient: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.08) 0%, transparent 65%);
+}
+
+/* 🌆 MODE 2 — SORE (15:00–17:59) */
+[data-theme="evening"] {
+  --bg-primary: #FFF1F7;
+  --bg-secondary: #FFE4F1;
+  --bg-sidebar: #FDE2FF;
+  --bg-navbar: #FFFFFF;
+  --bg-card: #FFFFFF;
+
+  --text-primary: #3B1E33;
+  --text-secondary: #6D3C5E;
+  --text-muted: #9C6F8C;
+  --text-inverse: #FFFFFF;
+
+  --accent-primary: #F472B6;
+  --accent-hover: #EC4899;
+  --accent-soft: #FCE7F3;
+  --accent-glow: rgba(244, 114, 182, 0.35);
+
+  --border-soft: #FBCFE8;
+  --border-strong: #F472B6;
+
+  --shadow-soft: 0 15px 35px rgba(236, 72, 153, 0.12);
+  --shadow-strong: 0 20px 45px rgba(168, 85, 247, 0.15);
+
+  --ambient-gradient: radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.18), rgba(168, 85, 247, 0.12) 50%, transparent 80%);
+}
+
+/* 🌙 MODE 3 — MALAM (18:00–03:59) */
+[data-theme="night"] {
+  --bg-primary: #0F0714;
+  --bg-secondary: #140A1C;
+  --bg-sidebar: #1A0F24;
+  --bg-navbar: #140A1C;
+  --bg-card: #1E1328;
+
+  --text-primary: #F5E9F2;
+  --text-secondary: #D6B9CC;
+  --text-muted: #9F7C93;
+  --text-inverse: #0F0714;
+
+  --accent-primary: #FF6EB5;
+  --accent-hover: #FF4FA3;
+  --accent-soft: #2A1835;
+  --accent-glow: rgba(255, 110, 181, 0.45);
+
+  --border-soft: #2A1A36;
+  --border-strong: #FF6EB5;
+
+  --shadow-soft: 0 10px 25px rgba(255, 110, 181, 0.12);
+  --shadow-strong: 0 20px 45px rgba(255, 110, 181, 0.25);
+
+  --ambient-gradient: radial-gradient(circle at center, rgba(255, 110, 181, 0.05) 0%, transparent 70%);
+}
+
+/* Legacy mappings for components not yet fully updated */
+:root {
+  --app-bg: var(--bg-primary);
+  --app-bg-secondary: var(--bg-secondary);
+  --app-surface: var(--bg-card);
+  --app-primary: var(--accent-primary);
+  --app-primary-hover: var(--accent-hover);
+  --app-primary-active: var(--accent-hover);
+  --app-text: var(--text-primary);
+  --app-text-secondary: var(--text-secondary);
+  --app-text-muted: var(--text-muted);
+  --app-border: var(--border-soft);
+  --app-border-focus: var(--border-strong);
+  --app-indicator: #22C55E;
+  --app-prog-track: var(--bg-secondary);
+  --app-prog-fill: var(--accent-primary);
+  --app-toast-bg: var(--bg-card);
+  --app-toast-text: var(--text-primary);
+  --app-toast-border: var(--border-soft);
+  --app-soft-accent: var(--accent-glow);
+  --theme-transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.4s ease;
 }
 
 * {
   box-sizing: border-box;
+  transition:
+    background-color 0.4s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.4s ease;
 }
 
 html {
@@ -101,8 +171,8 @@ html {
 }
 
 body {
-  background-color: var(--app-bg);
-  color: var(--app-text);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;

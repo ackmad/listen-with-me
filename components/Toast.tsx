@@ -48,8 +48,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                             style={{
                                 display: "flex", alignItems: "center", gap: 12,
                                 padding: "14px 20px",
-                                background: "var(--app-toast-bg)",
-                                border: "1.5px solid var(--app-toast-border)",
+                                background: "var(--toast-bg)",
+                                border: "1.5px solid var(--toast-border)",
                                 borderRadius: 20,
                                 backdropFilter: "blur(20px)",
                                 boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
@@ -59,13 +59,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                             }}
                         >
                             <div style={{ flexShrink: 0 }}>
-                                {t.type === "success" && <CheckCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
-                                {t.type === "error" && <XCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
-                                {t.type === "info" && <InformationCircleIcon style={{ width: 22, height: 22, color: "var(--app-toast-text)" }} />}
+                                {t.type === "success" && <CheckCircleIcon style={{ width: 22, height: 22, color: "var(--toast-text)" }} />}
+                                {t.type === "error" && <XCircleIcon style={{ width: 22, height: 22, color: "var(--toast-text)" }} />}
+                                {t.type === "info" && <InformationCircleIcon style={{ width: 22, height: 22, color: "var(--toast-text)" }} />}
                             </div>
                             <p style={{
                                 margin: 0, fontSize: 13,
-                                color: "var(--app-toast-text)",
+                                color: "var(--toast-text)",
                                 fontWeight: 800,
                                 lineHeight: 1.4,
                                 fontFamily: "var(--font-fredoka)",

@@ -260,9 +260,9 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         onChange={(e) => setMsgInput(e.target.value.slice(0, 50))}
                         style={{
                             width: "100%", padding: "16px 54px 16px 24px",
-                            background: "var(--app-surface)", backdropFilter: "blur(20px)",
-                            border: "2px solid var(--app-border)",
-                            borderRadius: 28, color: "var(--app-text)", fontSize: 16,
+                            background: "var(--bg-card)", backdropFilter: "blur(20px)",
+                            border: "2px solid var(--border-soft)",
+                            borderRadius: 28, color: "var(--text-primary)", fontSize: 16,
                             fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
                             outline: "none",
                             boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
@@ -270,11 +270,11 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                             pointerEvents: "auto",
                         }}
                         onFocus={(e) => {
-                            e.target.style.borderColor = "var(--app-primary)";
-                            e.target.style.boxShadow = "0 0 0 4px var(--app-soft-accent)";
+                            e.target.style.borderColor = "var(--accent-primary)";
+                            e.target.style.boxShadow = "var(--shadow-soft)";
                         }}
                         onBlur={(e) => {
-                            e.target.style.borderColor = "var(--app-border)";
+                            e.target.style.borderColor = "var(--border-soft)";
                             e.target.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
                         }}
                     />
@@ -284,7 +284,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         style={{
                             position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
                             width: 36, height: 36, borderRadius: "50%",
-                            background: msgInput.trim() ? "var(--app-primary)" : "var(--app-border)",
+                            background: msgInput.trim() ? "var(--accent-primary)" : "var(--border-soft)",
                             border: "none", color: "#fff", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             opacity: msgInput.trim() ? 1 : 0.6,
@@ -309,7 +309,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         className="reaction-toggle-btn"
                         style={{
                             width: 48, height: 48, borderRadius: "50%",
-                            color: showMenu ? "var(--app-primary)" : "var(--app-text-muted)", cursor: "pointer",
+                            color: showMenu ? "var(--accent-primary)" : "var(--text-muted)", cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             transition: "var(--theme-transition)",
                             pointerEvents: "auto",
@@ -327,8 +327,8 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                                 className="reaction-menu-popup"
                                 style={{
                                     position: "absolute", right: 0,
-                                    background: "var(--app-surface)", backdropFilter: "blur(24px)",
-                                    border: "2px solid var(--app-border)",
+                                    background: "var(--bg-card)", backdropFilter: "blur(24px)",
+                                    border: "2px solid var(--border-soft)",
                                     borderRadius: 28, padding: "10px",
                                     display: "flex", flexDirection: "column", gap: 8,
                                     boxShadow: "0 15px 40px rgba(0,0,0,0.2)",
@@ -341,7 +341,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.05 }}
-                                        whileHover={{ scale: 1.25, background: "var(--app-bg-secondary)" }}
+                                        whileHover={{ scale: 1.25, background: "var(--bg-secondary)" }}
                                         whileTap={{ scale: 0.8 }}
                                         onClick={() => sendReaction(r.emoji)}
                                         style={{
@@ -384,8 +384,8 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         right: 16px !important; 
                     }
                     .reaction-toggle-btn {
-                        background: var(--app-surface) !important;
-                        border: 1.5px solid var(--app-border) !important;
+                        background: var(--bg-card) !important;
+                        border: 1.5px solid var(--border-soft) !important;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
                         width: 48px !important; height: 48px !important;
                     }

@@ -6,12 +6,12 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
     collection, onSnapshot, query, orderBy, addDoc, serverTimestamp,
-    doc, getDoc, setDoc, updateDoc
+    doc, getDoc, setDoc, updateDoc, deleteDoc
 } from "firebase/firestore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowRightOnRectangleIcon, PlusIcon, MusicalNoteIcon, UserGroupIcon,
-    XMarkIcon, UserIcon
+    XMarkIcon, UserIcon, TrashIcon, MapPinIcon
 } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import {
@@ -22,7 +22,7 @@ import { LOCAL_SONGS } from "@/components/SongManager";
 
 // ─── Status Dot ──────────────────────────────────────────────────────────
 function StatusDot({ status }: { status: UserPresence["status"] }) {
-    const color = status === "online" ? "var(--app-indicator)" : status === "idle" ? "#fbbf24" : "var(--app-text-muted)";
+    const color = status === "online" ? "var(--accent-indicator)" : status === "idle" ? "#fbbf24" : "var(--text-muted)";
     return (
         <span style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", width: 10, height: 10, flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "block" }} />
@@ -53,17 +53,17 @@ function UserCard({ u, isMe, onJoin }: { u: UserPresence; isMe: boolean; onJoin:
         activityText = isOffline ? "Ttp denger lagu nih" : "Sedang mendengarkan";
     }
 
-    const statusColor = isOnline ? "var(--app-indicator)" : isIdle ? "#fbbf24" : "var(--app-text-muted)";
+    const statusColor = isOnline ? "var(--accent-indicator)" : isIdle ? "#fbbf24" : "var(--text-muted)";
 
     return (
         <motion.div
-            whileHover={{ x: 4, background: "var(--app-bg-secondary)" }}
+            whileHover={{ x: 4, background: "var(--bg-button-secondary)" }}
             onClick={() => hasRoom && u.currentRoom && onJoin(u.currentRoom)}
             style={{
                 display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
                 borderRadius: 20,
-                background: isMe ? "var(--app-bg-secondary)" : "transparent",
-                border: `1.5px solid ${isMe ? "var(--app-primary)" : "var(--app-border)"}`,
+                background: isMe ? "var(--bg-secondary)" : "transparent",
+                border: `1.5px solid ${isMe ? "var(--accent-primary)" : "var(--border-soft)"}`,
                 transition: "all 0.2s ease",
                 cursor: hasRoom ? "pointer" : "default",
                 position: "relative",
@@ -71,17 +71,17 @@ function UserCard({ u, isMe, onJoin }: { u: UserPresence; isMe: boolean; onJoin:
             }}>
             <div style={{
                 width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                background: isOnline ? "var(--app-primary)" : "var(--app-bg-secondary)",
+                background: isOnline ? "var(--accent-primary)" : "var(--bg-secondary)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 800,
-                color: isOnline ? "#fff" : "var(--app-text-muted)",
+                color: isOnline ? "#fff" : "var(--text-muted)",
                 position: "relative",
-                border: "2px solid var(--app-border)",
+                border: "2px solid var(--border-soft)",
             }}>
                 {getInitials(u.displayName)}
                 <span style={{
                     position: "absolute", bottom: -1, right: -1,
-                    width: 12, height: 12, borderRadius: "50%", border: "2px solid var(--app-surface)",
+                    width: 12, height: 12, borderRadius: "50%", border: "2px solid var(--bg-card)",
                     background: statusColor,
                 }} />
             </div>
@@ -89,20 +89,20 @@ function UserCard({ u, isMe, onJoin }: { u: UserPresence; isMe: boolean; onJoin:
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 2 }}>
                     <p style={{
                         margin: 0, fontSize: 13, fontWeight: 800,
-                        color: "var(--app-text)",
+                        color: "var(--text-primary)",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>
                         {u.displayName}{isMe ? " (Kamu)" : ""}
                     </p>
                     {!isOnline && u.lastSeen > 0 && (
-                        <span style={{ fontSize: 9, color: "var(--app-text-muted)", fontWeight: 700 }}>
+                        <span style={{ fontSize: 9, color: "var(--text-muted)", fontWeight: 700 }}>
                             {formatLastSeen(u.lastSeen)}
                         </span>
                     )}
                 </div>
                 <p style={{
                     margin: 0, fontSize: 11,
-                    color: hasRoom ? "var(--app-primary)" : "var(--app-text-muted)",
+                    color: hasRoom ? "var(--accent-primary)" : "var(--text-muted)",
                     fontWeight: 700,
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     display: "flex", alignItems: "center", gap: 4
@@ -114,9 +114,9 @@ function UserCard({ u, isMe, onJoin }: { u: UserPresence; isMe: boolean; onJoin:
             {hasRoom && !isMe && (
                 <div style={{
                     width: 28, height: 28, borderRadius: "50%",
-                    background: "var(--app-primary)", color: "#fff",
+                    background: "var(--accent-primary)", color: "#fff",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 4px 10px var(--app-soft-accent)"
+                    boxShadow: "var(--shadow-soft)"
                 }}>
                     <PlayIcon style={{ width: 14, height: 14, marginLeft: 2 }} />
                 </div>
@@ -126,7 +126,7 @@ function UserCard({ u, isMe, onJoin }: { u: UserPresence; isMe: boolean; onJoin:
 }
 
 // ─── Room Card ────────────────────────────────────────────────────────────
-function RoomCard({ room, usersInRoom, onClick, index }: { room: any; usersInRoom: UserPresence[]; onClick: () => void; index: number }) {
+function RoomCard({ room, usersInRoom, onClick, onDelete, index }: { room: any; usersInRoom: UserPresence[]; onClick: () => void; onDelete: (e: React.MouseEvent) => void; index: number }) {
     const [hov, setHov] = useState(false);
     const isActive = room.isPlaying;
 
@@ -141,37 +141,37 @@ function RoomCard({ room, usersInRoom, onClick, index }: { room: any; usersInRoo
             style={{
                 display: "flex", alignItems: "center", gap: 16, padding: "18px 20px",
                 borderRadius: 22, cursor: "pointer",
-                background: isActive ? "var(--app-bg-secondary)" : "var(--app-surface)",
-                border: `1.5px solid ${hov ? "var(--app-primary)" : isActive ? "var(--app-primary)" : "var(--app-border)"}`,
+                background: isActive ? "var(--bg-secondary)" : "var(--bg-card)",
+                border: `1.5px solid ${hov ? "var(--accent-primary)" : isActive ? "var(--accent-primary)" : "var(--border-soft)"}`,
                 transition: "all 0.3s ease",
                 transform: hov ? "translateY(-3px)" : "translateY(0)",
-                boxShadow: hov ? "0 12px 30px var(--app-soft-accent)" : "none",
+                boxShadow: hov ? "var(--shadow-strong)" : "none",
             }}
         >
             <div style={{
                 width: 54, height: 54, borderRadius: 16, flexShrink: 0,
-                background: isActive ? "var(--app-primary)" : "var(--app-bg-secondary)",
+                background: isActive ? "var(--accent-primary)" : "var(--bg-secondary)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff",
-                boxShadow: isActive ? "0 4px 15px var(--app-soft-accent)" : "none",
+                boxShadow: isActive ? "var(--shadow-soft)" : "none",
                 position: "relative", overflow: "hidden",
             }}>
                 {isActive
                     ? <PlayIcon style={{ width: 22, height: 22, marginLeft: 2 }} />
-                    : <MusicalNoteIcon style={{ width: 22, height: 22, color: "var(--app-primary)" }} />
+                    : <MusicalNoteIcon style={{ width: 22, height: 22, color: "var(--accent-primary)" }} />
                 }
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: "var(--app-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {room.name}
                     </p>
                     {isActive && (
                         <span style={{
                             fontSize: 9, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
                             padding: "3px 8px", borderRadius: 20,
-                            background: "var(--app-primary)", color: "#fff",
+                            background: "var(--accent-primary)", color: "#fff",
                         }}>
                             Aktif
                         </span>
@@ -179,36 +179,51 @@ function RoomCard({ room, usersInRoom, onClick, index }: { room: any; usersInRoo
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>by {room.hostName}</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>by {room.hostName}</span>
                     {room.currentSong && (
                         <>
-                            <span style={{ fontSize: 12, color: "var(--app-primary)", fontWeight: 700 }}>
+                            <span style={{ fontSize: 12, color: "var(--accent-primary)", fontWeight: 700 }}>
                                 ♪ {room.currentSong.title}
                             </span>
                         </>
                     )}
                     {usersInRoom.length > 0 && (
-                        <span style={{ fontSize: 12, color: "var(--app-indicator)", fontWeight: 700 }}>
+                        <span style={{ fontSize: 12, color: "var(--accent-indicator)", fontWeight: 700 }}>
                             • {usersInRoom.length} mendengarkan
                         </span>
                     )}
                 </div>
             </div>
 
-            <div style={{ flexShrink: 0 }}>
+            <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 12 }}>
                 {isActive ? (
                     <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 24 }}>
                         {[1, 2, 3, 4, 3, 2, 1].map((h, i) => (
                             <motion.div key={i}
                                 animate={{ height: [h * 3, h * 3 + 10, h * 3] }}
                                 transition={{ duration: 0.6 + i * 0.08, repeat: Infinity, ease: "easeInOut", delay: i * 0.1 }}
-                                style={{ width: 3.5, background: "var(--app-primary)", borderRadius: 3 }}
+                                style={{ width: 3.5, background: "var(--accent-primary)", borderRadius: 3 }}
                             />
                         ))}
                     </div>
                 ) : (
-                    <ArrowRightOnRectangleIcon style={{ width: 20, height: 20, color: "var(--app-text-muted)", transform: "rotate(180deg)" }} />
+                    <ArrowRightOnRectangleIcon style={{ width: 20, height: 20, color: "var(--text-muted)", transform: "rotate(180deg)" }} />
                 )}
+
+                <button
+                    onClick={onDelete}
+                    title="Hapus Ruang"
+                    style={{
+                        width: 34, height: 34, borderRadius: "50%",
+                        background: "rgba(239, 68, 68, 0.1)", border: "none",
+                        color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: "pointer", transition: "all 0.2s", padding: 0
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "#ef4444"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"; e.currentTarget.style.color = "#ef4444"; }}
+                >
+                    <TrashIcon style={{ width: 16, height: 16 }} />
+                </button>
             </div>
         </motion.div>
     );
@@ -225,6 +240,55 @@ export default function Dashboard() {
     const [newRoomName, setNewRoomName] = useState("");
     const [creating, setCreating] = useState(false);
     const [showUsers, setShowUsers] = useState(false);
+
+    // Delete Room states
+    const [deletingRoom, setDeletingRoom] = useState<any>(null);
+    const [deleteCode, setDeleteCode] = useState("");
+    const [deleteCodeError, setDeleteCodeError] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Aesthetics states
+    const [timeMode, setTimeMode] = useState<number>(0);
+    const [modeToast, setModeToast] = useState("");
+    const [showSyncGlow, setShowSyncGlow] = useState(false);
+
+    useEffect(() => {
+        // Init time mode logic matching CSS names
+        const savedMode = localStorage.getItem("theme-mode");
+        if (savedMode) {
+            const index = ["morning", "afternoon", "evening", "night"].indexOf(savedMode);
+            setTimeMode(index >= 0 ? index : 0);
+            document.documentElement.setAttribute("data-theme", savedMode);
+        } else {
+            const h = new Date().getHours();
+            const initMode = (h >= 4 && h < 11) ? 0 : (h >= 11 && h < 15) ? 1 : (h >= 15 && h < 18) ? 2 : 3;
+            setTimeMode(initMode);
+            const modes = ["morning", "afternoon", "evening", "night"];
+            document.documentElement.setAttribute("data-theme", modes[initMode]);
+        }
+
+        // Simulate micro-interaction sync after a bit
+        const t = setTimeout(() => setShowSyncGlow(true), 3500);
+        const t2 = setTimeout(() => setShowSyncGlow(false), 8500);
+        return () => { clearTimeout(t); clearTimeout(t2); };
+    }, []);
+
+    const handleCycleTime = () => {
+        const next = (timeMode + 1) % 4;
+        setTimeMode(next);
+        const modes = ["morning", "afternoon", "evening", "night"];
+        document.documentElement.setAttribute("data-theme", modes[next]);
+        localStorage.setItem("theme-mode", modes[next]);
+
+        const toasts = [
+            "Pagi yang tenang 🌅",
+            "Cerahnya siang ini ☀️",
+            "Sekarang suasananya sore ya 🌆",
+            "Mode malam aktif, waktunya lagu yang pelan 🌙"
+        ];
+        setModeToast(toasts[next]);
+        setTimeout(() => setModeToast(""), 2500);
+    };
 
     useEffect(() => {
         return onAuthStateChanged(auth, (u) => {
@@ -281,6 +345,27 @@ export default function Dashboard() {
         } catch (err: any) { console.error("Create room:", err.message); setCreating(false); }
     };
 
+    const handleDeleteRoomSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (deleteCode !== "221508") {
+            setDeleteCodeError(true);
+            return;
+        }
+        if (!deletingRoom) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteDoc(doc(db, "rooms", deletingRoom.id));
+            setDeletingRoom(null);
+            setDeleteCode("");
+            setDeleteCodeError(false);
+        } catch (err) {
+            console.error("Delete room error", err);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
     const hour = new Date().getHours();
@@ -300,36 +385,56 @@ export default function Dashboard() {
 
     return (
         <div style={{
-            minHeight: "100vh", background: "var(--app-bg)",
-            fontFamily: "var(--font-fredoka), sans-serif", color: "var(--app-text)",
-            position: "relative", transition: "var(--theme-transition)",
+            minHeight: "100vh", background: "var(--bg-primary)",
+            fontFamily: "var(--font-fredoka), sans-serif", color: "var(--text-primary)",
+            position: "relative",
+            transition: "background-color 0.4s ease, color 0.3s ease",
         }}>
             {/* Ambient Vibes */}
             <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-                <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "radial-gradient(ellipse, var(--app-soft-accent) 0%, transparent 65%)" }} />
+                <div style={{ position: "absolute", top: "-10%", left: "50%", transform: "translateX(-50%)", width: 800, height: 600, background: "var(--ambient-gradient)", transition: "background 0.5s ease" }} />
+                <AnimatePresence>
+                    {showSyncGlow && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} style={{ position: "absolute", inset: 0, background: "var(--accent-glow)", pointerEvents: "none" }} />
+                    )}
+                </AnimatePresence>
             </div>
+
+            {/* Mode Toast Overlay */}
+            <AnimatePresence>
+                {modeToast && (
+                    <motion.div initial={{ opacity: 0, y: -20, x: "-50%" }} animate={{ opacity: 1, y: 0, x: "-50%" }} exit={{ opacity: 0, scale: 0.9, x: "-50%" }} style={{
+                        position: "fixed", top: 80, left: "50%", zIndex: 300,
+                        background: "rgba(0,0,0,0.6)", color: "#fff", padding: "10px 20px", borderRadius: 20,
+                        backdropFilter: "blur(10px)", fontSize: 13, fontWeight: 700, pointerEvents: "none",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+                    }}>
+                        {modeToast}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Header */}
             <header style={{
                 padding: "0 20px", height: 68,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                borderBottom: "1.5px solid var(--app-border)",
-                background: "var(--app-surface)", backdropFilter: "blur(20px)",
+                borderBottom: "1.5px solid var(--border-soft)",
+                background: "var(--bg-navbar)", backdropFilter: "blur(20px)",
                 position: "sticky", top: 0, zIndex: 100,
-                transition: "var(--theme-transition)",
+                transition: "background-color 0.4s ease",
             }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{
                         width: 36, height: 36, borderRadius: 10,
                         overflow: "hidden",
-                        background: "var(--app-bg-secondary)",
+                        background: "var(--bg-secondary)",
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        border: "1px solid var(--app-border)"
+                        border: "1px solid var(--border-soft)"
                     }}>
                         <img src="/images/logo-listenWithMe.png" alt="Logo" style={{ width: "80%", height: "80%", objectFit: "contain" }} />
                     </div>
                     <div className="md:hidden">
-                        <h1 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--app-primary)", letterSpacing: "-0.02em" }}>ListenWithMe</h1>
+                        <h1 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--accent-primary)", letterSpacing: "-0.02em" }}>ListenWithMe</h1>
                     </div>
                 </div>
 
@@ -337,17 +442,25 @@ export default function Dashboard() {
                     <button onClick={() => setShowUsers(!showUsers)} style={{
                         display: "flex", alignItems: "center", gap: 8,
                         padding: "8px 14px", borderRadius: 20, cursor: "pointer",
-                        background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)",
-                        color: "var(--app-text)", fontSize: 12, fontWeight: 800,
+                        background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)",
+                        color: "var(--text-primary)", fontSize: 12, fontWeight: 800,
                         transition: "all 0.2s"
                     }}>
                         <StatusDot status="online" />
                         <span className="hidden sm:inline">{onlineUsers.length} Online</span>
                         <span className="sm:hidden">{onlineUsers.length}</span>
                     </button>
+                    <button onClick={handleCycleTime} style={{
+                        width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--border-soft)",
+                        background: "var(--bg-secondary)", color: "var(--text-primary)",
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.2s"
+                    }}>
+                        <span style={{ fontSize: 16 }}>{timeMode === 0 ? "🌅" : timeMode === 1 ? "☀️" : timeMode === 2 ? "🌆" : "🌙"}</span>
+                    </button>
                     <button onClick={() => router.push("/profile")} style={{
-                        width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--app-border)",
-                        background: "var(--app-bg-secondary)", color: "var(--app-text-muted)",
+                        width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--border-soft)",
+                        background: "var(--bg-secondary)", color: "var(--text-muted)",
                         cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                         transition: "all 0.2s"
                     }}>
@@ -366,56 +479,97 @@ export default function Dashboard() {
                 <div style={{ padding: "40px 20px" }} className="main-content-inner">
                     {/* Greeting Area */}
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 40 }}>
-                        <h2 style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 900, color: "var(--app-text)", letterSpacing: "-0.04em" }}>
+                        <h2 style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.04em" }}>
                             {greeting}, {displayName.split(" ")[0]} {greetingEmoji}
                         </h2>
-                        <p style={{ margin: 0, fontSize: 16, color: "var(--app-text-muted)", fontWeight: 600 }}>
-                            {rooms.length > 0 ? `Ada ${rooms.length} ruang seru yang sedang mendengarkan! ✨` : "Mulai ruang musik pertamamu hari ini."}
-                        </p>
-                        <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
-                            <div style={{ padding: "6px 12px", borderRadius: 12, background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)", fontSize: 12, fontWeight: 800, color: "var(--app-primary)", display: "flex", alignItems: "center", gap: 6 }}>
-                                <MusicalNoteIcon style={{ width: 14, height: 14 }} />
-                                {LOCAL_SONGS.length} Lagu Tersedia
-                            </div>
+
+                        <AnimatePresence>
+                            {showSyncGlow && (
+                                <motion.p initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: "auto", marginTop: 4 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ fontSize: 13, color: "var(--accent-primary)", fontWeight: 700, margin: 0, overflow: "hidden" }}>
+                                    Pas banget… detiknya sama ✨
+                                </motion.p>
+                            )}
+                        </AnimatePresence>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12 }}>
+                            <MapPinIcon className="dashboard-location-color" style={{ width: 14, height: 14 }} />
+                            <span className="dashboard-location-color" style={{ fontSize: 13, fontWeight: 600 }}>Jakarta ↔ Cirebon</span>
                         </div>
+                        <p className="dashboard-location-color" style={{ margin: "4px 0 0 20px", fontSize: 11, fontWeight: 500 }}>
+                            Walaupun beda kota, lagunya tetap sama.
+                        </p>
+
+                        <div style={{ height: 1, width: "100%", background: "linear-gradient(to right, rgba(236,72,153,0.15), transparent)", margin: "20px 0" }} />
+
+                        <p style={{ margin: 0, fontSize: 16, color: "var(--text-muted)", fontWeight: 600 }}>
+                            {rooms.length > 0 ? `Ruang yang lagi hidup ✨` : "Mulai ruang pertamamu hari ini."}
+                        </p>
                     </motion.div>
 
                     {/* Create Button Large */}
-                    <motion.button
-                        whileHover={{ scale: 1.02, y: -4, boxShadow: "0 15px 35px var(--app-soft-accent)" }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowCreate(true)}
-                        style={{
-                            width: "100%", padding: "22px", marginBottom: 48,
-                            background: "var(--app-primary)",
-                            borderRadius: 24, color: "#fff", cursor: "pointer",
-                            fontSize: 18, fontWeight: 900, border: "none",
-                            display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-                            boxShadow: "0 10px 25px var(--app-soft-accent)",
-                        }}
-                    >
-                        <PlusIcon style={{ width: 24, height: 24 }} strokeWidth={2.5} />
-                        Buat Ruang Musik Baru
-                    </motion.button>
+                    <div style={{ marginBottom: 48 }}>
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -4, boxShadow: "var(--shadow-strong)" }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowCreate(true)}
+                            style={{
+                                width: "100%", padding: "20px",
+                                background: "var(--accent-primary)",
+                                borderRadius: 24, color: "#fff", cursor: "pointer",
+                                fontSize: 18, fontWeight: 900, border: "none",
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                                boxShadow: "var(--shadow-soft)",
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <PlusIcon style={{ width: 24, height: 24 }} strokeWidth={2.5} />
+                                Buat Ruang Musik Baru
+                            </div>
+                            <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Siapa tau dia join 😉</span>
+                        </motion.button>
+
+                        <div className="counter-card" style={{ marginTop: 20, padding: "16px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
+                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>🎧 128 lagu sudah kita putar bareng.</p>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginTop: 4 }}>Dan masih nambah terus.</span>
+                        </div>
+                    </div>
+
+                    {/* Lagu Hari Ini */}
+                    {LOCAL_SONGS.length > 0 && (
+                        <div className="song-of-the-day" style={{ padding: "20px", borderRadius: 24, marginBottom: 32, display: "flex", alignItems: "center", gap: 16 }}>
+                            <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", boxShadow: "var(--shadow-soft)" }}>
+                                <MusicalNoteIcon style={{ width: 28, height: 28 }} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 800, color: "var(--accent-primary)", letterSpacing: "0.05em", textTransform: "uppercase" }}>🌅 Lagu hari ini buat kamu.</p>
+                                <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{LOCAL_SONGS[5]?.title || LOCAL_SONGS[0].title}</h3>
+                                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{LOCAL_SONGS[5]?.artist || LOCAL_SONGS[0].artist}</p>
+                            </div>
+                            <button onClick={() => setShowCreate(true)} style={{ padding: "8px 14px", borderRadius: 12, background: "var(--accent-primary)", color: "#fff", border: "none", fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 6, boxShadow: "var(--shadow-soft)" }}>
+                                <PlayIcon style={{ width: 12, height: 12 }} />
+                                Putar bareng
+                            </button>
+                        </div>
+                    )}
 
                     {/* Rooms List */}
                     <section>
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-                            <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
-                                Eksplorasi Ruang
+                            <p style={{ margin: 0, fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                                Yang lagi diputar sekarang
                             </p>
                         </div>
 
                         {loading ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} style={{ height: 90, borderRadius: 22, background: "var(--app-surface)", border: "1.5px solid var(--app-border)", opacity: 0.5 }} />
+                                    <div key={i} style={{ height: 90, borderRadius: 22, background: "var(--bg-card)", border: "1.5px solid var(--border-soft)", opacity: 0.5 }} />
                                 ))}
                             </div>
                         ) : rooms.length === 0 ? (
-                            <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--app-bg-secondary)", borderRadius: 24, border: "2px dashed var(--app-border)" }}>
-                                <MusicalNoteIcon style={{ width: 48, height: 48, color: "var(--app-text-muted)", margin: "0 auto 16px", opacity: 0.3 }} />
-                                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--app-text-muted)" }}>Masih sepi nih, belum ada ruang aktif.</p>
+                            <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--bg-secondary)", borderRadius: 24, border: "2px dashed var(--border-soft)" }}>
+                                <MusicalNoteIcon style={{ width: 48, height: 48, color: "var(--text-muted)", margin: "0 auto 16px", opacity: 0.3 }} />
+                                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text-muted)" }}>Masih sepi nih, belum ada ruang aktif.</p>
                             </div>
                         ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -423,7 +577,14 @@ export default function Dashboard() {
                                     <RoomCard
                                         key={room.id} room={room}
                                         usersInRoom={allUsers.filter(u => u.currentRoom === room.id && u.status !== "offline")}
-                                        onClick={() => router.push(`/room/${room.id}`)} index={i}
+                                        onClick={() => router.push(`/room/${room.id}`)}
+                                        onDelete={(e) => {
+                                            e.stopPropagation();
+                                            setDeletingRoom(room);
+                                            setDeleteCode("");
+                                            setDeleteCodeError(false);
+                                        }}
+                                        index={i}
                                     />
                                 ))}
                             </div>
@@ -439,7 +600,7 @@ export default function Dashboard() {
                         initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }}
                         style={{
                             position: "fixed", top: 0, right: 0, bottom: 0, width: 320, zIndex: 200,
-                            background: "var(--app-surface)", borderLeft: "1.5px solid var(--app-border)",
+                            background: "var(--bg-sidebar)", borderLeft: "1.5px solid var(--border-soft)",
                             padding: "24px", overflowY: "auto", boxShadow: "-10px 0 30px rgba(0,0,0,0.1)",
                             transition: "var(--theme-transition)"
                         }}
@@ -447,8 +608,8 @@ export default function Dashboard() {
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
                             <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>Daftar Teman</h3>
                             <button onClick={() => setShowUsers(false)} style={{
-                                width: 36, height: 36, borderRadius: "50%", background: "var(--app-bg-secondary)",
-                                border: "none", cursor: "pointer", color: "var(--app-text-muted)",
+                                width: 36, height: 36, borderRadius: "50%", background: "var(--bg-secondary)",
+                                border: "none", cursor: "pointer", color: "var(--text-muted)",
                                 display: "flex", alignItems: "center", justifyContent: "center"
                             }}>
                                 <XMarkIcon style={{ width: 20, height: 20 }} />
@@ -479,13 +640,13 @@ export default function Dashboard() {
                         <motion.div
                             initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                             style={{
-                                width: "100%", maxWidth: 440, background: "var(--app-surface)",
-                                border: "2px solid var(--app-border)", borderRadius: 32, padding: 32, position: "relative",
+                                width: "100%", maxWidth: 440, background: "var(--bg-card)",
+                                border: "2px solid var(--border-soft)", borderRadius: 32, padding: 32, position: "relative",
                                 boxShadow: "0 20px 50px rgba(0,0,0,0.2)"
                             }}
                         >
                             <h2 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 900, textAlign: "center", letterSpacing: "-0.02em" }}>Bikin Ruang Musik</h2>
-                            <p style={{ margin: "0 0 32px", fontSize: 15, color: "var(--app-text-muted)", textAlign: "center", fontWeight: 600 }}>Tentukan nama ruang biar teman gampang nemunya!</p>
+                            <p style={{ margin: "0 0 32px", fontSize: 15, color: "var(--text-muted)", textAlign: "center", fontWeight: 600 }}>Tentukan nama ruang biar teman gampang nemunya!</p>
 
                             <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                                 <input
@@ -493,19 +654,68 @@ export default function Dashboard() {
                                     value={newRoomName} onChange={e => setNewRoomName(e.target.value)}
                                     autoFocus required
                                     style={{
-                                        width: "100%", padding: "18px 24px", background: "var(--app-bg-secondary)",
-                                        border: "2px solid var(--app-border)", borderRadius: 20, color: "var(--app-text)",
+                                        width: "100%", padding: "18px 24px", background: "var(--bg-secondary)",
+                                        border: "2px solid var(--border-soft)", borderRadius: 20, color: "var(--text-primary)",
                                         fontSize: 16, fontWeight: 600, fontFamily: "var(--font-fredoka)", outline: "none",
                                         transition: "border-color 0.2s"
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: 12 }}>
-                                    <button type="button" onClick={() => setShowCreate(false)} style={{ flex: 1, padding: 16, borderRadius: 18, background: "var(--app-bg-secondary)", border: "none", color: "var(--app-text-muted)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Batal</button>
+                                    <button type="button" onClick={() => setShowCreate(false)} style={{ flex: 1, padding: 16, borderRadius: 18, background: "var(--bg-secondary)", border: "none", color: "var(--text-muted)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Batal</button>
                                     <button type="submit" disabled={creating || !newRoomName.trim()} style={{
-                                        flex: 2, padding: 16, borderRadius: 18, background: "var(--app-primary)", border: "none", color: "#fff",
-                                        fontSize: 15, fontWeight: 900, cursor: "pointer", boxShadow: "0 8px 20px var(--app-soft-accent)", opacity: creating ? 0.6 : 1
+                                        flex: 2, padding: 16, borderRadius: 18, background: "var(--accent-primary)", border: "none", color: "#fff",
+                                        fontSize: 15, fontWeight: 900, cursor: "pointer", boxShadow: "0 8px 20px var(--accent-glow)", opacity: creating ? 0.6 : 1
                                     }}>
                                         {creating ? "Membuat..." : "Gas! →"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Room Modal */}
+            <AnimatePresence>
+                {deletingRoom && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={e => e.target === e.currentTarget && setDeletingRoom(null)}
+                        style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                            style={{
+                                width: "100%", maxWidth: 440, background: "var(--bg-card)",
+                                border: "2px solid rgba(239, 68, 68, 0.4)", borderRadius: 32, padding: 32, position: "relative",
+                                boxShadow: "0 20px 50px rgba(239, 68, 68, 0.1)"
+                            }}
+                        >
+                            <h2 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 900, textAlign: "center", letterSpacing: "-0.02em", color: "#ef4444" }}>Hapus Ruang</h2>
+                            <p style={{ margin: "0 0 32px", fontSize: 15, color: "var(--text-muted)", textAlign: "center", fontWeight: 600 }}>Yakin ingin menghapus ruang <b>{deletingRoom.name}</b>? Masukkan kode rahasia untuk konfirmasi.</p>
+
+                            <form onSubmit={handleDeleteRoomSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                                <div>
+                                    <input
+                                        type="text" placeholder="Masukkan 6 digit kode..."
+                                        value={deleteCode} onChange={e => { setDeleteCode(e.target.value); setDeleteCodeError(false); }}
+                                        autoFocus required
+                                        style={{
+                                            width: "100%", padding: "18px 24px", background: "var(--bg-secondary)",
+                                            border: `2px solid ${deleteCodeError ? "#ef4444" : "var(--border-soft)"}`, borderRadius: 20, color: "var(--text-primary)",
+                                            fontSize: 16, fontWeight: 600, fontFamily: "var(--font-fredoka)", outline: "none",
+                                            transition: "border-color 0.2s"
+                                        }}
+                                    />
+                                    {deleteCodeError && <span style={{ color: "#ef4444", fontSize: 13, fontWeight: 700, marginTop: 8, display: "block", textAlign: "center" }}>Kode salah, coba lagi! 🥺</span>}
+                                </div>
+                                <div style={{ display: "flex", gap: 12 }}>
+                                    <button type="button" onClick={() => setDeletingRoom(null)} style={{ flex: 1, padding: 16, borderRadius: 18, background: "var(--bg-secondary)", border: "none", color: "var(--text-muted)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Batal</button>
+                                    <button type="submit" disabled={isDeleting || !deleteCode.trim()} style={{
+                                        flex: 2, padding: 16, borderRadius: 18, background: "#ef4444", border: "none", color: "#fff",
+                                        fontSize: 15, fontWeight: 900, cursor: "pointer", boxShadow: "0 8px 20px rgba(239, 68, 68, 0.3)", opacity: isDeleting ? 0.6 : 1
+                                    }}>
+                                        {isDeleting ? "Menghapus..." : "Hapus Ruang 💥"}
                                     </button>
                                 </div>
                             </form>
@@ -517,16 +727,16 @@ export default function Dashboard() {
             {/* Mobile Nav */}
             <nav className="mobile-bottomnav" style={{
                 display: "none", position: "fixed", bottom: 0, left: 0, right: 0, height: 80,
-                background: "var(--app-surface)", borderTop: "1.5px solid var(--app-border)",
+                background: "var(--bg-navbar)", borderTop: "1.5px solid var(--border-soft)",
                 justifyContent: "space-around", alignItems: "center", zIndex: 100,
                 paddingBottom: "env(safe-area-inset-bottom)",
-                transition: "var(--theme-transition)"
+                transition: "background-color 0.4s ease"
             }}>
-                <button onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", color: "var(--app-primary)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                <button onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", color: "var(--accent-primary)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
                     <MusicalNoteIcon style={{ width: 26, height: 26 }} />
                     <span style={{ fontSize: 11, fontWeight: 800 }}>DASHBOARD</span>
                 </button>
-                <button onClick={() => router.push("/profile")} style={{ background: "none", border: "none", color: "var(--app-text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                <button onClick={() => router.push("/profile")} style={{ background: "none", border: "none", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
                     <UserIcon style={{ width: 26, height: 26 }} />
                     <span style={{ fontSize: 11, fontWeight: 800 }}>PROFIL</span>
                 </button>
@@ -542,8 +752,15 @@ export default function Dashboard() {
                         padding: 24px 20px 100px !important;
                     }
                     .mobile-bottomnav { display: flex !important; }
-                    header { background: var(--app-surface) !important; }
+                    header { background: var(--bg-navbar) !important; }
                 }
+
+                /* Personal Ambient Styles */
+                .dashboard-location-color { color: var(--text-muted); }
+                
+                .counter-card { background: var(--bg-card); border: 1.5px solid var(--border-soft); }
+                
+                .song-of-the-day { background: var(--bg-secondary); border: 1px solid var(--border-soft); }
             `}</style>
         </div>
     );

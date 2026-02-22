@@ -123,8 +123,8 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                         style={{
                             width: "100%", maxWidth: 440,
-                            background: "var(--app-surface)",
-                            border: "1.5px solid var(--app-border)",
+                            background: "var(--bg-card)",
+                            border: "1.5px solid var(--border-soft)",
                             borderRadius: 24, overflow: "hidden",
                             display: "flex", flexDirection: "column", maxHeight: "78vh",
                             boxShadow: "0 40px 80px rgba(0,0,0,0.25)",
@@ -134,15 +134,15 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                     >
                         <div style={{ padding: "24px 24px 16px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, fontFamily: "var(--font-fredoka)", color: "var(--app-text)", letterSpacing: "-0.01em" }}>Pilih Lagu 🎵</h2>
+                                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, fontFamily: "var(--font-fredoka)", color: "var(--text-primary)", letterSpacing: "-0.01em" }}>Pilih Lagu 🎵</h2>
                                 {onAddRandom && (
                                     <button
                                         onClick={onAddRandom}
                                         style={{
                                             padding: "6px 12px", borderRadius: 12, border: "none",
-                                            background: "var(--app-primary)", color: "#fff",
+                                            background: "var(--accent-primary)", color: "#fff",
                                             fontSize: 11, fontWeight: 900, cursor: "pointer",
-                                            boxShadow: "0 4px 12px var(--app-soft-accent)",
+                                            boxShadow: "var(--shadow-soft)",
                                             transition: "all 0.2s"
                                         }}
                                         onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
@@ -153,7 +153,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                 )}
                             </div>
                             <div style={{ position: "relative" }}>
-                                <MagnifyingGlassIcon style={{ position: "absolute", left: 14, top: 12, width: 18, height: 18, color: "var(--app-text-muted)" }} />
+                                <MagnifyingGlassIcon style={{ position: "absolute", left: 14, top: 12, width: 18, height: 18, color: "var(--text-muted)" }} />
                                 <input
                                     autoFocus
                                     placeholder="Cari judul atau artis..."
@@ -161,9 +161,9 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                     onChange={e => setSearch(e.target.value)}
                                     style={{
                                         width: "100%", padding: "12px 16px 12px 42px",
-                                        borderRadius: 16, border: "1.5px solid var(--app-border)",
-                                        background: "var(--app-bg-secondary)",
-                                        color: "var(--app-text)", fontSize: 14, fontWeight: 600,
+                                        borderRadius: 16, border: "1.5px solid var(--border-soft)",
+                                        background: "var(--bg-secondary)",
+                                        color: "var(--text-primary)", fontSize: 14, fontWeight: 600,
                                         outline: "none", transition: "all 0.2s"
                                     }}
                                 />
@@ -184,7 +184,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                                 transition: "all 0.2s"
                                             }}
                                             onMouseEnter={e => {
-                                                e.currentTarget.style.background = "var(--app-bg-secondary)";
+                                                e.currentTarget.style.background = "var(--bg-secondary)";
                                             }}
                                             onMouseLeave={e => {
                                                 e.currentTarget.style.background = "none";
@@ -192,17 +192,17 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                         >
                                             <div style={{
                                                 width: 44, height: 44, borderRadius: 12,
-                                                background: "var(--app-primary)", display: "flex",
+                                                background: "var(--accent-primary)", display: "flex",
                                                 alignItems: "center", justifyContent: "center", fontSize: 20
                                             }}>🎵</div>
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--app-text)" }}>{s.title}</p>
+                                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>{s.title}</p>
                                                     {s.hasLyrics && (
                                                         <span style={{
                                                             fontSize: 9,
                                                             background: "rgba(255, 72, 153, 0.1)",
-                                                            color: "var(--app-primary)",
+                                                            color: "var(--accent-primary)",
                                                             padding: "2px 6px",
                                                             borderRadius: 6,
                                                             fontWeight: 900,
@@ -214,9 +214,9 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>{s.artist}</p>
+                                                <p style={{ margin: 0, fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>{s.artist}</p>
                                             </div>
-                                            <span style={{ fontSize: 11, color: "var(--app-text-muted)", fontWeight: 700 }}>
+                                            <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700 }}>
                                                 {Math.floor(s.duration / 60)}:{String(s.duration % 60).padStart(2, '0')}
                                             </span>
                                         </button>
@@ -224,7 +224,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                 </div>
                             ) : (
                                 <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                                    <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600 }}>Lagu tidak ditemukan 🥺</p>
+                                    <p style={{ margin: 0, fontSize: 14, color: "var(--text-muted)", fontWeight: 600 }}>Lagu tidak ditemukan 🥺</p>
                                 </div>
                             )}
                         </div>
@@ -234,11 +234,11 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                 onClick={onClose}
                                 style={{
                                     width: "100%", padding: "14px", borderRadius: 16, border: "none",
-                                    background: "var(--app-bg-secondary)", color: "var(--app-text)",
-                                    fontSize: 14, fontWeight: 800, cursor: "pointer", transition: "all 0.2s"
+                                    background: "var(--bg-secondary)", color: "var(--text-primary)",
+                                    fontSize: 14, fontWeight: 800, cursor: "pointer", transition: "0.2s"
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = "var(--app-border)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "var(--app-bg-secondary)"}
+                                onMouseEnter={e => e.currentTarget.style.background = "var(--border-soft)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "var(--bg-secondary)"}
                             >
                                 Tutup
                             </button>
