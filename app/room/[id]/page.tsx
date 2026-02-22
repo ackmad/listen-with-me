@@ -325,7 +325,10 @@ function RoomInner() {
     const [showImmersiveQueue, setShowImmersiveQueue] = useState(false);
 
     useEffect(() => {
-        const checkMobile = () => setIsMobileScreen(window.innerWidth <= 1024);
+        const checkMobile = () => {
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            setIsMobileScreen(window.innerWidth <= 1024 || (isTouch && window.innerWidth <= 1366));
+        };
         checkMobile();
         window.addEventListener("resize", checkMobile);
         return () => window.removeEventListener("resize", checkMobile);
@@ -1591,131 +1594,122 @@ function RoomInner() {
                         className="mobile-fullscreen-force-landscape"
                         style={{
                             position: "fixed", inset: 0, zIndex: 10000,
-                            background: "#eff4f8", // Warna netral terang seperti referensi image kaset
+                            background: "#E6EDF2", // A light cool grey like the image
                             color: "#1a1a1a",
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            display: "flex", alignItems: "stretch", // full height
                             overflow: "hidden",
-                            padding: "20px 30px"
+                            padding: "24px 32px"
                         }}
                     >
-                        {/* Top Right User Active & Close */}
-                        <div style={{ position: "absolute", top: 20, right: 20, display: "flex", alignItems: "center", gap: 12, zIndex: 100 }}>
-                            <div style={{ display: "flex" }}>
-                                {roomUsersSorted.slice(0, 3).map((u, i) => (
-                                    <div
-                                        key={u.uid}
-                                        onClick={() => toast(u.displayName, "info")}
-                                        style={{
-                                            position: "relative", cursor: "pointer",
-                                            marginLeft: i === 0 ? 0 : -10,
-                                            border: "2px solid #eff4f8", borderRadius: "50%"
-                                        }}
-                                    >
-                                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#ccc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                                            {u.photoURL ? <img src={u.photoURL} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: 12, fontWeight: 900 }}>{getInitials(u.displayName)}</span>}
-                                        </div>
-                                        {u.status === "online" && (
-                                            <div style={{ position: "absolute", bottom: -2, right: -2, width: 10, height: 10, borderRadius: "50%", background: "var(--app-primary)", border: "2px solid #eff4f8" }} />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <button onClick={toggleFullscreen} style={{ background: "rgba(0,0,0,0.05)", borderRadius: "50%", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}>
-                                <ArrowsPointingInIcon style={{ width: 20, height: 20, color: "#1a1a1a" }} />
+                        {/* Top Right Close */}
+                        <div style={{ position: "absolute", top: 16, right: 16, display: "flex", alignItems: "center", gap: 12, zIndex: 100 }}>
+                            <button onClick={toggleFullscreen} style={{ background: "rgba(0,0,0,0.05)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}>
+                                <ArrowsPointingInIcon style={{ width: 18, height: 18, color: "#1a1a1a" }} />
                             </button>
                         </div>
 
-                        {/* Left Side: Info & Lyrics */}
-                        <div style={{ width: "42%", display: "flex", flexDirection: "column", height: "100%", justifyContent: "center", position: "relative", zIndex: 10 }}>
-                            <h2 style={{ fontSize: "clamp(24px, 4vh, 32px)", fontWeight: 900, margin: "0 0 4px", fontFamily: "var(--font-geist-sans)", letterSpacing: "-1px" }}>
-                                {room?.currentSong?.title || "Belum ada lagu"}
-                            </h2>
-                            <p style={{ fontSize: "clamp(14px, 2.5vh, 18px)", color: "rgba(0,0,0,0.5)", fontWeight: 600, margin: "0 0 16px" }}>
-                                {room?.currentSong?.artist || "Standby..."}
-                            </p>
+                        {/* Left Column: Info & Controls */}
+                        <div style={{ width: "38%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", zIndex: 10, padding: "24px 0" }}>
 
-                            {/* Controls & Queue Button */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-                                <button onClick={togglePlay} style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(0,0,0,0.08)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                                    {room?.isPlaying ? <PauseIcon style={{ width: 20, height: 20 }} /> : <PlayIcon style={{ width: 20, height: 20, marginLeft: 2 }} />}
-                                </button>
-                                <button onClick={skipNext} disabled={!isHost || !room?.queue?.length} style={{ width: 36, height: 36, borderRadius: "50%", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isHost ? "pointer" : "default", opacity: isHost ? 1 : 0.3 }}>
-                                    <ForwardIcon style={{ width: 18, height: 18, color: "rgba(0,0,0,0.5)" }} />
-                                </button>
+                            {/* Top Info */}
+                            <div>
+                                <h1 style={{ fontSize: "clamp(24px, 5vh, 42px)", fontWeight: 900, margin: "0", color: "#1E1E1E", fontFamily: "var(--font-geist-sans)", letterSpacing: "-1px", lineHeight: "1.1" }}>
+                                    {room?.currentSong?.artist || "Standby..."}
+                                </h1>
+                                <p style={{ fontSize: "clamp(16px, 3vh, 22px)", color: "#1E1E1E", fontWeight: 600, margin: "4px 0 24px 0", opacity: 0.8 }}>
+                                    {room?.currentSong?.title || "Belum ada lagu"}
+                                </p>
 
-                                <div style={{ width: 1, height: 24, background: "rgba(0,0,0,0.1)", margin: "0 8px" }} />
+                                {/* Progress Bar */}
+                                <div style={{ width: "100%", maxWidth: "340px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#1E1E1E", opacity: 0.8 }}>{formatTime(currentTime)}</span>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#1E1E1E", opacity: 0.8 }}>{formatTime(duration)}</span>
+                                    </div>
+                                    <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, position: "relative" }}>
+                                        <div style={{ height: "100%", width: `${progress}%`, background: "#1E1E1E", borderRadius: 2, position: "relative" }}>
+                                            {/* Minimal Scrubber Dot */}
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <button onClick={() => setShowSongs(true)} style={{ width: 36, height: 36, borderRadius: "50%", background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                                    <QueueListIcon style={{ width: 18, height: 18, color: "rgba(0,0,0,0.5)" }} />
-                                </button>
+                                {/* Controls */}
+                                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 24 }}>
+                                    <button onClick={togglePlay} style={{ width: 44, height: 44, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.05)" }}>
+                                        {room?.isPlaying ? <PauseIcon style={{ width: 22, height: 22, color: "#1E1E1E" }} /> : <PlayIcon style={{ width: 22, height: 22, marginLeft: 2, color: "#1E1E1E" }} />}
+                                    </button>
+                                    <button onClick={() => { }} disabled={true} style={{ width: 36, height: 36, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.5 }}>
+                                        <PlayIcon style={{ width: 16, height: 16, color: "#1E1E1E", transform: "rotate(180deg)" }} />
+                                    </button>
+                                    <button onClick={skipNext} disabled={!isHost || !room?.queue?.length} style={{ width: 36, height: 36, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isHost && room?.queue?.length ? "pointer" : "default", opacity: isHost && room?.queue?.length ? 1 : 0.5 }}>
+                                        <ForwardIcon style={{ width: 16, height: 16, color: "#1E1E1E" }} />
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Lyrics mini panel */}
-                            <div style={{ flex: 1, minHeight: 0, overflow: "hidden", position: "relative" }}>
-                                <LyricsPanel
-                                    lyrics={lyrics}
-                                    activeIndex={activeIndex}
-                                    autoScrollEnabled={true}
-                                    setAutoScrollEnabled={() => { }}
-                                    isDarkMode={false}
-                                    isDesktopInline={true}
-                                    isImmersive={false}
-                                />
+                            {/* Bottom Menu Icon */}
+                            <div>
+                                <button onClick={() => setShowSongs(true)} style={{ width: 42, height: 42, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "inset 0 2px 4px rgba(255,255,255,0.4), 0 2px 5px rgba(0,0,0,0.05)" }}>
+                                    <QueueListIcon style={{ width: 20, height: 20, color: "#1E1E1E" }} />
+                                </button>
                             </div>
                         </div>
 
-                        {/* Right Side: Cassette Tape Image and Animations */}
-                        <div style={{ width: "55%", height: "100%", display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "5%", position: "relative" }}>
+                        {/* Right Area: Cassette Tape */}
+                        <div style={{ width: "62%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
+
                             <div style={{
                                 width: "100%",
-                                maxWidth: 600,
-                                aspectRatio: "1.58 / 1", // Rasio kaset pada umumnya
-                                background: `url('/images/kasetpita.png') center/contain no-repeat`,
+                                maxWidth: "560px",
                                 position: "relative",
-                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.2))"
+                                aspectRatio: "1.65 / 1",
+                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.25))"
                             }}>
-                                {/* 
-                                TUTORIAL CUSTOMIZE POSISI PITA KASET:
-                                - left (Pita Kiri) atau right (Pita Kanan) mengatur pergeseran X.
-                                - top mengatur pergeseran Y (tinggi rendah).
-                                - width mengatur besaran pitanya.
-                                Ubahlah persentasenya misal "25.5%" agar pas dengan lubang bolongan di gambar kasetpita.png Anda. 
-                                */}
+                                {/* Base Cassette Image */}
+                                <div style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    background: `url('/images/kasetpita.png') center/contain no-repeat`,
+                                    position: "relative",
+                                    zIndex: 2,
+                                }} />
 
-                                {/* Left Tape */}
+                                {/* Left Tape Spool */}
                                 <motion.div
                                     animate={{ rotate: room?.isPlaying && room?.currentSong ? 360 : 0 }}
-                                    transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                                     style={{
                                         position: "absolute",
-                                        left: "26.5%",  // <=== GESER KIRI/KANAN PITA KIRI DISINI
-                                        top: "40.5%",   // <=== GESER ATAS/BAWAH PITA KIRI DISINI
-                                        width: "16%",   // <=== ATUR UKURAN PITA KIRI DISINI
+                                        left: "26.5%",
+                                        top: "40.5%",
+                                        width: "16%",
                                         aspectRatio: "1/1",
                                         background: `url('/images/pita.png') center/contain no-repeat`,
                                         transformOrigin: "center center",
-                                        willChange: "transform"
+                                        willChange: "transform",
+                                        zIndex: 1
                                     }}
                                 />
 
-                                {/* Right Tape */}
+                                {/* Right Tape Spool */}
                                 <motion.div
                                     animate={{ rotate: room?.isPlaying && room?.currentSong ? 360 : 0 }}
-                                    transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                                     style={{
                                         position: "absolute",
-                                        right: "26.5%", // <=== GESER KIRI/KANAN PITA KANAN DISINI
-                                        top: "40.5%",   // <=== GESER ATAS/BAWAH PITA KANAN DISINI
-                                        width: "16%",   // <=== ATUR UKURAN PITA KANAN DISINI
+                                        right: "26.5%",
+                                        top: "40.5%",
+                                        width: "16%",
                                         aspectRatio: "1/1",
                                         background: `url('/images/pita.png') center/contain no-repeat`,
                                         transformOrigin: "center center",
-                                        willChange: "transform"
+                                        willChange: "transform",
+                                        zIndex: 1
                                     }}
                                 />
                             </div>
-                        </div>
 
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
