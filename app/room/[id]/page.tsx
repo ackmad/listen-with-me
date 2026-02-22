@@ -695,10 +695,10 @@ function RoomInner() {
                                     width: lyrics && lyrics.length > 0 ? 320 : 460,
                                     height: lyrics && lyrics.length > 0 ? 320 : 460,
                                     borderRadius: "50%",
-                                    background: "var(--bg-card)",
-                                    border: "6px solid var(--border-soft)",
+                                    background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
+                                    border: "6px solid #222",
                                     display: "flex", alignItems: "center", justifyContent: "center",
-                                    boxShadow: room?.isPlaying ? "0 0 60px var(--accent-glow)" : "0 20px 50px rgba(0,0,0,0.15)",
+                                    boxShadow: room?.isPlaying ? "0 0 60px var(--accent-glow), 0 30px 60px rgba(0,0,0,0.8)" : "0 20px 50px rgba(0,0,0,0.6)",
                                     transition: "width 0.5s ease, height 0.5s ease"
                                 }}
                             >
@@ -706,7 +706,7 @@ function RoomInner() {
                                     width: lyrics && lyrics.length > 0 ? 80 : 120,
                                     height: lyrics && lyrics.length > 0 ? 80 : 120,
                                     borderRadius: "50%",
-                                    background: "var(--bg-secondary)", border: "3px solid var(--border-soft)",
+                                    background: "#1a1a1a", border: "3px solid #333",
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     transition: "width 0.5s ease, height 0.5s ease"
                                 }}>
@@ -826,12 +826,12 @@ function RoomInner() {
                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                     style={{
                         width: "85vw", maxWidth: 320, height: "85vw", maxHeight: 320,
-                        borderRadius: 32, background: "var(--bg-card)",
-                        boxShadow: "0 30px 60px rgba(0,0,0,0.3)",
+                        borderRadius: 32, background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
+                        boxShadow: room?.isPlaying ? "0 30px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow)" : "0 30px 60px rgba(0,0,0,0.5)",
                         marginBottom: 48, display: "flex", alignItems: "center", justifyContent: "center"
                     }}
                 >
-                    <div style={{ width: "20%", height: "20%", borderRadius: "50%", background: "var(--bg-primary)", border: "2px solid var(--border-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "20%", height: "20%", borderRadius: "50%", background: "#1a1a1a", border: "2px solid #333", display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--accent-primary)" }} />
                     </div>
                 </motion.div>
@@ -1119,15 +1119,15 @@ function RoomInner() {
                                             style={{
                                                 width: "75vw", maxWidth: 300, height: "75vw", maxHeight: 300,
                                                 borderRadius: "50%",
-                                                background: `linear-gradient(135deg, ${isDarkMode ? '#2D1B36' : '#FFF0F5'} 0%, ${isDarkMode ? '#1A0F20' : '#FFE4E1'} 100%)`,
-                                                border: "6px solid var(--border-soft)",
+                                                background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
+                                                border: "6px solid #222",
                                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                                boxShadow: room?.isPlaying ? "0 20px 60px rgba(0,0,0,0.4)" : "0 10px 30px rgba(0,0,0,0.1)",
+                                                boxShadow: room?.isPlaying ? "0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow)" : "0 10px 30px rgba(0,0,0,0.6)",
                                             }}
                                         >
                                             <div style={{
                                                 width: "25%", height: "25%", borderRadius: "50%",
-                                                background: "rgba(0,0,0,0.2)", border: "2px solid rgba(255,255,255,0.05)",
+                                                background: "#1a1a1a", border: "2px solid #333",
                                                 display: "flex", alignItems: "center", justifyContent: "center"
                                             }}>
                                                 <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--accent-primary)" }} />
