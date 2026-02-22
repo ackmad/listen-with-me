@@ -1,6 +1,6 @@
 {
   "name": "listen-with-me",
-  "version": "0.11",
+  "version": "1.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
