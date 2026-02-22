@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeftIcon, MusicalNoteIcon, CheckIcon, XMarkIcon,
     QueueListIcon, PlusIcon, UsersIcon,
+    ChatBubbleOvalLeftIcon, HeartIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon
 } from "@heroicons/react/24/outline";
 import {
     PlayIcon, PauseIcon, ForwardIcon,
@@ -24,6 +25,8 @@ import {
 import { ToastProvider, useToast } from "@/components/Toast";
 import SongManager, { LOCAL_SONGS } from "@/components/SongManager";
 import ReactionSystem from "@/components/ReactionSystem";
+import LyricsPanel from "@/components/LyricsPanel";
+import { parseSRT, LyricLine } from "@/lib/srtParser";
 
 // ─── Sync Loading Screen ──────────────────────────────────────────────────
 function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string }) {
@@ -50,7 +53,6 @@ function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string
             padding: 32,
             transition: "var(--theme-transition)",
         }}>
-            {/* Pulsing disc */}
             <div style={{ position: "relative", marginBottom: 36 }}>
                 <motion.div
                     animate={{ rotate: 360 }}
@@ -65,7 +67,6 @@ function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string
                 >
                     <MusicalNoteIcon style={{ width: 36, height: 36, color: "var(--app-primary)" }} />
                 </motion.div>
-                {/* Ripple rings */}
                 {[1, 2, 3].map(i => (
                     <motion.div
                         key={i}
@@ -80,7 +81,6 @@ function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string
                 ))}
             </div>
 
-            {/* Song info */}
             {songTitle && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -94,7 +94,6 @@ function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string
                 </motion.div>
             )}
 
-            {/* Waveform bars */}
             <div style={{ display: "flex", gap: 5, alignItems: "flex-end", marginBottom: 24, height: 28 }}>
                 {[1, 2, 3, 4, 5, 4, 3, 2].map((h, i) => (
                     <motion.div
@@ -106,7 +105,6 @@ function SyncScreen({ songTitle, artist }: { songTitle?: string; artist?: string
                 ))}
             </div>
 
-            {/* Rotating tips */}
             <AnimatePresence mode="wait">
                 <motion.p
                     key={tipIdx}
@@ -311,6 +309,64 @@ function RoomInner() {
     const sessionStart = useRef(Date.now());
     const [songsPlayed, setSongsPlayed] = useState(0);
 
+    // Lyrics related state
+    const [lyrics, setLyrics] = useState<LyricLine[] | null>(null);
+    const [activeIndex, setActiveIndex] = useState(-1);
+    const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [activeView, setActiveView] = useState<"player" | "lyrics">("player");
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showImmersiveQueue, setShowImmersiveQueue] = useState(false);
+
+    useEffect(() => {
+        const handleFSChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", handleFSChange);
+        return () => document.removeEventListener("fullscreenchange", handleFSChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const checkTheme = () => setIsDarkMode(document.body.classList.contains('dark'));
+        checkTheme();
+        const observer = new MutationObserver(checkTheme);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        const songUrl = room?.currentSong?.url;
+        if (!songUrl) {
+            setLyrics(null);
+            setActiveIndex(-1);
+            return;
+        }
+        const baseUrl = songUrl.split('?')[0];
+        const srtUrl = baseUrl.replace(/\.[^/.]+$/, "") + ".srt";
+
+        fetch(srtUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("SRT not found");
+                return res.text();
+            })
+            .then(text => {
+                setLyrics(parseSRT(text));
+                setActiveIndex(-1);
+            })
+            .catch(() => {
+                setLyrics(null);
+                setActiveIndex(-1);
+            });
+    }, [room?.currentSong?.url]);
+
     useEffect(() => {
         return onAuthStateChanged(auth, (u) => {
             if (!u) { router.push("/"); return; }
@@ -339,8 +395,6 @@ function RoomInner() {
         }, (err) => console.warn("Room:", err.message));
     }, [rId, authDone, user, router]);
 
-
-
     const lastSongUrl = useRef<string | null>(null);
     useEffect(() => {
         const audio = audioRef.current;
@@ -366,10 +420,10 @@ function RoomInner() {
                 }
                 try {
                     await audio.play();
-                    setNeedsInteraction(false); // Play success, hide interaction overlay
+                    setNeedsInteraction(false);
                 } catch (e: any) {
                     if (e.name === "NotAllowedError") {
-                        setNeedsInteraction(true); // Play failed due to interaction policy
+                        setNeedsInteraction(true);
                     } else if (e.name !== "AbortError") {
                         console.warn("Play:", e.message);
                     }
@@ -402,8 +456,6 @@ function RoomInner() {
                 const data = snap.data();
                 if (!data) return;
 
-                // Sync check: only advance if the finished song is still currentSong
-                // Note: currentSrc might be absolute, so we check if it ends with the stored relative URL
                 const currentSrc = audioRef.current?.src || "";
                 const dbUrl = data.currentSong?.url || "";
                 if (!currentSrc || !dbUrl || !currentSrc.endsWith(dbUrl)) return;
@@ -426,19 +478,25 @@ function RoomInner() {
 
     const togglePlay = async () => {
         if (!isHost) return;
+        const newIsPlaying = !room.isPlaying;
+        const currentPos = audioRef.current?.currentTime || 0;
+
         await updateDoc(doc(db, "rooms", rId), {
-            isPlaying: !room.isPlaying,
-            ...(!room.isPlaying && { startedAt: serverTimestamp() }),
+            isPlaying: newIsPlaying,
+            ...(newIsPlaying && { startedAt: new Date(Date.now() - (currentPos * 1000)) }),
         });
     };
     const skipNext = async () => {
+        if (!room?.queue?.length) return;
         const next = room.queue[0];
         await updateDoc(doc(db, "rooms", rId), {
-            currentSong: next, queue: room.queue.slice(1),
-            isPlaying: true, startedAt: serverTimestamp(),
+            currentSong: next || null,
+            queue: room.queue.slice(1),
+            isPlaying: true,
+            startedAt: serverTimestamp(),
         });
         setSongsPlayed(p => p + 1);
-        toast(`▶ Lompat ke: ${next.title}`, "info");
+        toast(`▶ Lompat ke: ${next?.title || "Lagu Selanjutnya"}`, "info");
     };
 
     const handleSongSelect = async (song: any) => {
@@ -472,12 +530,13 @@ function RoomInner() {
         toast("Lagu dihapus dari antrian", "info");
     };
 
-
     const playFromQueue = async (song: any) => {
-        if (!isHost) return;
+        if (!isHost || !song) return;
         await updateDoc(doc(db, "rooms", rId), {
-            currentSong: song, queue: arrayRemove(song),
-            isPlaying: true, startedAt: serverTimestamp(),
+            currentSong: song || null,
+            queue: arrayRemove(song),
+            isPlaying: true,
+            startedAt: serverTimestamp(),
         });
         setSongsPlayed(p => p + 1);
     };
@@ -495,6 +554,228 @@ function RoomInner() {
 
     if (!authDone) return <RoomSkeleton />;
 
+    // ─── Shared Components ──────────────────────────────────────────────────
+
+    const desktopSidebar = (
+        <aside className="room-sidebar-desktop" style={{
+            width: 380, flexShrink: 0,
+            borderLeft: "1.5px solid var(--app-border)",
+            background: "var(--app-surface)",
+            display: "flex", flexDirection: "column",
+            transition: "var(--theme-transition)",
+            height: "100%", overflowY: "auto",
+        }}>
+            {/* Active Users */}
+            <div style={{ padding: "24px 20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <UsersIcon style={{ width: 16, height: 16, color: "var(--app-primary)" }} />
+                        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                            Teman Mendengar ({roomUsers.length})
+                        </h3>
+                    </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {roomUsersSorted.map(u => (
+                        <RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />
+                    ))}
+                </div>
+            </div>
+
+            <div style={{ height: 1.5, background: "var(--app-border)", margin: "0 20px" }} />
+
+            {/* Queue */}
+            <div style={{ padding: "24px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <QueueListIcon style={{ width: 16, height: 16, color: "var(--app-primary)" }} />
+                        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                            List Antrian
+                        </h3>
+                    </div>
+                    {isHost && (
+                        <button onClick={addRandomSongs} style={{ padding: "4px 10px", borderRadius: 10, border: "none", background: "var(--app-bg-secondary)", color: "var(--app-text-muted)", fontSize: 10, fontWeight: 900, cursor: "pointer" }}>
+                            🎲 RANDOM 5
+                        </button>
+                    )}
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+                    {room?.queue?.length > 0 ? (
+                        room.queue.map((s: any, i: number) => (
+                            <QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} onPlay={() => playFromQueue(s)} onRemove={() => removeFromQueue(s)} />
+                        ))
+                    ) : (
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20, gap: 12 }}>
+                            <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 700, fontSize: 13 }}>Antrian masih kosong</p>
+                            <button onClick={() => setShowSongs(true)} style={{ background: "none", border: "none", color: "var(--app-primary)", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>+ Tambah Lagu</button>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {/* Version */}
+            <div style={{ padding: 12, textAlign: "right" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "var(--app-text-muted)", opacity: 0.5 }}>v0.11</span>
+            </div>
+        </aside>
+    );
+
+    const desktopPlayerContent = (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--app-bg)", overflow: "hidden" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 40px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 60, width: "100%", maxWidth: 1100 }}>
+
+                    {/* Disc Section */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                        <div style={{ position: "relative", marginBottom: 40 }}>
+                            <motion.div
+                                animate={room?.isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                                transition={room?.isPlaying ? { duration: 12, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
+                                style={{
+                                    width: 320, height: 320, borderRadius: "50%",
+                                    background: "var(--app-surface)",
+                                    border: "6px solid var(--app-border)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    boxShadow: room?.isPlaying ? "0 0 60px var(--app-soft-accent)" : "0 20px 50px rgba(0,0,0,0.15)",
+                                }}
+                            >
+                                <div style={{
+                                    width: 80, height: 80, borderRadius: "50%",
+                                    background: "var(--app-bg-secondary)", border: "3px solid var(--app-border)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                }}>
+                                    <MusicalNoteIcon style={{ width: 32, height: 32, color: room?.currentSong ? "var(--app-primary)" : "var(--app-text-muted)" }} />
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        <div style={{ textAlign: "center", width: "100%" }}>
+                            <h2 style={{ margin: "0 0 8px", fontSize: 32, fontWeight: 900, color: "var(--app-text)" }}>
+                                {room?.currentSong?.title || "Belum ada lagu"}
+                            </h2>
+                            <p style={{ margin: "0 0 32px", fontSize: 18, color: "var(--app-primary)", fontWeight: 700 }}>
+                                {room?.currentSong?.artist || (isHost ? "Klik Request untuk mulai!" : "Menunggu host...")}
+                            </p>
+
+                            {/* Controls */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 24, justifyContent: "center" }}>
+                                <button onClick={() => setMuted(m => { if (audioRef.current) audioRef.current.muted = !m; return !m; })}
+                                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid var(--app-border)", borderRadius: "50%", cursor: "pointer", color: "var(--app-text-secondary)", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    {muted ? <SpeakerXMarkIcon style={{ width: 18, height: 18 }} /> : <SpeakerWaveIcon style={{ width: 18, height: 18 }} />}
+                                </button>
+                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={togglePlay} disabled={!isHost || !room?.currentSong}
+                                    style={{ width: 64, height: 64, borderRadius: "50%", border: "none", background: "var(--app-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 10px 30px var(--app-soft-accent)" }}>
+                                    {room?.isPlaying ? <PauseIcon style={{ width: 28, height: 28 }} /> : <PlayIcon style={{ width: 28, height: 28, marginLeft: 3 }} />}
+                                </motion.button>
+                                <button onClick={skipNext} disabled={!isHost || !room?.queue?.length}
+                                    style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid var(--app-border)", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", color: "var(--app-text-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <ForwardIcon style={{ width: 18, height: 18 }} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Inline Lyrics Section */}
+                    <div style={{ flex: 1, paddingLeft: 40, borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
+                        <LyricsPanel
+                            lyrics={lyrics}
+                            activeIndex={activeIndex}
+                            autoScrollEnabled={true}
+                            setAutoScrollEnabled={() => { }}
+                            isDarkMode={isDarkMode}
+                            isDesktopInline={true}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Tiny text at bottom */}
+            <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <MusicalNoteIcon style={{ width: 12, height: 12, color: "var(--app-text-muted)" }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: "var(--app-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    Sinkronisasi Dengan Host Aktif
+                </span>
+            </div>
+        </div>
+    );
+
+    // ─── Mobile Views (iOS Style) ───────────────────────────────────────────
+
+    const mobilePlayerView = (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px 60px", background: "var(--app-bg)" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                {/* Large Apple-style disc */}
+                <motion.div
+                    animate={room?.isPlaying ? { rotate: 360 } : {}}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                    style={{
+                        width: "85vw", maxWidth: 320, height: "85vw", maxHeight: 320,
+                        borderRadius: 32, background: "var(--app-surface)",
+                        boxShadow: "0 30px 60px rgba(0,0,0,0.3)",
+                        marginBottom: 48, display: "flex", alignItems: "center", justifyContent: "center"
+                    }}
+                >
+                    <div style={{ width: "20%", height: "20%", borderRadius: "50%", background: "var(--app-bg)", border: "2px solid var(--app-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--app-primary)" }} />
+                    </div>
+                </motion.div>
+
+                {/* Song Info */}
+                <div style={{ width: "100%", marginBottom: 32 }}>
+                    <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "var(--app-text)", letterSpacing: "-0.5px" }}>{room?.currentSong?.title || "Belum ada lagu"}</h2>
+                    <p style={{ margin: "4px 0 0", fontSize: 18, color: "var(--app-text-secondary)", fontWeight: 600 }}>{room?.currentSong?.artist || "Standby..."}</p>
+                </div>
+
+                {/* Progress */}
+                <div style={{ width: "100%", marginBottom: 40 }}>
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2 }}>
+                        <div style={{ height: "100%", width: `${progress}%`, background: "#fff", borderRadius: 2 }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.5 }}>{formatTime(currentTime)}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.5 }}>{formatTime(duration)}</span>
+                    </div>
+                </div>
+
+                {/* Large Controls */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 50, width: "100%" }}>
+                    <button style={{ background: "none", border: "none", color: "#fff" }}><PlayIcon style={{ width: 32, height: 32, transform: "rotate(180deg)" }} onClick={() => { }} /></button>
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={togglePlay}
+                        style={{ width: 84, height: 84, borderRadius: "50%", background: "#fff", border: "none", color: "#000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {room?.isPlaying ? <PauseIcon style={{ width: 40, height: 40 }} /> : <PlayIcon style={{ width: 40, height: 40, marginLeft: 4 }} />}
+                    </motion.button>
+                    <button onClick={skipNext} style={{ background: "none", border: "none", color: "#fff" }}><ForwardIcon style={{ width: 32, height: 32 }} /></button>
+                </div>
+            </div>
+        </div>
+    );
+
+    const mobileLyricsView = (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--app-bg)", overflow: "hidden" }}>
+            {/* Small header for lyrics view */}
+            <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--app-surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <MusicalNoteIcon style={{ width: 20, height: 20, color: "var(--app-primary)" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 900 }}>{room?.currentSong?.title}</p>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, opacity: 0.6 }}>{room?.currentSong?.artist}</p>
+                </div>
+            </div>
+
+            <div style={{ flex: 1, padding: "20px 0" }}>
+                <LyricsPanel
+                    lyrics={lyrics}
+                    activeIndex={activeIndex}
+                    autoScrollEnabled={autoScrollEnabled}
+                    setAutoScrollEnabled={setAutoScrollEnabled}
+                    isDarkMode={isDarkMode}
+                    isMobile={true}
+                />
+            </div>
+        </div>
+    );
+
     return (
         <div style={{
             minHeight: "100vh", background: "var(--app-bg)", color: "var(--app-text)",
@@ -506,7 +787,20 @@ function RoomInner() {
                 ref={audioRef}
                 onTimeUpdate={() => {
                     const a = audioRef.current;
-                    if (a) { setCurrentTime(a.currentTime); setDuration(isNaN(a.duration) ? 0 : a.duration); }
+                    if (a) {
+                        const time = a.currentTime;
+                        setCurrentTime(time);
+                        setDuration(isNaN(a.duration) ? 0 : a.duration);
+                        if (lyrics && lyrics.length > 0) {
+                            const index = lyrics.findIndex(l => time >= l.start && time <= l.end);
+                            if (index !== -1) setActiveIndex(index);
+                            else {
+                                const lastIndex = [...lyrics].reverse().findIndex(l => time >= l.start);
+                                if (lastIndex !== -1) setActiveIndex(lyrics.length - 1 - lastIndex);
+                                else setActiveIndex(-1);
+                            }
+                        }
+                    }
                 }}
                 onCanPlay={() => { setIsSyncing(false); if (syncTimeout.current) clearTimeout(syncTimeout.current); }}
                 onEnded={handleAudioEnded}
@@ -516,461 +810,677 @@ function RoomInner() {
 
             <AnimatePresence>
                 {(isSyncing || needsInteraction) && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        style={{ position: "fixed", inset: 0, zIndex: 2000 }}
-                    >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", inset: 0, zIndex: 2000 }}>
                         {needsInteraction ? (
-                            <div style={{
-                                position: "absolute", inset: 0,
-                                background: "var(--app-bg)",
-                                display: "flex", flexDirection: "column",
-                                alignItems: "center", justifyContent: "center", gap: 32,
-                                padding: 32, textAlign: "center",
-                                transition: "var(--theme-transition)",
-                            }}>
-                                <div style={{ position: "relative" }}>
-                                    <motion.div
-                                        animate={{ scale: [1, 1.1, 1] }}
-                                        transition={{ duration: 2, repeat: Infinity }}
-                                        style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--app-bg-secondary)", border: "2px solid var(--app-border)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                    >
-                                        <MusicalNoteIcon style={{ width: 40, height: 40, color: "var(--app-primary)" }} />
-                                    </motion.div>
-                                </div>
+                            <div style={{ position: "absolute", inset: 0, background: "var(--app-bg)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 32, padding: 32, textAlign: "center" }}>
+                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--app-bg-secondary)", border: "2px solid var(--app-border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <MusicalNoteIcon style={{ width: 40, height: 40, color: "var(--app-primary)" }} />
+                                </motion.div>
                                 <div>
-                                    <h2 style={{ margin: "0 0 12px", fontSize: 24, fontWeight: 900, color: "var(--app-text)" }}>
-                                        Siap untuk Mendengarkan?
-                                    </h2>
-                                    <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600, fontFamily: "var(--font-fredoka)", maxWidth: 300 }}>
-                                        Tap tombol di bawah untuk bergabung dan sinkronisasi musik otomatis! ✨
-                                    </p>
+                                    <h2 style={{ margin: "0 0 12px", fontSize: 24, fontWeight: 900 }}>Siap untuk Mendengarkan?</h2>
+                                    <p style={{ margin: 0, fontSize: 14, color: "var(--app-text-muted)", fontWeight: 600 }}>Tap tombol di bawah untuk bergabung!</p>
                                 </div>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={async () => {
-                                        const audio = audioRef.current;
-                                        if (audio) {
-                                            try {
-                                                await audio.play();
-                                                setNeedsInteraction(false);
-                                            } catch (e) {
-                                                console.warn("Manual join failed:", e);
-                                            }
-                                        }
-                                    }}
-                                    style={{
-                                        padding: "18px 40px", borderRadius: 24,
-                                        background: "var(--app-primary)", border: "none",
-                                        color: "#fff", fontSize: 18, fontWeight: 900,
-                                        cursor: "pointer", boxShadow: "0 10px 30px var(--app-soft-accent)",
-                                        display: "flex", alignItems: "center", gap: 12
-                                    }}
-                                >
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={async () => { if (audioRef.current) await audioRef.current.play(); setNeedsInteraction(false); }}
+                                    style={{ padding: "18px 40px", borderRadius: 24, background: "var(--app-primary)", border: "none", color: "#fff", fontSize: 18, fontWeight: 900, cursor: "pointer", boxShadow: "0 10px 30px var(--app-soft-accent)" }}>
                                     Gabung & Sinkron →
                                 </motion.button>
                             </div>
-                        ) : (
-                            <SyncScreen
-                                songTitle={room?.currentSong?.title}
-                                artist={room?.currentSong?.artist}
-                            />
-                        )}
+                        ) : <SyncScreen songTitle={room?.currentSong?.title} artist={room?.currentSong?.artist} />}
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <header style={{
-                padding: "0 16px", height: 60,
+            {/* Main Header (Mostly for desktop) */}
+            <header className="room-main-header" style={{
+                padding: "0 24px", height: 72,
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 borderBottom: "1.5px solid var(--app-border)",
                 background: "var(--app-surface)", backdropFilter: "blur(20px)",
-                position: "sticky", top: 0, zIndex: 50, flexShrink: 0,
-                transition: "var(--theme-transition)",
+                position: "sticky", top: 0, zIndex: 50, flexShrink: 0
             }}>
                 <button onClick={() => router.push("/dashboard")} style={{
-                    display: "flex", alignItems: "center", gap: 7, padding: "10px 16px",
-                    borderRadius: 20, background: "var(--app-bg-secondary)",
-                    border: "1px solid var(--app-border)",
-                    color: "var(--app-text-secondary)", cursor: "pointer", fontSize: 13, fontWeight: 700,
-                    transition: "all 0.2s ease"
-                }}
-                    onMouseEnter={e => { e.currentTarget.style.color = "var(--app-primary)"; e.currentTarget.style.borderColor = "var(--app-primary)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = "var(--app-text-secondary)"; e.currentTarget.style.borderColor = "var(--app-border)"; }}
-                >
+                    display: "flex", alignItems: "center", gap: 8, padding: "10px 18px",
+                    borderRadius: 20, background: "var(--app-bg-secondary)", border: "1px solid var(--app-border)", color: "var(--app-text-secondary)", cursor: "pointer", fontSize: 13, fontWeight: 800
+                }}>
                     <ArrowLeftIcon style={{ width: 16, height: 16 }} /> Keluar
                 </button>
 
-                <div style={{ textAlign: "center", flex: 1, padding: "0 12px" }}>
-                    <h1 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--app-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {room?.name || "Memuat..."}
-                    </h1>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 2 }}>
-                        <img src="/images/logo-listenWithMe.png" alt="Logo" style={{ width: 14, height: 14, objectFit: "contain" }} />
-                        <span style={{ fontSize: 10, color: "var(--app-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700 }}>
-                            {isHost ? "👑 Host" : "Tamu"}{sessionMinutes > 0 ? ` · ${sessionMinutes}m` : ""}
-                        </span>
+                <div className="header-center-info" style={{ textAlign: "center", flex: 1, padding: "0 20px" }}>
+                    <h1 style={{ margin: 0, fontSize: 16, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>{room?.name || "Room"}</h1>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginTop: 4 }}>
+                        <MusicalNoteIcon style={{ width: 14, height: 14, color: "var(--app-primary)" }} />
+                        <span style={{ fontSize: 11, color: "var(--app-text-muted)", fontWeight: 800 }}>{isHost ? "👑 HOST" : "TAMU"}{sessionMinutes > 0 ? ` • ${sessionMinutes}M` : ""}</span>
                     </div>
                 </div>
 
-                <button onClick={() => setShowSongs(true)} style={{
-                    display: "flex", alignItems: "center", gap: 6, padding: "10px 18px",
-                    borderRadius: 20, background: "var(--app-primary)",
-                    border: "none", color: "#fff", fontWeight: 800, fontSize: 13,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 15px var(--app-soft-accent)",
-                    transition: "all 0.2s"
-                }}
-                    onMouseEnter={e => e.currentTarget.style.background = "var(--app-primary-hover)"}
-                    onMouseLeave={e => e.currentTarget.style.background = "var(--app-primary)"}
-                >
-                    <PlusIcon style={{ width: 16, height: 16 }} />
-                    <span className="hidden sm:inline">{isHost ? "Tambah Lagu" : "Request"}</span>
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <button
+                        onClick={toggleFullscreen}
+                        className="desktop-only-btn"
+                        style={{
+                            padding: 10, background: "var(--app-bg-secondary)",
+                            borderRadius: "50%", border: "none", color: "var(--app-text)",
+                            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                        }}
+                    >
+                        {isFullscreen ? <ArrowsPointingInIcon style={{ width: 20, height: 20 }} /> : <ArrowsPointingOutIcon style={{ width: 20, height: 20 }} />}
+                    </button>
+                    {/* Mobile toggle removed as it's now in tabs */}
+                    <button onClick={() => setShowSongs(true)} style={{
+                        display: "flex", alignItems: "center", gap: 8, padding: "12px 24px",
+                        borderRadius: 24, background: "var(--app-primary)",
+                        border: "none", color: "#fff", fontWeight: 900, fontSize: 14, cursor: "pointer",
+                        boxShadow: "0 8px 20px var(--app-soft-accent)"
+                    }}>
+                        <PlusIcon style={{ width: 18, height: 18 }} />
+                        <span className="sm-hidden">Request</span>
+                    </button>
+                </div>
             </header>
 
             <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-                {/* ──── Player ──── */}
-                <div style={{
-                    flex: 1, display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center",
-                    padding: "20px",
-                    paddingBottom: "120px",
-                }}>
-                    {/* Disc View */}
-                    <div style={{ position: "relative", marginBottom: 32 }}>
-                        <motion.div
-                            animate={room?.isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                            transition={room?.isPlaying ? { duration: 10, repeat: Infinity, ease: "linear" } : { duration: 0.5 }}
-                            style={{
-                                width: "clamp(160px, 30vw, 240px)", height: "clamp(160px, 30vw, 240px)", borderRadius: "50%",
-                                background: "var(--app-surface)",
-                                border: "4px solid var(--app-border)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                boxShadow: room?.isPlaying
-                                    ? "0 0 50px var(--app-soft-accent)"
-                                    : "0 10px 30px rgba(0,0,0,0.1)",
-                                transition: "var(--theme-transition)",
-                            }}
-                        >
+                {/* Content View */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                    {/* Desktop Content */}
+                    <div className="desktop-view" style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+                        {desktopPlayerContent}
+                        {desktopSidebar}
+                    </div>
+
+                    {/* Mobile Content */}
+                    <div className="mobile-view" style={{ flex: 1, display: "none", flexDirection: "column", overflow: "hidden", background: "var(--app-bg)" }}>
+                        {/* Mobile Shared Top Area (Chat Input) - Stays visible */}
+                        <div style={{ padding: "12px 20px", background: "var(--app-surface)", borderBottom: "1.5px solid var(--app-border)" }}>
                             <div style={{
-                                width: 50, height: 50, borderRadius: "50%",
-                                background: "var(--app-bg-secondary)", border: "2px solid var(--app-border)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
+                                display: "flex", alignItems: "center", gap: 12,
+                                background: "var(--app-bg-secondary)",
+                                padding: "8px 16px", borderRadius: 24,
+                                border: "1.5px solid var(--app-border)"
                             }}>
-                                <MusicalNoteIcon style={{ width: 22, height: 22, color: room?.currentSong ? "var(--app-primary)" : "var(--app-text-muted)" }} />
-                            </div>
-                        </motion.div>
-                        {room?.isPlaying && (
-                            <motion.div
-                                animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                style={{ position: "absolute", inset: -15, borderRadius: "50%", border: "2px solid var(--app-primary)", pointerEvents: "none", opacity: 0.2 }}
-                            />
-                        )}
-                    </div>
-
-                    <div style={{ textAlign: "center", marginBottom: 28, width: "100%", maxWidth: 400 }}>
-                        <AnimatePresence mode="wait">
-                            <motion.h2
-                                key={room?.currentSong?.title || "none"}
-                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                style={{
-                                    margin: "0 0 8px", fontSize: "clamp(20px, 4vw, 28px)", fontWeight: 900,
-                                    color: room?.currentSong ? "var(--app-text)" : "var(--app-text-muted)",
-                                    lineHeight: 1.2,
-                                }}
-                            >
-                                {room?.currentSong?.title || "Belum ada lagu"}
-                            </motion.h2>
-                        </AnimatePresence>
-                        <p style={{ margin: 0, fontSize: 14, color: "var(--app-primary)", fontWeight: 600, letterSpacing: "0.02em" }}>
-                            {room?.currentSong?.artist || (isHost ? "Klik + untuk mulai!" : "Menunggu host...")}
-                        </p>
-                    </div>
-
-                    {/* Progress Bar */}
-                    {room?.currentSong && (
-                        <div style={{ width: "100%", maxWidth: 360, marginBottom: 24 }}>
-                            <div style={{
-                                height: 6, background: "var(--app-prog-track)", borderRadius: 10, overflow: "hidden", cursor: isHost ? "pointer" : "default",
-                                transition: "var(--theme-transition)",
-                            }}
-                                onClick={e => {
-                                    if (!isHost || !duration) return;
-                                    const r = e.currentTarget.getBoundingClientRect();
-                                    const pct = (e.clientX - r.left) / r.width;
-                                    if (audioRef.current) audioRef.current.currentTime = pct * duration;
-                                }}
-                            >
-                                <motion.div
-                                    style={{ height: "100%", width: `${progress}%`, background: "var(--app-prog-fill)", borderRadius: 10 }}
-                                    transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                                <input
+                                    placeholder="Kirim pesan singkat..."
+                                    style={{
+                                        flex: 1, background: "none", border: "none",
+                                        color: "var(--app-text)", fontSize: 13, fontWeight: 600,
+                                        outline: "none"
+                                    }}
                                 />
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)" }}>{formatTime(currentTime)}</span>
-                                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--app-text-muted)" }}>{formatTime(duration)}</span>
+                                <button style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                                    <ChatBubbleOvalLeftIcon style={{ width: 18, height: 18, color: "var(--app-primary)" }} />
+                                </button>
                             </div>
                         </div>
-                    )}
 
-                    {/* Controls */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 20 }}>
-                        <button onClick={() => { setMuted(m => { if (audioRef.current) audioRef.current.muted = !m; return !m; }); }}
-                            style={{ background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)", borderRadius: "50%", cursor: "pointer", color: "var(--app-text-secondary)", width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                            {muted ? <SpeakerXMarkIcon style={{ width: 20, height: 20 }} /> : <SpeakerWaveIcon style={{ width: 20, height: 20 }} />}
-                        </button>
-
-                        <motion.button
-                            whileHover={isHost && room?.currentSong ? { scale: 1.1 } : {}}
-                            whileTap={isHost && room?.currentSong ? { scale: 0.9 } : {}}
-                            onClick={togglePlay}
-                            disabled={!isHost || !room?.currentSong}
-                            style={{
-                                width: 72, height: 72, borderRadius: "50%", border: "none",
-                                background: isHost && room?.currentSong ? "var(--app-primary)" : "var(--app-border)",
-                                color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: isHost && room?.currentSong ? "pointer" : "not-allowed",
-                                boxShadow: isHost && room?.currentSong ? "0 8px 25px var(--app-soft-accent)" : "none",
-                                transition: "background 0.3s ease"
+                        {/* Mobile Tab Switcher (Lagu / Lirik) */}
+                        <div style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "center", background: "var(--app-bg)" }}>
+                            <div style={{
+                                display: "flex",
+                                background: "var(--app-bg-secondary)",
+                                borderRadius: 16,
+                                padding: 4,
+                                border: "1px solid var(--app-border)",
+                                gap: 4,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
                             }}>
-                            {room?.isPlaying ? <PauseIcon style={{ width: 32, height: 32 }} /> : <PlayIcon style={{ width: 32, height: 32, marginLeft: 4 }} />}
-                        </motion.button>
-
-                        <button onClick={skipNext} disabled={!isHost || !room?.queue?.length}
-                            style={{
-                                background: "var(--app-bg-secondary)", border: "1.5px solid var(--app-border)", borderRadius: "50%", width: 44, height: 44,
-                                cursor: isHost && room?.queue?.length ? "pointer" : "not-allowed",
-                                color: isHost && room?.queue?.length ? "var(--app-primary)" : "var(--app-text-muted)",
-                                display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s"
-                            }}>
-                            <ForwardIcon style={{ width: 20, height: 20 }} />
-                        </button>
-                    </div>
-
-                    {!isHost && (
-                        <p style={{ fontSize: 11, color: "var(--app-text-muted)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                            🎵 Sinkronisasi dengan Host aktif
-                        </p>
-                    )}
-                </div>
-
-                {/* ──── Sidebar ──── */}
-                <aside className="room-sidebar" style={{
-                    width: 320, flexShrink: 0,
-                    borderLeft: "1.5px solid var(--app-border)",
-                    background: "var(--app-surface)",
-                    display: "flex", flexDirection: "column",
-                    transition: "var(--theme-transition)",
-                }}>
-                    {/* Users Section */}
-                    <div style={{ padding: "20px 16px", borderBottom: "1px solid var(--app-border)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                            <UsersIcon style={{ width: 14, height: 14, color: "var(--app-primary)" }} />
-                            <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
-                                Teman Mendengar ({roomUsers.length})
-                            </p>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {roomUsersSorted.map(u => (
-                                <RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Main Sidebar Content Area (Scrollable) */}
-                    <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px" }}>
-
-
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                <QueueListIcon style={{ width: 14, height: 14, color: "var(--app-text-muted)" }} />
-                                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: "var(--app-text-muted)", textTransform: "uppercase" }}>
-                                    List Antrian
-                                </p>
+                                <button
+                                    onClick={() => setActiveView("player")}
+                                    style={{
+                                        padding: "8px 36px",
+                                        borderRadius: 12,
+                                        border: "none",
+                                        background: activeView === "player" ? "var(--app-surface)" : "transparent",
+                                        color: activeView === "player" ? "var(--app-primary)" : "var(--app-text-muted)",
+                                        fontSize: 13,
+                                        fontWeight: 800,
+                                        cursor: "pointer",
+                                        boxShadow: activeView === "player" ? "0 4px 10px rgba(0,0,0,0.1)" : "none",
+                                        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                                    }}
+                                >
+                                    Lagu
+                                </button>
+                                <button
+                                    onClick={() => setActiveView("lyrics")}
+                                    style={{
+                                        padding: "8px 36px",
+                                        borderRadius: 12,
+                                        border: "none",
+                                        background: activeView === "lyrics" ? "var(--app-surface)" : "transparent",
+                                        color: activeView === "lyrics" ? "var(--app-primary)" : "var(--app-text-muted)",
+                                        fontSize: 13,
+                                        fontWeight: 800,
+                                        cursor: "pointer",
+                                        boxShadow: activeView === "lyrics" ? "0 4px 10px rgba(0,0,0,0.1)" : "none",
+                                        transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)"
+                                    }}
+                                >
+                                    Lirik
+                                </button>
                             </div>
-                            <button
-                                onClick={addRandomSongs}
-                                title="Tambah 5 Lagu Random"
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 6,
-                                    padding: "4px 8px", borderRadius: 8, border: "none",
-                                    background: "var(--app-bg-secondary)", color: "var(--app-primary)",
-                                    fontSize: 10, fontWeight: 800, cursor: "pointer", transition: "all 0.2s"
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = "var(--app-surface)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "var(--app-bg-secondary)"}
-                            >
-                                <span>🎲</span> RANDOM 5
-                            </button>
                         </div>
 
-                        {room?.queue?.length > 0 ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                {room.queue.map((s: any, i: number) => (
-                                    <QueueItem
-                                        key={`${s.queueId}-${i}`}
-                                        song={s}
-                                        isHost={isHost}
-                                        isActive={room.currentSong?.queueId === s.queueId}
-                                        onPlay={() => playFromQueue(s)}
-                                        onRemove={() => removeFromQueue(s)}
+                        {/* Mobile Switchable Content Area */}
+                        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                            {activeView === "player" ? (
+                                <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px", alignItems: "center", justifyContent: "center" }}>
+                                    {/* Disc View with Pulse */}
+                                    <div style={{ position: "relative", marginBottom: 36 }}>
+                                        <motion.div
+                                            animate={room?.isPlaying ? { rotate: 360 } : {}}
+                                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                            style={{
+                                                width: "75vw", maxWidth: 300, height: "75vw", maxHeight: 300,
+                                                borderRadius: "50%",
+                                                background: `linear-gradient(135deg, ${isDarkMode ? '#2D1B36' : '#FFF0F5'} 0%, ${isDarkMode ? '#1A0F20' : '#FFE4E1'} 100%)`,
+                                                border: "6px solid var(--app-border)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                boxShadow: room?.isPlaying ? "0 20px 60px rgba(0,0,0,0.4)" : "0 10px 30px rgba(0,0,0,0.1)",
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: "25%", height: "25%", borderRadius: "50%",
+                                                background: "rgba(0,0,0,0.2)", border: "2px solid rgba(255,255,255,0.05)",
+                                                display: "flex", alignItems: "center", justifyContent: "center"
+                                            }}>
+                                                <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--app-primary)" }} />
+                                            </div>
+                                        </motion.div>
+                                    </div>
+
+                                    {/* Song Info */}
+                                    <div style={{ textAlign: "center", marginBottom: 24, width: "100%" }}>
+                                        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "var(--app-text)", letterSpacing: "-0.5px" }}>
+                                            {room?.currentSong?.title || "Belum ada lagu"}
+                                        </h2>
+                                        <p style={{ margin: "4px 0 0", fontSize: 16, color: "var(--app-primary)", fontWeight: 700 }}>
+                                            {room?.currentSong?.artist || "Standby..."}
+                                        </p>
+                                    </div>
+
+                                    {/* Progress Area */}
+                                    <div style={{ width: "100%", maxWidth: 320, marginBottom: 36 }}>
+                                        <div style={{ height: 4, background: "rgba(255,255,255,0.05)", borderRadius: 2 }}>
+                                            <div style={{ height: "100%", width: `${progress}%`, background: "var(--app-primary)", borderRadius: 2 }} />
+                                        </div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12 }}>
+                                            <span style={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }}>{formatTime(currentTime)}</span>
+                                            <span style={{ fontSize: 10, fontWeight: 800, opacity: 0.4 }}>{formatTime(duration)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Controls Area */}
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 40, width: "100%" }}>
+                                        <button onClick={() => setMuted(m => { if (audioRef.current) audioRef.current.muted = !m; return !m; })}
+                                            style={{ background: "none", border: "none", color: "var(--app-text-secondary)" }}>
+                                            {muted ? <SpeakerXMarkIcon style={{ width: 22, height: 22 }} /> : <SpeakerWaveIcon style={{ width: 22, height: 22 }} />}
+                                        </button>
+
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={togglePlay}
+                                            style={{
+                                                width: 76, height: 76, borderRadius: "50%",
+                                                background: isDarkMode ? "#fff" : "var(--app-primary)",
+                                                color: isDarkMode ? "#000" : "#fff",
+                                                border: "none", display: "flex", alignItems: "center", justifyContent: "center",
+                                                boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+                                            }}
+                                        >
+                                            {room?.isPlaying ? <PauseIcon style={{ width: 34, height: 34 }} /> : <PlayIcon style={{ width: 34, height: 34, marginLeft: 4 }} />}
+                                        </motion.button>
+
+                                        <button onClick={skipNext} style={{ background: "none", border: "none", color: "var(--app-text-secondary)" }}>
+                                            <ForwardIcon style={{ width: 24, height: 24 }} />
+                                        </button>
+                                    </div>
+
+                                    <div style={{ marginTop: 40 }}>
+                                        <span style={{ fontSize: 10, fontWeight: 800, color: "var(--app-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                                            🎵 Sinkronisasi dengan host
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                                    <LyricsPanel
+                                        lyrics={lyrics}
+                                        activeIndex={activeIndex}
+                                        autoScrollEnabled={autoScrollEnabled}
+                                        setAutoScrollEnabled={setAutoScrollEnabled}
+                                        isDarkMode={isDarkMode}
+                                        isMobile={true}
                                     />
-                                ))}
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: "center", padding: "40px 24px", background: "var(--app-bg-secondary)", borderRadius: 20, border: "1.5px dashed var(--app-border)" }}>
-                                <p style={{ margin: 0, fontSize: 13, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
-                                <button onClick={() => setShowSongs(true)} style={{ marginTop: 12, color: "var(--app-primary)", fontWeight: 800, fontSize: 12, background: "none", border: "none", cursor: "pointer" }}>+ Tambah Lagu</button>
-                            </div>
-                        )}
+                                </div>
+                            )}
+                        </div>
+                        {/* Visual spacer for bottom bar area */}
+                        <div style={{ height: 84, flexShrink: 0 }} />
                     </div>
-                </aside>
+                </div>
             </div>
 
-            {/* Mobile Bottom Tab Bar */}
+            {/* Mobile Tabbar */}
             <div className="mobile-tabbar" style={{
-                position: "fixed", bottom: 0, left: 0, right: 0, height: 80,
+                position: "fixed", bottom: 0, left: 0, right: 0, height: 84,
                 background: "var(--app-surface)", borderTop: "1.5px solid var(--app-border)",
                 display: "none", alignItems: "center", justifyContent: "space-around",
-                padding: "0 10px", zIndex: 1000,
-                transition: "var(--theme-transition)",
+                padding: "0 12px", zIndex: 1000
             }}>
                 {[
-                    { id: "queue", icon: QueueListIcon, label: "Antrian" },
-                    { id: "add", icon: PlusIcon, label: "Tambah" },
-                    { id: "users", icon: UsersIcon, label: "Teman" },
+                    { id: "queue", icon: QueueListIcon, label: "Antrian", action: () => { setMobileTab("queue"); setShowDrawer(true); } },
+                    { id: "users", icon: UsersIcon, label: "Teman", action: () => { setMobileTab("users"); setShowDrawer(true); } },
                 ].map(t => (
-                    <button key={t.id}
-                        onClick={() => {
-                            if (t.id === "add") {
-                                setShowSongs(true);
-                            } else {
-                                setMobileTab(t.id as any);
-                                setShowDrawer(true);
-                            }
-                        }}
-                        style={{
-                            flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                            background: "none", border: "none",
-                            color: showDrawer && mobileTab === t.id ? "var(--app-primary)" : "var(--app-text-muted)",
-                            transition: "all 0.2s", cursor: "pointer"
-                        }}>
-                        <t.icon style={{ width: 22, height: 22 }} />
-                        <span style={{ fontSize: 10, fontWeight: 800 }}>{t.label}</span>
+                    <button key={t.id} onClick={t.action}
+                        style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "none", border: "none", color: (activeView === t.id && !showDrawer) ? "var(--app-primary)" : "var(--app-text-muted)", transition: "all 0.2s" }}>
+                        <t.icon style={{ width: 24, height: 24 }} />
+                        <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase" }}>{t.label}</span>
                     </button>
                 ))}
             </div>
 
-            {/* Mobile Drawer Popup */}
+            {/* Drawer for Mobile */}
             <AnimatePresence>
                 {showDrawer && (
                     <>
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowDrawer(false)}
-                            style={{
-                                position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
-                                backdropFilter: "blur(4px)", zIndex: 1100
-                            }}
-                        />
-                        {/* Drawer */}
-                        <motion.div
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDrawer(false)}
+                            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", zIndex: 3000 }} />
+                        <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }}
                             style={{
                                 position: "fixed", bottom: 0, left: 0, right: 0,
-                                background: "var(--app-surface)",
-                                borderTop: "2px solid var(--app-border)",
-                                borderRadius: "32px 32px 0 0",
-                                padding: "24px 20px 40px",
-                                maxHeight: "80vh", overflowY: "auto",
-                                zIndex: 1200,
-                                boxShadow: "0 -10px 40px rgba(0,0,0,0.3)"
+                                background: "var(--app-surface)", borderRadius: "32px 32px 0 0",
+                                padding: "32px 24px 60px", maxHeight: "85vh", overflowY: "auto", zIndex: 3100
                             }}
                         >
-                            {/* Handle */}
-                            <div style={{
-                                width: 40, height: 4, background: "var(--app-border)",
-                                borderRadius: 2, margin: "0 auto 24px"
-                            }} />
-
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                        {mobileTab === "queue" ? "Antrian Lagu" : "Teman Mendengar"}
-                                    </h3>
-                                    {mobileTab === "queue" && (
-                                        <button
-                                            onClick={addRandomSongs}
-                                            style={{
-                                                padding: "4px 10px", borderRadius: 10, border: "none",
-                                                background: "var(--app-primary)", color: "#fff",
-                                                fontSize: 10, fontWeight: 900, cursor: "pointer"
-                                            }}
-                                        >
-                                            🎲 RANDOM 5
-                                        </button>
-                                    )}
-                                </div>
-                                <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 8, borderRadius: "50%", color: "var(--app-text-muted)" }}>
-                                    <XMarkIcon style={{ width: 20, height: 20 }} />
-                                </button>
+                            <div style={{ width: 40, height: 4, background: "var(--app-border)", borderRadius: 2, margin: "0 auto 30px" }} />
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, textTransform: "uppercase" }}>{mobileTab === "queue" ? "Daftar Antrian" : "Teman Mendengar"}</h3>
+                                <button onClick={() => setShowDrawer(false)} style={{ background: "var(--app-bg-secondary)", border: "none", padding: 10, borderRadius: "50%" }}><XMarkIcon style={{ width: 22, height: 22 }} /></button>
                             </div>
-
-                            {mobileTab === "queue" ? (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                    {room?.queue?.length > 0 ? (
-                                        room.queue.map((s: any, i: number) => (
-                                            <QueueItem
-                                                key={`${s.queueId}-${i}`}
-                                                song={s}
-                                                isHost={isHost}
-                                                isActive={room.currentSong?.queueId === s.queueId}
-                                                onPlay={() => { playFromQueue(s); setShowDrawer(false); }}
-                                                onRemove={() => removeFromQueue(s)}
-                                            />
-                                        ))
-                                    ) : (
-                                        <div style={{ textAlign: "center", padding: "40px 20px", border: "1.5px dashed var(--app-border)", borderRadius: 20 }}>
-                                            <p style={{ margin: 0, color: "var(--app-text-muted)", fontWeight: 600 }}>Antrian masih kosong</p>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                    {roomUsersSorted.map(u => (
-                                        <RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />
-                                    ))}
-                                </div>
-                            )}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                                {mobileTab === "queue" ? (
+                                    room?.queue?.length > 0 ? room.queue.map((s: any) => (<QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} onRemove={() => removeFromQueue(s)} />))
+                                        : <div style={{ padding: 40, textAlign: "center", opacity: 0.5 }}>Daftar kosong</div>
+                                ) : roomUsersSorted.map(u => (<RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />))}
+                            </div>
                         </motion.div>
                     </>
                 )}
             </AnimatePresence>
 
-            {/* Reactions & Mobile Popups Overlay */}
             <ReactionSystem roomId={rId} userId={user?.uid || ""} />
 
-            {/* Extra Styles */}
-            <style>{`
-                @media (max-width: 700px) {
-                    .room-sidebar { display: none !important; }
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media (max-width: 1023px) {
+                    .desktop-view { display: none !important; }
+                    .mobile-view { display: flex !important; }
                     .mobile-tabbar { display: flex !important; }
+                    .room-main-header { height: 64px !important; }
+                    .sm-hidden { display: none; }
+                    .mobile-view-toggle { display: block !important; }
+                    .desktop-only-btn { display: none !important; }
                 }
-            `}</style>
+                @media (min-width: 1024px) {
+                    .desktop-view { display: flex !important; }
+                    .mobile-view { display: none !important; }
+                    .mobile-tabbar { display: none !important; }
+                }
+                @keyframes room-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            ` }} />
 
             <SongManager isOpen={showSongs} onClose={() => setShowSongs(false)} onSongSelect={handleSongSelect} />
+
+            {/* Immersive View Overlay */}
+            <AnimatePresence>
+                {isFullscreen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.8 }}
+                        style={{
+                            position: "fixed", inset: 0, zIndex: 10000,
+                            background: "#000", color: "#fff",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            overflow: "hidden"
+                        }}
+                    >
+                        {/* Smooth Neon Background - Optimized for Performance */}
+                        <div style={{
+                            position: "absolute", inset: 0,
+                            background: "radial-gradient(circle at 30% 50%, #1a0b2e 0%, #050208 100%)",
+                            zIndex: 1,
+                            willChange: "transform"
+                        }} />
+
+                        {/* Animated Neon Blobs - Lightened for performance (Fewer blobs, less blur) */}
+                        <motion.div
+                            animate={{
+                                x: [0, 80, -60, 0],
+                                y: [0, -70, 40, 0],
+                                scale: [1, 1.2, 0.9, 1],
+                                opacity: [0.2, 0.4, 0.3, 0.2]
+                            }}
+                            transition={{ duration: 45, repeat: Infinity, ease: "linear" }}
+                            style={{
+                                position: "absolute", top: '10%', left: '10%', width: "60%", height: "60%",
+                                background: "radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%)",
+                                filter: "blur(40px)",
+                                zIndex: 2,
+                                willChange: "transform, opacity"
+                            }}
+                        />
+                        <motion.div
+                            animate={{
+                                x: [0, -80, 50, 0],
+                                y: [0, 50, -60, 0],
+                                scale: [1.1, 0.9, 1.2, 1.1],
+                                opacity: [0.15, 0.3, 0.2, 0.15]
+                            }}
+                            transition={{ duration: 60, repeat: Infinity, ease: "linear", delay: 2 }}
+                            style={{
+                                position: "absolute", bottom: '15%', right: '10%', width: "70%", height: "70%",
+                                background: "radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%)",
+                                filter: "blur(50px)",
+                                zIndex: 2,
+                                willChange: "transform, opacity"
+                            }}
+                        />
+
+                        {/* Top Left: Active Users - Positioned slightly differently to match image */}
+                        <div style={{ position: "absolute", top: 48, left: 48, zIndex: 100, display: "flex", gap: 16 }}>
+                            {roomUsersSorted.slice(0, 10).map((u, i) => (
+                                <motion.div
+                                    key={u.uid}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
+                                    style={{
+                                        position: "relative",
+                                        width: 56, height: 56, borderRadius: "50%",
+                                        padding: 3,
+                                        background: "rgba(255,255,255,0.03)",
+                                        border: "1px solid rgba(255,255,255,0.08)",
+                                        backdropFilter: "blur(12px)",
+                                        boxShadow: u.status === "online" ? "0 0 25px rgba(255, 72, 153, 0.1)" : "none"
+                                    }}
+                                >
+                                    <div style={{
+                                        width: "100%", height: "100%", borderRadius: "50%",
+                                        overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
+                                        background: "#111",
+                                        position: "relative"
+                                    }}>
+                                        {u.photoURL ? (
+                                            <img src={u.photoURL} alt={u.displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                        ) : (
+                                            <div style={{
+                                                width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+                                                background: "#1a1a2e", color: "rgba(255,255,255,0.4)",
+                                                fontSize: 16, fontWeight: 900,
+                                                letterSpacing: "-0.5px"
+                                            }}>
+                                                {getInitials(u.displayName)}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Active Status Glow Indicator */}
+                                    {u.status === "online" && (
+                                        <motion.div
+                                            animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                                            transition={{ duration: 3, repeat: Infinity }}
+                                            style={{
+                                                position: "absolute", bottom: 2, right: 2,
+                                                width: 14, height: 14, borderRadius: "50%",
+                                                background: "var(--app-primary)",
+                                                border: "2.5px solid #000",
+                                                boxShadow: "0 0 10px var(--app-primary)"
+                                            }}
+                                        />
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Top Right: Fullscreen Exit */}
+                        <div style={{ position: "absolute", top: 40, right: 40, zIndex: 100 }}>
+                            <motion.button
+                                whileHover={{ scale: 1.1, background: "rgba(255,255,255,0.1)" }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={toggleFullscreen}
+                                style={{
+                                    width: 56, height: 56, borderRadius: "50%",
+                                    background: "rgba(255,255,255,0.05)",
+                                    backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)",
+                                    color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
+                                }}
+                            >
+                                <ArrowsPointingInIcon style={{ width: 24, height: 24 }} />
+                            </motion.button>
+                        </div>
+
+                        {/* Queue Popup - Repositioned to be above bottom bar */}
+                        <AnimatePresence>
+                            {showImmersiveQueue && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                                    style={{
+                                        position: "absolute", bottom: 124, left: "50%", transform: "translateX(-50%)",
+                                        width: "min(420px, 90vw)", maxHeight: "55vh",
+                                        background: "rgba(10, 5, 15, 0.85)", backdropFilter: "blur(20px)", // Optimized
+                                        borderRadius: 28, border: "1px solid rgba(255,255,255,0.1)",
+                                        boxShadow: "0 -20px 80px rgba(0,0,0,0.7)", overflow: "hidden",
+                                        display: "flex", flexDirection: "column", zIndex: 1000
+                                    }}
+                                >
+                                    <div style={{ padding: 24, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                            <QueueListIcon style={{ width: 18, height: 18, color: "var(--app-primary)" }} />
+                                            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "0.1em" }}>Daftar Antrian</h3>
+                                        </div>
+                                        <button onClick={() => setShowSongs(true)} style={{
+                                            padding: "8px 16px", borderRadius: 12, background: "rgba(255,255,255,0.08)", border: "none",
+                                            color: "#fff", fontSize: 11, fontWeight: 800, cursor: "pointer", transition: "all 0.2s"
+                                        }}>
+                                            + Tambah
+                                        </button>
+                                    </div>
+                                    <div style={{ flex: 1, overflowY: "auto", padding: 12 }}>
+                                        {room?.queue?.length > 0 ? (
+                                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                                {room.queue.map((s: any) => (
+                                                    <QueueItem
+                                                        key={s.queueId}
+                                                        song={s}
+                                                        isHost={isHost}
+                                                        isActive={false}
+                                                        onPlay={() => playFromQueue(s)}
+                                                        onRemove={() => removeFromQueue(s)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div style={{ padding: 60, textAlign: "center", opacity: 0.3 }}>
+                                                <MusicalNoteIcon style={{ width: 32, height: 32, margin: "0 auto 16px" }} />
+                                                <p style={{ fontSize: 13, fontWeight: 700 }}>Antrian masih kosong</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Immersive Layout - Optimized for user's image */}
+                        <div style={{
+                            position: "relative", zIndex: 10, width: "100%", height: "100%",
+                            display: "flex", alignItems: "center", justifyContent: "flex-start",
+                            padding: "0 100px"
+                        }}>
+                            {/* Vinyl Disc Section - Larger as requested */}
+                            <div style={{
+                                position: "relative",
+                                width: "min(680px, 46vw)",
+                                height: "min(680px, 46vw)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "2%"
+                            }}>
+                                {/* The Record / Piringan - Use darkMode path as requested */}
+                                <div
+                                    style={{
+                                        width: "100%", height: "100%",
+                                        borderRadius: "50%",
+                                        background: `url('/images/piringan-darkMode.png') center/cover no-repeat`,
+                                        boxShadow: "0 80px 150px rgba(0,0,0,0.9)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        position: "relative",
+                                        animation: "room-spin 12s linear infinite",
+                                        animationPlayState: room?.isPlaying ? "running" : "paused",
+                                        willChange: "transform"
+                                    }}
+                                >
+                                    {/* Center Cover */}
+                                    <div style={{
+                                        width: "28%", height: "28%", borderRadius: "50%",
+                                        background: "var(--app-primary)", border: "5px solid #000",
+                                        overflow: "hidden", boxShadow: "inset 0 0 20px rgba(0,0,0,0.5)"
+                                    }}>
+                                        <div style={{ width: "100%", height: "100%", background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <MusicalNoteIcon style={{ width: "45%", height: "45%", color: "#fff", opacity: 0.8 }} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* The Tonearm / Stik - Larger and correctly pivoted, use darkMode path */}
+                                {/* 
+                                   TUTORIAL CUSTOMIZE TONEARM (STIK):
+                                   - bottom: Geser ke atas (positif) atau bawah (negatif)
+                                   - right: Geser ke kiri (positif) atau kanan (negatif)
+                                   - width/height: Ukuran tonearm
+                                   - transformOrigin: TITIK PUSAT rotasi. (Contoh: "82.5% 82.5%")
+                                */}
+                                <motion.div
+                                    initial={false}
+                                    animate={{ rotate: room?.isPlaying ? 0 : -32 }}
+                                    transition={{ type: "spring", stiffness: 45, damping: 12 }}
+                                    style={{
+                                        position: "absolute",
+                                        bottom: "-25%", // Geser manual di sini
+                                        right: "-10%",  // Geser manual di sini 
+                                        width: "80%",  // Ukuran manual di sini
+                                        height: "80%", // Ukuran manual di sini
+                                        background: `url('/images/turntableTonearm-darkMode.png') center/contain no-repeat`,
+                                        transformOrigin: "80% 50%", // TITIK PUSAT (ORIGIN) DI SINI
+                                        zIndex: 15,
+                                        pointerEvents: "none",
+                                        filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.5))",
+                                        willChange: "transform"
+                                    }}
+                                />
+                            </div>
+
+                            {/* Lyrics "Box" Section - Positioned top-rightish as in the image */}
+                            <div style={{
+                                position: "absolute",
+                                top: 120,
+                                right: 100,
+                                width: "clamp(300px, 30vw, 450px)",
+                                bottom: 140,
+                                display: "flex",
+                                flexDirection: "column",
+                                zIndex: 10
+                            }}>
+                                <LyricsPanel
+                                    lyrics={lyrics}
+                                    activeIndex={activeIndex}
+                                    autoScrollEnabled={true}
+                                    setAutoScrollEnabled={() => { }}
+                                    isDarkMode={true}
+                                    isDesktopInline={true}
+                                    isImmersive={true}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Controls Overlay (Bottom Center) */}
+                        <div style={{
+                            position: "absolute", bottom: 48, left: "50%", transform: "translateX(-50%)",
+                            display: "flex", alignItems: "center", gap: 0, zIndex: 20,
+                            background: "rgba(10, 5, 20, 0.45)", borderRadius: 36,
+                            backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.08)",
+                            padding: "10px",
+                            boxShadow: "0 25px 60px rgba(0,0,0,0.6)"
+                        }}>
+                            {/* Section 1: Music Playback Controls */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 28, padding: "0 28px" }}>
+                                <button onClick={() => setMuted(m => { if (audioRef.current) audioRef.current.muted = !m; return !m; })}
+                                    style={{ background: "none", border: "none", color: "rgba(255,255,255,0.45)", cursor: "pointer", display: "flex", alignItems: "center", transition: "all 0.2s" }}>
+                                    {muted ? <SpeakerXMarkIcon style={{ width: 22, height: 22 }} /> : <SpeakerWaveIcon style={{ width: 22, height: 22 }} />}
+                                </button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(255,255,255,0.3)" }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={togglePlay}
+                                    style={{
+                                        background: "#fff", color: "#000", border: "none",
+                                        width: 56, height: 56, borderRadius: "50%",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    {room?.isPlaying ? <PauseIcon style={{ width: 28, height: 28 }} /> : <PlayIcon style={{ width: 28, height: 28, marginLeft: 2 }} />}
+                                </motion.button>
+
+                                <button onClick={skipNext} disabled={!isHost || !room?.queue?.length}
+                                    style={{ background: "none", border: "none", color: isHost && room?.queue?.length ? "#fdfdfd" : "rgba(255,255,255,0.2)", cursor: isHost && room?.queue?.length ? "pointer" : "default", transition: "all 0.2s" }}>
+                                    <ForwardIcon style={{ width: 22, height: 22 }} />
+                                </button>
+                            </div>
+
+                            {/* Thin Divider Line */}
+                            <div style={{ width: 1, height: 36, background: "rgba(255,255,255,0.12)" }} />
+
+                            {/* Section 2: Queue & Add Music Controls */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 24, padding: "0 28px" }}>
+                                <motion.button
+                                    whileHover={{ scale: 1.15, color: "#fff" }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setShowImmersiveQueue(!showImmersiveQueue)}
+                                    style={{
+                                        background: "none", border: "none",
+                                        color: showImmersiveQueue ? "var(--app-primary)" : "rgba(255,255,255,0.45)",
+                                        cursor: "pointer", display: "flex", alignItems: "center", transition: "color 0.2s"
+                                    }}
+                                >
+                                    <QueueListIcon style={{ width: 24, height: 24 }} />
+                                </motion.button>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.15, color: "#fff" }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setShowSongs(true)}
+                                    style={{
+                                        background: "none", border: "none",
+                                        color: "rgba(255,255,255,0.45)",
+                                        cursor: "pointer", display: "flex", alignItems: "center", transition: "color 0.2s"
+                                    }}
+                                >
+                                    <PlusIcon style={{ width: 24, height: 24 }} />
+                                </motion.button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

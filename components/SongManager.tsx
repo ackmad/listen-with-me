@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export const LOCAL_SONGS = [
     { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192 },
-    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325 },
-    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249 },
-    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270 },
-    { id: 'pp-05', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613 },
+    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325, hasLyrics: true },
+    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249, hasLyrics: true },
+    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270, hasLyrics: true },
+    { id: 'pp-05', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613, hasLyrics: true },
     { id: 'pp-06', title: 'An Art Gallery Could Never Be As Unique As You', artist: 'mrld', url: '/music/paypay/AnArtGalleryCouldNeverBeAsUniqueAsYou-mrld.mp3', duration: 169 },
     { id: 'pp-07', title: 'Anchor', artist: 'Novo Amor', url: '/music/paypay/Anchor-NovoAmor.mp3', duration: 254 },
     { id: 'pp-08', title: 'Anything', artist: 'Adrianne Lenker', url: '/music/paypay/Anything-AdrianneLenker.mp3', duration: 202 },
@@ -104,7 +104,7 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
         <AnimatePresence>
             {isOpen && (
                 <div style={{
-                    position: "fixed", inset: 0, zIndex: 3000,
+                    position: "fixed", inset: 0, zIndex: 20000,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     padding: 20, pointerEvents: "auto",
                 }}>
@@ -178,7 +178,24 @@ export default function SongManager({ isOpen, onClose, onSongSelect }: {
                                                 alignItems: "center", justifyContent: "center", fontSize: 20
                                             }}>🎵</div>
                                             <div style={{ flex: 1 }}>
-                                                <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 800, color: "var(--app-text)" }}>{s.title}</p>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--app-text)" }}>{s.title}</p>
+                                                    {s.hasLyrics && (
+                                                        <span style={{
+                                                            fontSize: 9,
+                                                            background: "rgba(255, 72, 153, 0.1)",
+                                                            color: "var(--app-primary)",
+                                                            padding: "2px 6px",
+                                                            borderRadius: 6,
+                                                            fontWeight: 900,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            border: "1px solid rgba(255, 72, 153, 0.2)"
+                                                        }}>
+                                                            Lirik
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p style={{ margin: 0, fontSize: 12, color: "var(--app-text-muted)", fontWeight: 600 }}>{s.artist}</p>
                                             </div>
                                             <span style={{ fontSize: 11, color: "var(--app-text-muted)", fontWeight: 700 }}>

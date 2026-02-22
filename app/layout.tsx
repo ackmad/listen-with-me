@@ -18,7 +18,7 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "ListenWithMe | Sync & Vibe",
+  title: "ListenWithMe | Barbie & Ken",
   description: "Share music in real-time. Personal vibe space.",
   icons: {
     icon: [
