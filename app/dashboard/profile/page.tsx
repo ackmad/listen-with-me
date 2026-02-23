@@ -1,0 +1,256 @@
+"use client";
+export const dynamic = 'force-dynamic';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { updateProfile, updatePassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    ShieldCheckIcon, MusicalNoteIcon,
+    HeartIcon, ArrowLeftIcon, ArrowRightOnRectangleIcon,
+    CheckIcon
+} from '@heroicons/react/24/outline';
+import { getInitials } from '@/hooks/usePresence';
+
+export default function ProfilePage() {
+    const [user, setUser] = useState<any>(null);
+    const [username, setUsername] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        return onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    setUsername(userDoc.data().username || currentUser.displayName || '');
+                } else {
+                    setUsername(currentUser.displayName || '');
+                }
+            } else {
+                router.push('/');
+            }
+            setLoading(false);
+        });
+    }, [router]);
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        setIsSaving(true);
+        setSavedSuccessfully(false);
+
+        try {
+            await updateProfile(user, { displayName: username });
+            await updateDoc(doc(db, 'users', user.uid), { username });
+
+            if (newPassword) {
+                await updatePassword(user, newPassword);
+            }
+            setSavedSuccessfully(true);
+            setTimeout(() => setSavedSuccessfully(false), 3000);
+        } catch (error: any) {
+            console.error(error);
+            alert('Gagal update profile: ' + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        await signOut(auth);
+        router.push('/');
+    };
+
+    if (loading) return (
+        <div style={{
+            minHeight: "100vh", background: "var(--bg-primary)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 20, color: "var(--text-primary)"
+        }}>
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                style={{
+                    width: 38, height: 38, borderRadius: "50%",
+                    border: "3px solid var(--border-soft)",
+                    borderTopColor: "var(--accent-primary)",
+                }}
+            />
+            <p style={{ color: "var(--text-muted)", fontSize: 13, fontWeight: 700, fontFamily: "var(--font-fredoka)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                Memuat profilmu...
+            </p>
+        </div>
+    );
+
+    return (
+        <div style={{
+            padding: "40px 24px 120px", maxWidth: 1000, margin: "0 auto",
+            position: "relative", zIndex: 1, color: "var(--text-primary)"
+        }}>
+            {/* Page Title Section */}
+            <div style={{ marginBottom: 44 }}>
+                <h1 style={{ margin: '0 0 8px', fontSize: 32, fontWeight: 900, letterSpacing: '-0.04em' }}>Profil Saya</h1>
+                <p style={{ margin: 0, fontSize: 16, color: 'var(--text-muted)', fontWeight: 600 }}>
+                    Kelola identitas dan keamanan akunmu di satu tempat.
+                </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 32 }}>
+
+                {/* Left: Identity Card */}
+                <motion.div
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    style={{
+                        padding: "48px 32px", borderRadius: 32,
+                        background: "var(--bg-card)",
+                        border: "1.5px solid var(--border-soft)",
+                        display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.05)",
+                        position: "relative", overflow: "hidden"
+                    }}
+                >
+                    <div style={{ position: "relative", marginBottom: 32 }}>
+                        <div style={{
+                            width: 150, height: 150, borderRadius: "50%",
+                            border: "4px solid var(--accent-glow)",
+                            padding: 8, background: "var(--bg-secondary)",
+                        }}>
+                            <div style={{
+                                width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden",
+                                background: "var(--accent-primary)", color: "#fff",
+                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, fontWeight: 900
+                            }}>
+                                {getInitials(username) || "U"}
+                            </div>
+                        </div>
+                        <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            style={{
+                                position: "absolute", bottom: 5, right: 5,
+                                width: 40, height: 40, borderRadius: "50%",
+                                background: "var(--accent-primary)", border: "4px solid var(--bg-card)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                color: "#fff"
+                            }}
+                        >
+                            <HeartIcon style={{ width: 20, height: 20 }} />
+                        </motion.div>
+                    </div>
+
+                    <h2 style={{ margin: "0 0 8px", fontSize: 28, fontWeight: 900, color: "var(--text-primary)" }}>
+                        {username || 'Pecinta Musik'}
+                    </h2>
+                    <p style={{ margin: "0 0 32px", fontSize: 14, color: "var(--text-muted)", fontWeight: 700 }}>
+                        {user?.email}
+                    </p>
+
+                    <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)" }}>
+                            <MusicalNoteIcon style={{ width: 24, height: 24, color: "var(--accent-primary)", margin: "0 auto 8px" }} />
+                            <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--text-primary)" }}>Akrab</p>
+                            <p style={{ margin: 0, fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Status</p>
+                        </div>
+                        <div style={{ padding: "20px 12px", borderRadius: 24, background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)" }}>
+                            <ShieldCheckIcon style={{ width: 24, height: 24, color: "var(--accent-indicator)", margin: "0 auto 8px" }} />
+                            <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "var(--text-primary)" }}>Aktif</p>
+                            <p style={{ margin: 0, fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 800 }}>Akses</p>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Right: Settings Form */}
+                <motion.div
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    style={{
+                        padding: "48px 32px", borderRadius: 32,
+                        background: "var(--bg-card)",
+                        border: "1.5px solid var(--border-soft)",
+                        display: "flex", flexDirection: "column", justifyContent: "center",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.05)"
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
+                        <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "var(--text-primary)" }}>Ubah Profil</h3>
+                    </div>
+
+                    <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Nama Kamu</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                style={{
+                                    padding: "18px 24px", borderRadius: 18, background: "var(--bg-secondary)",
+                                    border: "1.5px solid var(--border-soft)", color: "var(--text-primary)",
+                                    fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
+                                }}
+                                onFocus={e => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.boxShadow = "var(--shadow-soft)"; }}
+                                onBlur={e => { e.target.style.borderColor = "var(--border-soft)"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", paddingLeft: 4 }}>Sandi Baru (Opsional)</label>
+                            <input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Kosongkan jika tidak ganti"
+                                style={{
+                                    padding: "18px 24px", borderRadius: 18, background: "var(--bg-secondary)",
+                                    border: "1.5px solid var(--border-soft)", color: "var(--text-primary)",
+                                    fontSize: 15, fontWeight: 700, fontFamily: "inherit", outline: "none", transition: "all 0.2s"
+                                }}
+                                onFocus={e => { e.target.style.borderColor = "var(--accent-primary)"; e.target.style.boxShadow = "var(--shadow-soft)"; }}
+                                onBlur={e => { e.target.style.borderColor = "var(--border-soft)"; e.target.style.boxShadow = "none"; }}
+                            />
+                        </div>
+
+                        <div style={{ marginTop: 12 }}>
+                            <motion.button
+                                whileHover={!isSaving ? { scale: 1.02, y: -2, boxShadow: "var(--shadow-strong)" } : {}}
+                                whileTap={!isSaving ? { scale: 0.98 } : {}}
+                                type="submit"
+                                disabled={isSaving}
+                                style={{
+                                    width: "100%", padding: "20px", borderRadius: 20,
+                                    background: savedSuccessfully ? "#22C55E" : "var(--accent-primary)",
+                                    border: "none", color: "#fff", cursor: isSaving ? "not-allowed" : "pointer",
+                                    fontSize: 15, fontWeight: 800, opacity: isSaving ? 0.7 : 1, transition: "all 0.3s",
+                                    boxShadow: "var(--shadow-soft)",
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 12
+                                }}
+                            >
+                                {isSaving ? (
+                                    <div style={{ width: 22, height: 22, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", animation: "spin 0.8s linear infinite" }} />
+                                ) : savedSuccessfully ? (
+                                    <><CheckIcon style={{ width: 22, height: 22, strokeWidth: 3 }} /> Profil Disimpan!</>
+                                ) : (
+                                    "Simpan Perubahan ✨"
+                                )}
+                            </motion.button>
+                        </div>
+                    </form>
+                </motion.div>
+            </div>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @media (max-width: 680px) {
+                    div[style*="gridTemplateColumns: repeat(auto-fit"] {
+                        gap: 20px !important;
+                    }
+                }
+            `}</style>
+        </div>
+    );
+}

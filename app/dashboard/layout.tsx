@@ -8,6 +8,7 @@ import { signOut } from 'firebase/auth';
 import {
     HomeIcon,
     UserCircleIcon,
+    MusicalNoteIcon,
     ArrowRightStartOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { clsx } from 'clsx';
@@ -24,7 +25,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const navItems = [
         { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-        { name: 'Profile', href: '/profile', icon: UserCircleIcon },
+        { name: 'Library', href: '/dashboard/songs', icon: MusicalNoteIcon },
+        { name: 'Profile', href: '/dashboard/profile', icon: UserCircleIcon },
     ];
 
     return (
@@ -33,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <aside className="hidden md:flex flex-col w-64 fixed h-full p-6"
                 style={{
                     background: "var(--bg-sidebar)",
-                    borderRight: "1.5px solid var(--border-primary)",
+                    borderRight: "1.5px solid var(--border-soft)",
                     zIndex: 50,
                     transition: "var(--theme-transition)"
                 }}>
@@ -91,8 +93,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {children}
             </main>
 
-            {/* Mobile Bottom Navigation - Using the one from dashboard/page.tsx or replacing it here */}
-            {/* The user wants full atas bawah, so we ensure this nav doesn't crowd too much or we match the design */}
+            {/* Mobile Bottom Navigation - Liquid Glass Style */}
+            <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-[420px]" style={{ zIndex: 1000 }}>
+                <nav className="flex justify-around items-center p-2.5 rounded-[36px] border-[1px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden relative"
+                    style={{
+                        background: "rgba(255, 255, 255, 0.03)",
+                        backdropFilter: "blur(32px) saturate(180%)",
+                        WebkitBackdropFilter: "blur(32px) saturate(180%)",
+                        borderColor: "rgba(255, 255, 255, 0.12)",
+                    }}
+                >
+                    {/* Glossy Liquid Highlight Reflection */}
+                    <motion.div
+                        animate={{ x: ['-100%', '200%'] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        style={{
+                            position: 'absolute', inset: 0,
+                            background: 'linear-gradient(110deg, transparent, rgba(255,255,255,0.08), transparent)',
+                            pointerEvents: 'none', zIndex: 1
+                        }}
+                    />
+
+                    {/* Top Edge Rim Light */}
+                    <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)', pointerEvents: 'none', zIndex: 2 }} />
+
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = item.icon;
+
+                        return (
+                            <Link key={item.name} href={item.href} className="relative z-10 flex-1">
+                                <motion.div
+                                    whileTap={{ scale: 0.92 }}
+                                    className="flex flex-col items-center gap-1 px-2 py-2.5 relative"
+                                >
+                                    {/* Liquid Plasma Active Indicator */}
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="liquid-pill"
+                                            className="absolute inset-0 rounded-[28px] -z-10"
+                                            style={{
+                                                background: "var(--accent-primary)",
+                                                opacity: 0.15,
+                                                filter: "blur(12px)",
+                                            }}
+                                            transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
+                                        />
+                                    )}
+
+                                    <div className="relative">
+                                        <Icon className={clsx("w-6 h-6 transition-all duration-500", isActive ? "text-[var(--accent-primary)] drop-shadow-[0_0_8px_var(--accent-glow)]" : "text-[var(--text-muted)] opacity-60")} />
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="active-dot"
+                                                className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[var(--accent-primary)] rounded-full shadow-[0_0_8px_var(--accent-primary)]"
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className={clsx("text-[9px] font-[900] tracking-[0.2em] uppercase transition-colors duration-300", isActive ? "text-[var(--accent-primary)]" : "text-[var(--text-muted)] opacity-50")}>
+                                        {item.name}
+                                    </span>
+                                </motion.div>
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </div>
         </div>
     );
 }

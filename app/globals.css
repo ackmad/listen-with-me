@@ -51,8 +51,12 @@
   --shadow-strong: 0 20px 40px rgba(236, 72, 153, 0.12);
 
   --ambient-gradient: radial-gradient(circle at center, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
-  --vinyl-disc: repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px),
-    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.03) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.03) 165deg, transparent 180deg);
+  --vinyl-disc:
+    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.04) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.04) 165deg, transparent 180deg),
+    radial-gradient(circle at center, transparent 38%, rgba(255, 255, 255, 0.12) 38.2%, transparent 38.4%),
+    radial-gradient(circle at center, transparent 58%, rgba(255, 255, 255, 0.08) 58.2%, transparent 58.4%),
+    radial-gradient(circle at center, transparent 78%, rgba(255, 255, 255, 0.12) 78.2%, transparent 78.4%),
+    repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px);
   --vinyl-center: #EC4899;
   --vinyl-border: #111;
 }
@@ -82,40 +86,48 @@
   --shadow-strong: 0 15px 35px rgba(244, 114, 182, 0.10);
 
   --ambient-gradient: radial-gradient(ellipse at center, rgba(244, 114, 182, 0.05) 0%, transparent 65%);
-  --vinyl-disc: repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px),
-    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.03) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.03) 165deg, transparent 180deg);
+  --vinyl-disc:
+    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.04) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.04) 165deg, transparent 180deg),
+    radial-gradient(circle at center, transparent 38%, rgba(255, 255, 255, 0.12) 38.2%, transparent 38.4%),
+    radial-gradient(circle at center, transparent 58%, rgba(255, 255, 255, 0.08) 58.2%, transparent 58.4%),
+    radial-gradient(circle at center, transparent 78%, rgba(255, 255, 255, 0.12) 78.2%, transparent 78.4%),
+    repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px);
   --vinyl-center: #D946EF;
   --vinyl-border: #111;
 }
 
 /* 🌆 MODE 2 — SORE (15:00–17:59) */
 [data-theme="evening"] {
-  --bg-primary: linear-gradient(to bottom, #FFF1F6, #FCE7F3);
-  --bg-secondary: #FFE4F1;
-  --bg-sidebar: #FDE2FF;
+  --bg-primary: linear-gradient(135deg, #FFFCF2 0%, #FFF7E6 100%);
+  --bg-secondary: #FFFAF0;
+  --bg-sidebar: #FFF9E6;
   --bg-navbar: #FFFFFF;
   --bg-card: #FFFFFF;
 
-  --text-primary: #2B1020;
-  --text-secondary: #7C4A67;
-  --text-muted: #9C6F8C;
+  --text-primary: #432C1E;
+  --text-secondary: #8B6B4D;
+  --text-muted: #A88B72;
   --text-inverse: #FFFFFF;
 
-  --accent-primary: #EC4899;
-  --accent-hover: #DB2777;
-  --accent-soft: #FBCFE8;
-  --accent-glow: rgba(236, 72, 153, 0.15);
+  --accent-primary: #F59E0B;
+  --accent-hover: #D97706;
+  --accent-soft: #FEF3C7;
+  --accent-glow: rgba(245, 158, 11, 0.12);
 
-  --border-soft: #FBCFE8;
-  --border-strong: #EC4899;
+  --border-soft: #FDE68A;
+  --border-strong: #F59E0B;
 
-  --shadow-soft: 0 15px 35px rgba(236, 72, 153, 0.12);
-  --shadow-strong: 0 20px 45px rgba(168, 85, 247, 0.15);
+  --shadow-soft: 0 15px 35px rgba(245, 158, 11, 0.08);
+  --shadow-strong: 0 20px 45px rgba(217, 119, 6, 0.12);
 
-  --ambient-gradient: radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.18), rgba(168, 85, 247, 0.12) 50%, transparent 80%);
-  --vinyl-disc: repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px),
-    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.03) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.03) 165deg, transparent 180deg);
-  --vinyl-center: #EC4899;
+  --ambient-gradient: radial-gradient(circle at 50% -20%, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.05) 60%, transparent 100%);
+  --vinyl-disc:
+    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.04) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.04) 165deg, transparent 180deg),
+    radial-gradient(circle at center, transparent 38%, rgba(255, 255, 255, 0.12) 38.2%, transparent 38.4%),
+    radial-gradient(circle at center, transparent 58%, rgba(255, 255, 255, 0.08) 58.2%, transparent 58.4%),
+    radial-gradient(circle at center, transparent 78%, rgba(255, 255, 255, 0.12) 78.2%, transparent 78.4%),
+    repeating-radial-gradient(circle at center, #181818 0, #181818 1px, #0a0a0a 1.5px, #181818 2px);
+  --vinyl-center: #F59E0B;
   --vinyl-border: #111;
 }
 
@@ -144,8 +156,12 @@
   --shadow-strong: 0 20px 45px rgba(236, 72, 153, 0.25);
 
   --ambient-gradient: radial-gradient(circle at center, rgba(236, 72, 153, 0.08), transparent 70%);
-  --vinyl-disc: repeating-radial-gradient(circle at center, #121212 0, #121212 1px, #000 1.5px, #121212 2px),
-    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.02) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.02) 165deg, transparent 180deg);
+  --vinyl-disc:
+    conic-gradient(from 0deg, transparent 0deg, rgba(255, 255, 255, 0.04) 15deg, transparent 30deg, transparent 150deg, rgba(255, 255, 255, 0.04) 165deg, transparent 180deg),
+    radial-gradient(circle at center, transparent 38%, rgba(255, 255, 255, 0.12) 38.2%, transparent 38.4%),
+    radial-gradient(circle at center, transparent 58%, rgba(255, 255, 255, 0.08) 58.2%, transparent 58.4%),
+    radial-gradient(circle at center, transparent 78%, rgba(255, 255, 255, 0.12) 78.2%, transparent 78.4%),
+    repeating-radial-gradient(circle at center, #121212 0, #121212 1px, #000 1.5px, #121212 2px);
   --vinyl-center: #D81E5B;
   --vinyl-border: #000;
 }
@@ -408,7 +424,7 @@ body {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 1;
+  z-index: -1;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;

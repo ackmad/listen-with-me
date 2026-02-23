@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic';
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowRightOnRectangleIcon, PlusIcon, MusicalNoteIcon, UserGroupIcon,
-    XMarkIcon, UserIcon, TrashIcon, MapPinIcon
+    XMarkIcon, UserIcon, TrashIcon, MapPinIcon, HomeIcon
 } from "@heroicons/react/24/outline";
 import { PlayIcon } from "@heroicons/react/24/solid";
 import {
@@ -232,6 +232,8 @@ function RoomCard({ room, usersInRoom, onClick, onDelete, index }: { room: any; 
 // ─── Main Dashboard ───────────────────────────────────────────────────────
 export default function Dashboard() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [user, setUser] = useState<any>(null);
     const [rooms, setRooms] = useState<any[]>([]);
     const [allUsers, setAllUsers] = useState<UserPresence[]>([]);
@@ -290,11 +292,22 @@ export default function Dashboard() {
     useMergedPresence(handlePresenceUpdate);
 
     useEffect(() => {
+        const createMode = searchParams.get('create') === 'true';
+        if (createMode) {
+            setShowCreate(true);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        setLoading(true);
         const q = query(collection(db, "rooms"), orderBy("createdAt", "desc"));
         const unsub = onSnapshot(q, (snap) => {
             setRooms(snap.docs.map(d => ({ id: d.id, ...d.data() })));
             setLoading(false);
-        }, (err) => { console.warn("Rooms:", err.message); setLoading(false); });
+        }, (err) => {
+            console.warn("Rooms listener error:", err.message);
+            setLoading(false);
+        });
         return () => unsub();
     }, []);
 
@@ -303,9 +316,21 @@ export default function Dashboard() {
         if (!newRoomName.trim() || !user) return;
         setCreating(true);
         try {
+            const songId = searchParams.get('songId');
+            const songData = songId ? LOCAL_SONGS.find(s => s.id === songId) : null;
+            const initialSong = songData ? {
+                ...songData,
+                queueId: `${songData.id}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+            } : null;
+
             const docRef = await addDoc(collection(db, "rooms"), {
                 name: newRoomName.trim(), hostId: user.uid, hostName: displayName,
-                createdAt: serverTimestamp(), isPlaying: false, currentSong: null, queue: [],
+                createdAt: serverTimestamp(),
+                isPlaying: !!initialSong,
+                currentSong: initialSong || null,
+                queue: initialSong ? [initialSong] : [],
+                lastAction: initialSong ? 'play' : null,
+                lastActionTime: initialSong ? Date.now() : null
             });
             router.push(`/room/${docRef.id}`);
         } catch (err: any) { console.error("Create room:", err.message); setCreating(false); }
@@ -348,6 +373,11 @@ export default function Dashboard() {
         ...allUsers.filter(u => u.status === "idle"),
         ...allUsers.filter(u => u.status === "offline"),
     ];
+
+    // Seeded Random for Song of the Day
+    const todaySeed = new Date().getFullYear() * 1000 + (new Date().getMonth() + 1) * 100 + new Date().getDate();
+    const songOfTheDayIndex = todaySeed % LOCAL_SONGS.length;
+    const songOfTheDay = LOCAL_SONGS[songOfTheDayIndex];
 
     return (
         <div style={{
@@ -406,7 +436,7 @@ export default function Dashboard() {
                         <span className="sm:hidden">{onlineUsers.length}</span>
                     </button>
 
-                    <button onClick={() => router.push("/profile")} style={{
+                    <button onClick={() => router.push("/dashboard/profile")} style={{
                         width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--border-soft)",
                         background: "var(--bg-secondary)", color: "var(--text-muted)",
                         cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -422,7 +452,8 @@ export default function Dashboard() {
                 margin: "0 auto",
                 position: "relative",
                 zIndex: 1,
-                minHeight: "calc(100vh - 68px)"
+                minHeight: "calc(100vh - 68px)",
+                paddingBottom: 120
             }}>
                 <div style={{ padding: "40px 20px" }} className="main-content-inner">
                     {/* Greeting Area */}
@@ -454,151 +485,109 @@ export default function Dashboard() {
                         </p>
                     </motion.div>
 
-                    <div style={{ position: "relative", marginBottom: 48 }}>
-                        <motion.button
-                            whileHover={{ scale: 1.02, y: -4, boxShadow: "var(--shadow-strong)" }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setShowCreate(true)}
-                            style={{
-                                width: "100%", padding: "24px",
-                                background: "var(--accent-primary)",
-                                borderRadius: 28, color: "#fff", cursor: "pointer",
-                                fontSize: 20, fontWeight: 900, border: "none",
-                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
-                                boxShadow: "var(--shadow-soft)",
-                                position: "relative", overflow: "hidden"
-                            }}
-                        >
-                            {/* Subtle inner glow for create button */}
-                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%)", pointerEvents: "none" }} />
-
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <PlusIcon style={{ width: 28, height: 28 }} strokeWidth={3} />
-                                Buat Ruang Musik Baru
-                            </div>
-                            <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, letterSpacing: "0.02em" }}>Siapa tau dia join 😉</span>
-                        </motion.button>
-
-                        {/* Memory Capsule / Togetherness Counter */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 40 }}>
+                        {/* Stats Card: Total Songs */}
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="counter-card"
+                            whileHover={{ y: -5 }}
                             style={{
-                                marginTop: 20, padding: "20px 24px", borderRadius: 24,
-                                display: "flex", alignItems: "center", justifyContent: "space-between",
-                                boxShadow: "var(--shadow-soft)",
-                                background: "var(--bg-card)",
-                                border: "1.5px solid var(--border-soft)",
-                                position: "relative",
-                                overflow: "hidden"
+                                padding: "24px", borderRadius: 28, background: "var(--bg-card)",
+                                border: "1.5px solid var(--border-soft)", boxShadow: "var(--shadow-soft)",
+                                display: "flex", alignItems: "center", gap: 16
                             }}
                         >
-                            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                                <div style={{
-                                    width: 44, height: 44, borderRadius: "50%",
-                                    background: "var(--bg-secondary)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 20, border: "1px solid var(--border-soft)"
-                                }}>🎧</div>
-                                <div style={{ textAlign: "left" }}>
-                                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>
-                                        Memory Capsule <span style={{ color: "var(--accent-primary)", marginLeft: 4 }}>• 128 lagu</span>
-                                    </p>
-                                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
-                                        Total piringan hitam yang kita putar bareng.
-                                    </p>
-                                </div>
+                            <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <MusicalNoteIcon style={{ width: 28, height: 28, color: "var(--accent-primary)" }} />
                             </div>
-                            <div style={{
-                                padding: "6px 12px", borderRadius: 12,
-                                background: "var(--bg-secondary)",
-                                fontSize: 10, fontWeight: 800, color: "var(--accent-primary)",
-                                textTransform: "uppercase", letterSpacing: "0.05em",
-                                border: "1px solid var(--border-soft)"
-                            }}>
-                                Terus Bertambah
+                            <div>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-muted)" }}>Perpustakaan Lagu</p>
+                                <p style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "var(--text-primary)" }}>{LOCAL_SONGS.length} <span style={{ fontSize: 14, opacity: 0.6 }}>Tersedia</span></p>
+                            </div>
+                        </motion.div>
+
+                        {/* Memory Capsule Card */}
+                        <motion.div
+                            whileHover={{ y: -5 }}
+                            style={{
+                                padding: "24px", borderRadius: 28, background: "var(--bg-card)",
+                                border: "1.5px solid var(--border-soft)", boxShadow: "var(--shadow-soft)",
+                                display: "flex", alignItems: "center", gap: 16
+                            }}
+                        >
+                            <div style={{ width: 56, height: 56, borderRadius: 18, background: "var(--bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <span style={{ fontSize: 24 }}>🎧</span>
+                            </div>
+                            <div>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-muted)" }}>Memory Capsule</p>
+                                <p style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "var(--text-primary)" }}>128 <span style={{ fontSize: 14, opacity: 0.6 }}>Lagu Terputar</span></p>
                             </div>
                         </motion.div>
                     </div>
 
-                    {/* Lagu Hari Ini - Premium Gradient Card */}
-                    {LOCAL_SONGS.length > 0 && (
-                        <motion.div
-                            whileHover={{ scale: 1.01 }}
-                            className="song-of-the-day"
+                    {/* Quick Start & Recommendation Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, marginBottom: 48 }} className="quick-actions-grid">
+                        <motion.button
+                            whileHover={{ scale: 1.01, y: -4, boxShadow: "var(--shadow-strong)" }}
+                            whileTap={{ scale: 0.99 }}
+                            onClick={() => setShowCreate(true)}
                             style={{
-                                padding: "24px", borderRadius: 32, marginBottom: 40,
-                                display: "flex", alignItems: "center", gap: 20,
-                                background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%)",
-                                border: "1.5px solid var(--border-soft)",
+                                padding: "32px",
+                                background: "var(--accent-primary)",
+                                borderRadius: 32, color: "#fff", cursor: "pointer",
+                                border: "none",
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
                                 boxShadow: "var(--shadow-soft)",
-                                position: "relative",
-                                overflow: "hidden"
+                                position: "relative", overflow: "hidden"
                             }}
                         >
-                            {/* Animated background blob behind song icon */}
-                            <motion.div
-                                animate={{
-                                    scale: [1, 1.2, 1],
-                                    rotate: [0, 90, 0],
-                                    opacity: [0.3, 0.5, 0.3]
-                                }}
-                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                style={{
-                                    position: "absolute", top: -20, left: -20,
-                                    width: 120, height: 120,
-                                    background: "var(--accent-glow)",
-                                    filter: "blur(40px)", borderRadius: "50%",
-                                    pointerEvents: "none"
-                                }}
-                            />
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%)", pointerEvents: "none" }} />
+                            <PlusIcon style={{ width: 40, height: 40, marginBottom: 4 }} strokeWidth={2.5} />
+                            <div style={{ fontSize: 22, fontWeight: 900 }}>Buat Ruang Baru</div>
+                            <span style={{ fontSize: 14, fontWeight: 600, opacity: 0.85 }}>Siapa tau dia join 😉</span>
+                        </motion.button>
 
-                            <div style={{
-                                width: 72, height: 72, borderRadius: 22,
-                                background: "linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                flexShrink: 0, color: "#fff",
-                                boxShadow: "0 10px 25px var(--accent-glow)",
-                                position: "relative", zIndex: 1
-                            }}>
-                                <MusicalNoteIcon style={{ width: 32, height: 32 }} />
+                        <motion.div
+                            whileHover={{ scale: 1.01 }}
+                            style={{
+                                padding: "28px", borderRadius: 32,
+                                display: "flex", flexDirection: "column", justifyContent: "center",
+                                background: "var(--bg-card)",
+                                border: "1.5px solid var(--border-soft)",
+                                boxShadow: "var(--shadow-soft)",
+                                position: "relative", overflow: "hidden"
+                            }}
+                        >
+                            <div style={{ position: "absolute", top: -20, left: -20, width: 100, height: 100, background: "var(--accent-glow)", filter: "blur(30px)", borderRadius: "50%", pointerEvents: "none" }} />
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                                <span style={{ fontSize: 11, fontWeight: 900, color: "var(--accent-primary)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                                    ✨ Buat Kamu Hari Ini
+                                </span>
                             </div>
-
-                            <div style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                    <span style={{ fontSize: 10, fontWeight: 900, color: "var(--accent-primary)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                                        🌅 Lagu hari ini buat kamu
-                                    </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                                <div style={{ width: 60, height: 60, borderRadius: 16, background: "var(--bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <MusicalNoteIcon style={{ width: 24, height: 24, color: "var(--accent-primary)" }} />
                                 </div>
-                                <h3 style={{ margin: "0 0 2px", fontSize: 19, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
-                                    {LOCAL_SONGS[5]?.title || LOCAL_SONGS[0].title}
-                                </h3>
-                                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {LOCAL_SONGS[5]?.artist || LOCAL_SONGS[0].artist}
-                                </p>
+                                <div style={{ minWidth: 0 }}>
+                                    <h3 style={{ margin: "0 0 2px", fontSize: 17, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {songOfTheDay.title}
+                                    </h3>
+                                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {songOfTheDay.artist}
+                                    </p>
+                                </div>
                             </div>
-
-                            <motion.button
-                                whileHover={{ scale: 1.05, background: "var(--accent-primary)", color: "#fff" }}
-                                whileTap={{ scale: 0.95 }}
+                            <button
                                 onClick={() => setShowCreate(true)}
                                 style={{
-                                    padding: "12px 20px", borderRadius: 16,
+                                    marginTop: 20, padding: "10px", borderRadius: 14,
                                     background: "var(--accent-soft)", color: "var(--accent-primary)",
-                                    border: "none", fontSize: 13, fontWeight: 900, cursor: "pointer",
-                                    flexShrink: 0, display: "flex", alignItems: "center", gap: 8,
-                                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    boxShadow: "0 4px 12px rgba(236,72,153,0.1)",
-                                    position: "relative", zIndex: 1
+                                    border: "none", fontSize: 12, fontWeight: 900, cursor: "pointer",
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6
                                 }}
                             >
-                                <PlayIcon style={{ width: 14, height: 14 }} />
-                                Putar bareng
-                            </motion.button>
+                                <PlayIcon style={{ width: 12, height: 12 }} /> Putar Bareng
+                            </button>
                         </motion.div>
-                    )}
+                    </div>
 
                     {/* Rooms List */}
                     <section>
@@ -773,22 +762,7 @@ export default function Dashboard() {
             </AnimatePresence>
 
             {/* Mobile Nav */}
-            <nav className="mobile-bottomnav" style={{
-                display: "none", position: "fixed", bottom: 0, left: 0, right: 0, height: 80,
-                background: "var(--bg-navbar)", borderTop: "1.5px solid var(--border-soft)",
-                justifyContent: "space-around", alignItems: "center", zIndex: 100,
-                paddingBottom: "env(safe-area-inset-bottom)",
-                transition: "background-color 0.4s ease"
-            }}>
-                <button onClick={() => router.push("/dashboard")} style={{ background: "none", border: "none", color: "var(--accent-primary)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                    <MusicalNoteIcon style={{ width: 26, height: 26 }} />
-                    <span style={{ fontSize: 11, fontWeight: 800 }}>DASHBOARD</span>
-                </button>
-                <button onClick={() => router.push("/profile")} style={{ background: "none", border: "none", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                    <UserIcon style={{ width: 26, height: 26 }} />
-                    <span style={{ fontSize: 11, fontWeight: 800 }}>PROFIL</span>
-                </button>
-            </nav>
+            {/* Mobile Nav removed - now in layout.tsx */}
 
             <style>{`
                 @media (max-width: 680px) {
@@ -801,6 +775,9 @@ export default function Dashboard() {
                     }
                     .mobile-bottomnav { display: flex !important; }
                     header { background: var(--bg-navbar) !important; }
+                    .quick-actions-grid {
+                        grid-template-columns: 1fr !important;
+                    }
                 }
 
                 /* Personal Ambient Styles */

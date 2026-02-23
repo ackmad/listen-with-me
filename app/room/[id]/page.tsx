@@ -663,7 +663,7 @@ function RoomInner() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                     {room?.queue?.length > 0 ? (
                         room.queue.map((s: any, i: number) => (
-                            <QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} index={i + 1} onPlay={() => playFromQueue(s)} onRemove={() => removeFromQueue(s)} />
+                            <QueueItem key={s.queueId || `q-${i}`} song={s} isHost={isHost} isActive={false} index={i + 1} onPlay={() => playFromQueue(s)} onRemove={() => removeFromQueue(s)} />
                         ))
                     ) : (
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", border: "1.5px dashed var(--border-soft)", borderRadius: 20, gap: 12 }}>
@@ -1285,7 +1285,7 @@ function RoomInner() {
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                 {mobileTab === "queue" ? (
-                                    room?.queue?.length > 0 ? room.queue.map((s: any) => (<QueueItem key={s.queueId} song={s} isHost={isHost} isActive={false} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} onRemove={() => removeFromQueue(s)} />))
+                                    room?.queue?.length > 0 ? room.queue.map((s: any, i: number) => (<QueueItem key={s.queueId || `dq-${i}`} song={s} isHost={isHost} isActive={false} onPlay={() => { playFromQueue(s); setShowDrawer(false); }} onRemove={() => removeFromQueue(s)} />))
                                         : <div style={{ padding: 40, textAlign: "center", opacity: 0.5 }}>Daftar kosong</div>
                                 ) : roomUsersSorted.map(u => (<RoomUserCard key={u.uid} u={u} isHost={u.uid === room?.hostId} isMe={u.uid === user?.uid} />))}
                             </div>
