@@ -304,18 +304,23 @@ export default function ReactionSystem({ roomId, userId }: Props) {
             }}>
                 <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "auto" }}>
                     <motion.button
+                        whileHover={{ scale: 1.1, background: "var(--bg-secondary)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setShowMenu(!showMenu)}
-                        className="reaction-toggle-btn"
+                        className="reaction-toggle-btn-desktop"
                         style={{
-                            width: 48, height: 48, borderRadius: "50%",
-                            color: showMenu ? "var(--accent-primary)" : "var(--text-muted)", cursor: "pointer",
+                            width: 56, height: 56, borderRadius: "20px",
+                            background: "var(--bg-card)",
+                            color: showMenu ? "var(--accent-primary)" : "var(--text-primary)",
+                            cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "var(--theme-transition)",
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                             pointerEvents: "auto",
+                            border: "1.5px solid var(--border-soft)",
+                            boxShadow: "var(--shadow-soft)",
                         }}
                     >
-                        {showMenu ? <XMarkIcon style={{ width: 28, height: 28 }} /> : <FaceSmileIcon style={{ width: 28, height: 28 }} />}
+                        {showMenu ? <XMarkIcon style={{ width: 32, height: 32 }} /> : <FaceSmileIcon style={{ width: 32, height: 32 }} />}
                     </motion.button>
 
                     <AnimatePresence>
@@ -362,10 +367,8 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                 </div>
             </div>
             <style>{`
-                .reaction-toggle-btn {
-                    background: transparent !important;
-                    border: none !important;
-                    box-shadow: none !important;
+                .reaction-toggle-btn-desktop {
+                    background: var(--bg-card) !important;
                 }
                 .reaction-menu-popup {
                     top: 100%;
@@ -383,11 +386,12 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                         bottom: 96px !important; 
                         right: 16px !important; 
                     }
-                    .reaction-toggle-btn {
+                    .reaction-toggle-btn-desktop {
                         background: var(--bg-card) !important;
                         border: 1.5px solid var(--border-soft) !important;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
                         width: 48px !important; height: 48px !important;
+                        border-radius: 50% !important;
                     }
                     .reaction-menu-popup {
                         top: auto !important;

@@ -54,14 +54,20 @@ export default function LyricsPanel({
             const activeLine = lines[activeIndex] as HTMLElement;
 
             if (activeLine) {
-                const targetScroll = activeLine.offsetTop - container.offsetHeight / 2 + activeLine.offsetHeight / 2;
+                const containerHeight = container.offsetHeight;
+                const activeLineHeight = activeLine.offsetHeight;
+                const activeLineOffset = activeLine.offsetTop;
+
+                // Center the active line perfectly in the middle of the container
+                const targetScroll = activeLineOffset - (containerHeight / 2) + (activeLineHeight / 2);
+
                 container.scrollTo({
                     top: targetScroll,
                     behavior: "smooth"
                 });
             }
         }
-    }, [activeIndex, autoScrollEnabled, isManualScrolling, isDesktopInline]);
+    }, [activeIndex, autoScrollEnabled, isManualScrolling, isDesktopInline, lyrics]);
 
     const handleScroll = () => {
         if (autoScrollEnabled && !isDesktopInline) {
@@ -73,8 +79,8 @@ export default function LyricsPanel({
         }
     };
 
-    if (!lyrics) {
-        if (isDesktopInline) return null; // Don't show anything inline if no lyrics
+    if (!lyrics || lyrics.length === 0) {
+        if (isDesktopInline) return null;
         return (
             <div style={{
                 flex: 1, display: "flex", flexDirection: "column",
@@ -83,63 +89,64 @@ export default function LyricsPanel({
                 transition: "var(--theme-transition)",
             }}>
                 <div style={{
-                    width: 64, height: 64, borderRadius: "50%", background: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+                    width: 72, height: 72, borderRadius: "50%", background: isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
                     display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8
                 }}>
-                    <MusicalNoteIcon style={{ width: 32, height: 32, opacity: 0.5 }} />
+                    <MusicalNoteIcon style={{ width: 36, height: 36, opacity: 0.5 }} />
                 </div>
-                <p style={{ fontSize: 16, fontWeight: 700, opacity: 0.8, maxWidth: 240, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 18, fontWeight: 800, opacity: 0.9, maxWidth: 300, lineHeight: 1.4, margin: 0, fontFamily: "var(--font-fredoka)" }}>
                     Lirik belum tersedia untuk lagu ini
                 </p>
-                <p style={{ fontSize: 12, opacity: 0.5, fontWeight: 500 }}>
+                <p style={{ fontSize: 13, opacity: 0.5, fontWeight: 500 }}>
                     Putar lagu lain yang memiliki file .srt
                 </p>
             </div>
         );
     }
 
-    // Special logic for Desktop Inline (only show 5 lines)
+    // Special logic for Desktop Inline (only show 5 lines centered)
     if (isDesktopInline) {
         const linesToShow = [];
-        // Line 1: Previous
+        // Lines 1, 2: Previous
+        linesToShow.push(activeIndex > 1 ? lyrics[activeIndex - 2] : { text: "", start: 0, end: 0 });
         linesToShow.push(activeIndex > 0 ? lyrics[activeIndex - 1] : { text: "", start: 0, end: 0 });
-        // Line 2: Active
+        // Line 3: Active
         linesToShow.push(activeIndex >= 0 ? lyrics[activeIndex] : { text: "...", start: 0, end: 0 });
-        // Lines 3, 4, 5: Next
-        for (let i = 1; i <= 3; i++) {
+        // Lines 4, 5: Next
+        for (let i = 1; i <= 2; i++) {
             linesToShow.push(activeIndex + i < lyrics.length ? lyrics[activeIndex + i] : { text: "", start: 0, end: 0 });
         }
 
         return (
             <div style={{
                 display: "flex", flexDirection: "column", gap: 12,
-                width: "100%", maxWidth: 500, padding: "0 20px"
+                width: "100%", maxWidth: 600, padding: "0 20px"
             }}>
                 {linesToShow.map((line, i) => {
-                    const isActive = i === 1; // Index 1 is the active line in this 5-line array
-                    const isPrev = i === 0;
+                    const isActive = i === 2; // Middle line is active
+                    const isFocus = i >= 1 && i <= 3;
                     return (
                         <motion.div
                             key={`${activeIndex}-${i}`}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{
-                                opacity: isActive ? 1 : isPrev ? 0.3 : 0.4,
-                                scale: isActive ? (isImmersive ? 1.15 : 1.05) : 1,
+                                opacity: isActive ? 1 : isFocus ? 0.35 : 0.2,
+                                scale: isActive ? (isImmersive ? 1.25 : 1.1) : 1,
                                 color: isActive ? (isImmersive ? "#FFFFFF" : theme.active) : theme.text,
-                                x: isActive ? (isImmersive ? 20 : 10) : 0,
-                                textShadow: isActive && isImmersive ? "0 0 20px rgba(255,255,255,0.4)" : "none"
+                                textShadow: isActive ? (isImmersive ? "0 0 25px rgba(255,255,255,0.5)" : `0 0 15px ${theme.active}44`) : "none"
                             }}
                             transition={{ duration: 0.4 }}
                             style={{
                                 fontSize: isActive
-                                    ? (isImmersive ? "2.6rem" : "1.4rem")
-                                    : (isImmersive ? "1.4rem" : "1rem"),
-                                fontWeight: isActive ? 900 : 600,
-                                textAlign: "left",
-                                filter: !isActive ? (isImmersive ? "blur(1px)" : "blur(0.5px)") : "none",
-                                lineHeight: 1.3,
-                                minHeight: "1.4em",
-                                transition: "all 0.4s ease"
+                                    ? (isImmersive ? "2.6rem" : "1.8rem")
+                                    : (isImmersive ? "1.4rem" : "1.2rem"),
+                                fontWeight: isActive ? 900 : 700,
+                                textAlign: "center",
+                                filter: !isActive ? (isImmersive ? "blur(1.5px)" : "blur(0.5px)") : "none",
+                                lineHeight: 1.35,
+                                minHeight: "1.6em",
+                                transition: "all 0.4s ease",
+                                willChange: "transform, opacity"
                             }}
                         >
                             {line.text}
@@ -178,12 +185,13 @@ export default function LyricsPanel({
                 onScroll={handleScroll}
                 className="lyrics-container"
                 style={{
-                    flex: 1, overflowY: "auto", padding: isMobile ? "20px" : "40px 24px",
-                    display: "flex", flexDirection: "column", gap: 4,
+                    flex: 1, overflowY: "auto", padding: isMobile ? "40px 20px" : "80px 24px",
+                    display: "flex", flexDirection: "column", gap: 8,
                     scrollBehavior: "smooth",
                     scrollbarWidth: "none",
                 }}
             >
+                <div style={{ minHeight: "40%" }} />
                 {lyrics.map((line, i) => {
                     const isActive = i === activeIndex;
 
@@ -194,21 +202,23 @@ export default function LyricsPanel({
                             initial={false}
                             animate={{
                                 color: isActive ? theme.active : theme.text,
-                                scale: isActive ? 1.08 : 1,
-                                opacity: isActive ? 1 : 0.4,
-                                background: isActive ? theme.highlight : "transparent",
-                                filter: isActive ? "none" : "blur(0.2px)"
+                                scale: isActive ? 1.12 : 1,
+                                opacity: isActive ? 1 : 0.35,
+                                textShadow: isActive ? `0 0 15px ${theme.active}44` : "none",
+                                filter: isActive ? "none" : "blur(0.5px)"
                             }}
-                            transition={{ duration: 0.4 }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
                             style={{
-                                padding: "16px 24px",
+                                padding: "12px 24px",
                                 borderRadius: 20,
                                 textAlign: "center",
                                 cursor: "pointer",
-                                fontSize: isActive ? (isMobile ? "1.5rem" : "1.8rem") : "1.1rem",
-                                fontWeight: isActive ? 900 : 600,
-                                lineHeight: 1.5,
+                                fontSize: isActive ? (isMobile ? "1.8rem" : "2.2rem") : (isMobile ? "1.2rem" : "1.4rem"),
+                                fontWeight: isActive ? 900 : 700,
+                                lineHeight: 1.4,
                                 position: "relative",
+                                width: "100%",
+                                willChange: "transform, opacity"
                             }}
                         >
                             {line.text}

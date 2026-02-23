@@ -95,7 +95,13 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
 }) {
     const [search, setSearch] = useState("");
 
-    const filtered = LOCAL_SONGS.filter(s =>
+    const sortedSongs = [...LOCAL_SONGS].sort((a, b) => {
+        const artistCompare = a.artist.localeCompare(b.artist);
+        if (artistCompare !== 0) return artistCompare;
+        return a.title.localeCompare(b.title);
+    });
+
+    const filtered = sortedSongs.filter(s =>
         s.title.toLowerCase().includes(search.toLowerCase()) ||
         s.artist.toLowerCase().includes(search.toLowerCase())
     );

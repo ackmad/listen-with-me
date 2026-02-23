@@ -335,7 +335,7 @@ export default function Dashboard() {
     const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
     const hour = new Date().getHours();
-    const isMorning = hour >= 4 && hour < 11;
+    const isMorning = hour >= 5 && hour < 11;
     const isDay = hour >= 11 && hour < 15;
     const isEvening = hour >= 15 && hour < 18;
 
@@ -454,50 +454,150 @@ export default function Dashboard() {
                         </p>
                     </motion.div>
 
-                    {/* Create Button Large */}
-                    <div style={{ marginBottom: 48 }}>
+                    <div style={{ position: "relative", marginBottom: 48 }}>
                         <motion.button
                             whileHover={{ scale: 1.02, y: -4, boxShadow: "var(--shadow-strong)" }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setShowCreate(true)}
                             style={{
-                                width: "100%", padding: "20px",
+                                width: "100%", padding: "24px",
                                 background: "var(--accent-primary)",
-                                borderRadius: 24, color: "#fff", cursor: "pointer",
-                                fontSize: 18, fontWeight: 900, border: "none",
-                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
+                                borderRadius: 28, color: "#fff", cursor: "pointer",
+                                fontSize: 20, fontWeight: 900, border: "none",
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                                 boxShadow: "var(--shadow-soft)",
+                                position: "relative", overflow: "hidden"
                             }}
                         >
+                            {/* Subtle inner glow for create button */}
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%)", pointerEvents: "none" }} />
+
                             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <PlusIcon style={{ width: 24, height: 24 }} strokeWidth={2.5} />
+                                <PlusIcon style={{ width: 28, height: 28 }} strokeWidth={3} />
                                 Buat Ruang Musik Baru
                             </div>
-                            <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>Siapa tau dia join 😉</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85, letterSpacing: "0.02em" }}>Siapa tau dia join 😉</span>
                         </motion.button>
 
-                        <div className="counter-card" style={{ marginTop: 20, padding: "16px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
-                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>🎧 128 lagu sudah kita putar bareng.</p>
-                            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", marginTop: 4 }}>Dan masih nambah terus.</span>
-                        </div>
+                        {/* Memory Capsule / Togetherness Counter */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="counter-card"
+                            style={{
+                                marginTop: 20, padding: "20px 24px", borderRadius: 24,
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                boxShadow: "var(--shadow-soft)",
+                                background: "var(--bg-card)",
+                                border: "1.5px solid var(--border-soft)",
+                                position: "relative",
+                                overflow: "hidden"
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: "50%",
+                                    background: "var(--bg-secondary)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 20, border: "1px solid var(--border-soft)"
+                                }}>🎧</div>
+                                <div style={{ textAlign: "left" }}>
+                                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>
+                                        Memory Capsule <span style={{ color: "var(--accent-primary)", marginLeft: 4 }}>• 128 lagu</span>
+                                    </p>
+                                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
+                                        Total piringan hitam yang kita putar bareng.
+                                    </p>
+                                </div>
+                            </div>
+                            <div style={{
+                                padding: "6px 12px", borderRadius: 12,
+                                background: "var(--bg-secondary)",
+                                fontSize: 10, fontWeight: 800, color: "var(--accent-primary)",
+                                textTransform: "uppercase", letterSpacing: "0.05em",
+                                border: "1px solid var(--border-soft)"
+                            }}>
+                                Terus Bertambah
+                            </div>
+                        </motion.div>
                     </div>
 
-                    {/* Lagu Hari Ini */}
+                    {/* Lagu Hari Ini - Premium Gradient Card */}
                     {LOCAL_SONGS.length > 0 && (
-                        <div className="song-of-the-day" style={{ padding: "20px", borderRadius: 24, marginBottom: 32, display: "flex", alignItems: "center", gap: 16 }}>
-                            <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", boxShadow: "var(--shadow-soft)" }}>
-                                <MusicalNoteIcon style={{ width: 28, height: 28 }} />
+                        <motion.div
+                            whileHover={{ scale: 1.01 }}
+                            className="song-of-the-day"
+                            style={{
+                                padding: "24px", borderRadius: 32, marginBottom: 40,
+                                display: "flex", alignItems: "center", gap: 20,
+                                background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%)",
+                                border: "1.5px solid var(--border-soft)",
+                                boxShadow: "var(--shadow-soft)",
+                                position: "relative",
+                                overflow: "hidden"
+                            }}
+                        >
+                            {/* Animated background blob behind song icon */}
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    rotate: [0, 90, 0],
+                                    opacity: [0.3, 0.5, 0.3]
+                                }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                style={{
+                                    position: "absolute", top: -20, left: -20,
+                                    width: 120, height: 120,
+                                    background: "var(--accent-glow)",
+                                    filter: "blur(40px)", borderRadius: "50%",
+                                    pointerEvents: "none"
+                                }}
+                            />
+
+                            <div style={{
+                                width: 72, height: 72, borderRadius: 22,
+                                background: "linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                flexShrink: 0, color: "#fff",
+                                boxShadow: "0 10px 25px var(--accent-glow)",
+                                position: "relative", zIndex: 1
+                            }}>
+                                <MusicalNoteIcon style={{ width: 32, height: 32 }} />
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 800, color: "var(--accent-primary)", letterSpacing: "0.05em", textTransform: "uppercase" }}>🌅 Lagu hari ini buat kamu.</p>
-                                <h3 style={{ margin: "0 0 2px", fontSize: 16, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{LOCAL_SONGS[5]?.title || LOCAL_SONGS[0].title}</h3>
-                                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{LOCAL_SONGS[5]?.artist || LOCAL_SONGS[0].artist}</p>
+
+                            <div style={{ flex: 1, minWidth: 0, position: "relative", zIndex: 1 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                    <span style={{ fontSize: 10, fontWeight: 900, color: "var(--accent-primary)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                                        🌅 Lagu hari ini buat kamu
+                                    </span>
+                                </div>
+                                <h3 style={{ margin: "0 0 2px", fontSize: 19, fontWeight: 900, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: "-0.01em" }}>
+                                    {LOCAL_SONGS[5]?.title || LOCAL_SONGS[0].title}
+                                </h3>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {LOCAL_SONGS[5]?.artist || LOCAL_SONGS[0].artist}
+                                </p>
                             </div>
-                            <button onClick={() => setShowCreate(true)} style={{ padding: "8px 14px", borderRadius: 12, background: "var(--accent-primary)", color: "#fff", border: "none", fontSize: 11, fontWeight: 800, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 6, boxShadow: "var(--shadow-soft)" }}>
-                                <PlayIcon style={{ width: 12, height: 12 }} />
+
+                            <motion.button
+                                whileHover={{ scale: 1.05, background: "var(--accent-primary)", color: "#fff" }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowCreate(true)}
+                                style={{
+                                    padding: "12px 20px", borderRadius: 16,
+                                    background: "var(--accent-soft)", color: "var(--accent-primary)",
+                                    border: "none", fontSize: 13, fontWeight: 900, cursor: "pointer",
+                                    flexShrink: 0, display: "flex", alignItems: "center", gap: 8,
+                                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    boxShadow: "0 4px 12px rgba(236,72,153,0.1)",
+                                    position: "relative", zIndex: 1
+                                }}
+                            >
+                                <PlayIcon style={{ width: 14, height: 14 }} />
                                 Putar bareng
-                            </button>
-                        </div>
+                            </motion.button>
+                        </motion.div>
                     )}
 
                     {/* Rooms List */}

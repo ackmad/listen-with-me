@@ -695,10 +695,12 @@ function RoomInner() {
                                     width: lyrics && lyrics.length > 0 ? 320 : 460,
                                     height: lyrics && lyrics.length > 0 ? 320 : 460,
                                     borderRadius: "50%",
-                                    background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
-                                    border: "6px solid #222",
+                                    background: "var(--vinyl-disc)",
+                                    border: "6px solid var(--vinyl-border)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
-                                    boxShadow: room?.isPlaying ? "0 0 60px var(--accent-glow), 0 30px 60px rgba(0,0,0,0.8)" : "0 20px 50px rgba(0,0,0,0.6)",
+                                    boxShadow: room?.isPlaying
+                                        ? "0 0 80px var(--accent-glow), 0 30px 100px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.2)"
+                                        : "0 20px 50px rgba(0,0,0,0.25)",
                                     transition: "width 0.5s ease, height 0.5s ease"
                                 }}
                             >
@@ -706,11 +708,17 @@ function RoomInner() {
                                     width: lyrics && lyrics.length > 0 ? 80 : 120,
                                     height: lyrics && lyrics.length > 0 ? 80 : 120,
                                     borderRadius: "50%",
-                                    background: "#1a1a1a", border: "3px solid #333",
+                                    background: "var(--vinyl-center)", border: "3px solid var(--vinyl-border)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
-                                    transition: "width 0.5s ease, height 0.5s ease"
+                                    transition: "width 0.5s ease, height 0.5s ease",
+                                    position: "relative"
                                 }}>
-                                    <MusicalNoteIcon style={{ width: 32, height: 32, color: room?.currentSong ? "var(--accent-primary)" : "var(--text-muted)" }} />
+                                    <MusicalNoteIcon style={{ width: 32, height: 32, color: room?.currentSong ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.15)", position: "relative", zIndex: 1 }} />
+                                    <div style={{
+                                        width: 6, height: 6, borderRadius: "50%", background: "#000",
+                                        position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                                        zIndex: 2, boxShadow: "inset 0 1px 2px rgba(255,255,255,0.3)"
+                                    }} />
                                 </div>
                             </motion.div>
                         </div>
@@ -787,30 +795,32 @@ function RoomInner() {
             <AnimatePresence mode="wait">
                 <motion.div
                     key={isRealtimeSynced ? "sync" : "wait"}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
                     style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 6,
-                        padding: "6px 14px",
+                        padding: "4px 12px",
                         borderRadius: 20,
                         background: isRealtimeSynced
                             ? "var(--accent-glow)"
-                            : "rgba(156,163,175,0.1)",
-                        marginBottom: isImmersiveMobile ? 24 : 16,
+                            : "rgba(100,100,100,0.05)",
+                        marginBottom: isImmersiveMobile ? 12 : 16,
+                        backdropFilter: "blur(4px)",
+                        border: isRealtimeSynced ? "1px solid var(--accent-soft)" : "1px solid rgba(0,0,0,0.03)"
                     }}
                 >
                     <span style={{
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: 800,
                         color: isRealtimeSynced
-                            ? "var(--accent-strong)"
+                            ? "var(--accent-primary)"
                             : "var(--text-muted)",
+                        letterSpacing: "0.02em"
                     }}>
-                        {isRealtimeSynced ? "🟢 Sinkron banget sekarang" : "🕒 Lagi nyesuain detik…"}
+                        {isRealtimeSynced ? "Sinkron banget sekarang 💫" : "🕒 Lagi nyesuain detik…"}
                     </span>
                 </motion.div>
             </AnimatePresence>
@@ -826,13 +836,25 @@ function RoomInner() {
                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                     style={{
                         width: "85vw", maxWidth: 320, height: "85vw", maxHeight: 320,
-                        borderRadius: 32, background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
-                        boxShadow: room?.isPlaying ? "0 30px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow)" : "0 30px 60px rgba(0,0,0,0.5)",
+                        borderRadius: 32, background: "var(--vinyl-disc)",
+                        boxShadow: room?.isPlaying
+                            ? "0 40px 80px rgba(0,0,0,0.35), 0 0 50px var(--accent-glow)"
+                            : "0 30px 60px rgba(0,0,0,0.2)",
                         marginBottom: 48, display: "flex", alignItems: "center", justifyContent: "center"
                     }}
                 >
-                    <div style={{ width: "20%", height: "20%", borderRadius: "50%", background: "#1a1a1a", border: "2px solid #333", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--accent-primary)" }} />
+                    <div style={{
+                        width: "20%", height: "20%", borderRadius: "50%",
+                        background: "var(--vinyl-center)", border: "2px solid var(--vinyl-border)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        position: "relative"
+                    }}>
+                        <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "rgba(0,0,0,0.3)", position: "relative", zIndex: 1 }} />
+                        <div style={{
+                            width: "15%", height: "15%", borderRadius: "50%", background: "#000",
+                            position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                            zIndex: 2, boxShadow: "inset 0 1px 1px rgba(255,255,255,0.3)"
+                        }} />
                     </div>
                 </motion.div>
 
@@ -900,6 +922,15 @@ function RoomInner() {
             display: "flex", flexDirection: "column",
             transition: "var(--theme-transition)",
         }}>
+            {/* 🌌 Night Sky Layer — Only active in night mode via CSS */}
+            <div className="night-sky-layer">
+                <div className="night-nebula" />
+                <div className="star-layer star-far" />
+                <div className="star-layer star-mid" />
+                <div className="star-layer star-near" />
+                <div className="meteor" style={{ top: '5%', left: '90%', animationDelay: '2s', animationDuration: '8s' }} />
+                <div className="meteor" style={{ top: '20%', left: '95%', animationDelay: '7s', animationDuration: '11s' }} />
+            </div>
             <audio
                 ref={audioRef}
                 onTimeUpdate={() => {
@@ -1119,18 +1150,26 @@ function RoomInner() {
                                             style={{
                                                 width: "75vw", maxWidth: 300, height: "75vw", maxHeight: 300,
                                                 borderRadius: "50%",
-                                                background: "radial-gradient(circle at 35% 35%, #1c1c1c 0%, #0a0a0a 60%, #000 100%)",
-                                                border: "6px solid #222",
+                                                background: "var(--vinyl-disc)",
+                                                border: "6px solid var(--vinyl-border)",
                                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                                boxShadow: room?.isPlaying ? "0 20px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow)" : "0 10px 30px rgba(0,0,0,0.6)",
+                                                boxShadow: room?.isPlaying
+                                                    ? "0 30px 90px rgba(0,0,0,0.4), 0 0 50px var(--accent-glow)"
+                                                    : "0 10px 40px rgba(0,0,0,0.2)",
                                             }}
                                         >
                                             <div style={{
                                                 width: "25%", height: "25%", borderRadius: "50%",
-                                                background: "#1a1a1a", border: "2px solid #333",
-                                                display: "flex", alignItems: "center", justifyContent: "center"
+                                                background: "var(--vinyl-center)", border: "2px solid var(--vinyl-border)",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                position: "relative"
                                             }}>
-                                                <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "var(--accent-primary)" }} />
+                                                <MusicalNoteIcon style={{ width: "40%", height: "40%", color: "rgba(0,0,0,0.3)", position: "relative", zIndex: 1 }} />
+                                                <div style={{
+                                                    width: "15%", height: "15%", borderRadius: "50%", background: "#000",
+                                                    position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                                                    zIndex: 2, boxShadow: "inset 0 1px 1px rgba(255,255,255,0.3)"
+                                                }} />
                                             </div>
                                         </motion.div>
                                     </div>
@@ -1705,13 +1744,34 @@ function RoomInner() {
                         className="mobile-fullscreen-force-landscape"
                         style={{
                             position: "fixed", inset: 0, zIndex: 10000,
-                            background: "#E6EDF2", // A light cool grey like the image
-                            color: "#1a1a1a",
+                            background: "var(--bg-primary)", // Follow mode background
+                            color: "var(--text-primary)",
                             display: "flex", alignItems: "stretch", // full height
                             overflow: "hidden",
                             padding: "24px 32px"
                         }}
                     >
+                        {/* 🌌 Night Sky Background for Immersive Mobile (Dark Mode) */}
+                        <div className="night-sky-layer" style={{ position: "absolute", zIndex: 0, pointerEvents: "none" }}>
+                            <div className="night-nebula" />
+                            <div className="star-layer star-far" />
+                            <div className="star-layer star-mid" />
+                            <div className="star-layer star-near" />
+
+                            {/* Extra Meteors for Mobile for "Clear Visibility" */}
+                            <div className="meteor" style={{ top: '10%', left: '80%', animationDelay: '1s', animationDuration: '6s' }} />
+                            <div className="meteor" style={{ top: '40%', left: '90%', animationDelay: '5s', animationDuration: '9s' }} />
+                            <div className="meteor" style={{ top: '15%', left: '70%', animationDelay: '8s', animationDuration: '12s' }} />
+                            <div className="meteor" style={{ top: '60%', left: '95%', animationDelay: '3s', animationDuration: '7s' }} />
+                            <div className="meteor" style={{ top: '25%', left: '85%', animationDelay: '12s', animationDuration: '15s' }} />
+
+                            {/* Sparkles for a more magical feel */}
+                            <div className="night-sparkle" style={{ top: '30%', left: '15%', animationDelay: '0.2s' }} />
+                            <div className="night-sparkle" style={{ top: '70%', left: '25%', animationDelay: '1.5s' }} />
+                            <div className="night-sparkle" style={{ top: '45%', left: '55%', animationDelay: '3.2s' }} />
+                            <div className="night-sparkle" style={{ top: '20%', left: '80%', animationDelay: '0.8s' }} />
+                            <div className="night-sparkle" style={{ top: '85%', left: '65%', animationDelay: '2.4s' }} />
+                        </div>
                         {/* Top Right User Active & Close */}
                         <div style={{ position: "absolute", top: 16, right: 16, display: "flex", alignItems: "center", gap: 12, zIndex: 100 }}>
                             {/* User Circles */}
@@ -1722,100 +1782,120 @@ function RoomInner() {
                                         style={{
                                             position: "relative",
                                             marginLeft: i === 0 ? 0 : -8,
-                                            border: "2px solid #E6EDF2", borderRadius: "50%",
+                                            border: "2px solid var(--bg-primary)", borderRadius: "50%",
                                             zIndex: 10 - i
                                         }}
                                     >
-                                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#ccc", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid var(--border-soft)" }}>
                                             {u.photoURL ? <img src={u.photoURL} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" /> : <span style={{ fontSize: 10, fontWeight: 900 }}>{getInitials(u.displayName)}</span>}
                                         </div>
                                         {u.status === "online" && (
-                                            <div style={{ position: "absolute", bottom: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "var(--accent-primary)", border: "2px solid #E6EDF2" }} />
+                                            <div style={{ position: "absolute", bottom: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: "var(--accent-primary)", border: "2px solid var(--bg-primary)" }} />
                                         )}
                                     </div>
                                 ))}
                                 {roomUsersSorted.length > 3 && (
-                                    <div style={{ marginLeft: 8, fontSize: 13, fontWeight: 800, color: "#1E1E1E" }}>+{roomUsersSorted.length - 3}</div>
+                                    <div style={{ marginLeft: 8, fontSize: 11, fontWeight: 800, color: "var(--text-secondary)" }}>+{roomUsersSorted.length - 3}</div>
                                 )}
                             </div>
 
-                            <button onClick={toggleFullscreen} style={{ background: "rgba(0,0,0,0.05)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}>
-                                <ArrowsPointingInIcon style={{ width: 18, height: 18, color: "#1a1a1a" }} />
+                            <button onClick={toggleFullscreen} style={{ background: "var(--accent-soft)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}>
+                                <ArrowsPointingInIcon style={{ width: 18, height: 18, color: "var(--accent-primary)" }} />
                             </button>
                         </div>
 
                         {/* Left Column: Info & Controls */}
-                        <div style={{ width: "32%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", zIndex: 10, padding: "24px 0" }}>
-
+                        <div style={{ width: "35%", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 10, padding: "24px 0" }}>
                             {/* Top Info */}
                             <div>
-                                <h1 style={{ fontSize: "clamp(24px, 5vh, 42px)", fontWeight: 900, margin: "0", color: "#1E1E1E", fontFamily: "var(--font-geist-sans)", letterSpacing: "-1px", lineHeight: "1.1" }}>
-                                    {room?.currentSong?.artist || "Standby..."}
-                                </h1>
-                                <p style={{ fontSize: "clamp(16px, 3vh, 22px)", color: "#1E1E1E", fontWeight: 600, margin: "4px 0 16px 0", opacity: 0.8 }}>
+                                <h1 style={{ fontSize: "clamp(28px, 6vh, 48px)", fontWeight: 900, margin: "0", color: "var(--text-primary)", fontFamily: "var(--font-geist-sans)", letterSpacing: "-1.5px", lineHeight: "1.05" }}>
                                     {room?.currentSong?.title || "Belum ada lagu"}
+                                </h1>
+                                <p style={{ fontSize: "clamp(16px, 3vh, 22px)", color: "var(--accent-primary)", fontWeight: 700, margin: "6px 0 12px 0", opacity: 0.9 }}>
+                                    {room?.currentSong?.artist || "Standby..."}
                                 </p>
 
-                                <SyncIndicator isDarkBg={false} isImmersiveMobile={true} />
+
 
                                 {/* Progress Bar */}
-                                <div style={{ width: "100%", maxWidth: "340px" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#1E1E1E", opacity: 0.8 }}>{formatTime(currentTime)}</span>
-                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#1E1E1E", opacity: 0.8 }}>{formatTime(duration)}</span>
+                                <div style={{ width: "100%", maxWidth: "340px", marginBottom: 32 }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                        <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-primary)", opacity: 0.6 }}>{formatTime(currentTime)}</span>
+                                        <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-primary)", opacity: 0.6 }}>{formatTime(duration)}</span>
                                     </div>
-                                    <div style={{ height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, position: "relative" }}>
-                                        <div style={{ height: "100%", width: `${progress}%`, background: "#1E1E1E", borderRadius: 2, position: "relative" }}>
-                                            {/* Minimal Scrubber Dot */}
-                                        </div>
+                                    <div style={{ height: 8, background: "var(--bg-secondary)", borderRadius: 10, position: "relative", border: "1px solid var(--border-soft)" }}>
+                                        <motion.div
+                                            initial={false}
+                                            animate={{ width: `${progress}%` }}
+                                            style={{
+                                                height: "100%", background: "var(--accent-primary)", borderRadius: 10, position: "relative",
+                                                boxShadow: "0 0 10px var(--accent-glow)"
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
                                 {/* Controls (Menu, Play/Pause and Next) */}
-                                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 24 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 20, marginTop: 12 }}>
                                     {/* Menu / Queue */}
-                                    <button onClick={() => setShowImmersiveMobileMenu(true)} style={{ width: 44, height: 44, borderRadius: "50%", background: "#1E1E1E", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.15)" }}>
-                                        <QueueListIcon style={{ width: 20, height: 20, color: "#fff" }} />
-                                    </button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => setShowImmersiveMobileMenu(true)}
+                                        style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-card)", border: "1px solid var(--border-soft)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "var(--shadow-soft)" }}
+                                    >
+                                        <QueueListIcon style={{ width: 22, height: 22, color: "var(--text-primary)" }} />
+                                    </motion.button>
 
                                     {/* Play / Pause */}
-                                    <button onClick={togglePlay} style={{ width: 44, height: 44, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "inset 0 -2px 5px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.7), 0 4px 10px rgba(0,0,0,0.05)" }}>
-                                        {room?.isPlaying ? <PauseIcon style={{ width: 22, height: 22, color: "#1E1E1E" }} /> : <PlayIcon style={{ width: 22, height: 22, marginLeft: 2, color: "#1E1E1E" }} />}
-                                    </button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={togglePlay}
+                                        style={{
+                                            width: 68, height: 68, borderRadius: "50%",
+                                            background: "var(--accent-primary)", border: "none",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            cursor: "pointer",
+                                            boxShadow: "0 10px 25px var(--accent-glow), inset 0 -2px 5px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.3)"
+                                        }}
+                                    >
+                                        {room?.isPlaying ? <PauseIcon style={{ width: 32, height: 32, color: "#fff" }} /> : <PlayIcon style={{ width: 32, height: 32, marginLeft: 2, color: "#fff" }} />}
+                                    </motion.button>
 
                                     {/* Next */}
-                                    <button onClick={skipNext} disabled={!isHost || !room?.queue?.length} style={{ width: 44, height: 44, borderRadius: "50%", background: "#D0DCE3", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: isHost && room?.queue?.length ? "pointer" : "default", opacity: isHost && room?.queue?.length ? 1 : 0.5, boxShadow: "inset 0 -2px 5px rgba(0,0,0,0.1), inset 0 2px 4px rgba(255,255,255,0.7), 0 4px 10px rgba(0,0,0,0.05)" }}>
-                                        <ForwardIcon style={{ width: 22, height: 22, color: "#1E1E1E" }} />
-                                    </button>
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={skipNext} disabled={!isHost || !room?.queue?.length}
+                                        style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--bg-card)", border: "1px solid var(--border-soft)", display: "flex", alignItems: "center", justifyContent: "center", cursor: isHost && room?.queue?.length ? "pointer" : "default", opacity: isHost && room?.queue?.length ? 1 : 0.5, boxShadow: "var(--shadow-soft)" }}
+                                    >
+                                        <ForwardIcon style={{ width: 22, height: 22, color: "var(--text-primary)" }} />
+                                    </motion.button>
                                 </div>
-                            </div>
 
-                            {/* Lyrics Panel */}
-                            <div style={{ flex: 1, minHeight: 0, marginTop: 24, paddingBottom: 16, overflow: "hidden", position: "relative", maskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)" }}>
-                                <LyricsPanel
-                                    lyrics={lyrics}
-                                    activeIndex={activeIndex}
-                                    autoScrollEnabled={true}
-                                    setAutoScrollEnabled={() => { }}
-                                    isDarkMode={false}
-                                    isDesktopInline={true}
-                                    isImmersive={false}
-                                />
+
+
+                                {/* Lyrics Snippet (Subtle) */}
+                                <div style={{ flex: 1, minHeight: 0, marginTop: 32, paddingBottom: 16, overflow: "hidden", position: "relative", maskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)" }}>
+                                    <LyricsPanel
+                                        lyrics={lyrics}
+                                        activeIndex={activeIndex}
+                                        autoScrollEnabled={true}
+                                        setAutoScrollEnabled={() => { }}
+                                        isDarkMode={false}
+                                        isDesktopInline={true}
+                                        isImmersive={false}
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         {/* Right Area: Cassette Tape */}
-                        <div style={{ width: "62%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
-
+                        <div style={{ width: "65%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 1 }}>
                             <div style={{
                                 width: "100%",
                                 maxWidth: "560px",
                                 position: "relative",
                                 aspectRatio: "1.65 / 1",
-                                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.25))",
-                                // TUTORIAL GESER/PERBESAR SELURUH KASET:
-                                // Gunakan scale() untuk membesarkan (misal 1.1, 1.2, 1.3)
-                                // Gunakan translateX() untuk geser Kiri/Kanan (misal -10%, -20%, 5%, dll.)
+                                filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.15))",
                                 transformOrigin: "center center"
                             }}>
                                 {/* Base Cassette Image */}
@@ -1827,15 +1907,6 @@ function RoomInner() {
                                     transform: "scale(1.1) translateX(-10%)",
                                     zIndex: 2,
                                 }} />
-
-                                {/* 
-                                TUTORIAL MENGATUR POSISI DAN UKURAN PITA KASET:
-                                - Ubah persentase "left", "right" untuk geser pita ke Kiri atau Kanan.
-                                - Ubah persentase "top" untuk geser pita Ke Atas atau Ke Bawah.
-                                - Ubah persentase "width" untuk mengatur Besar Kecilnya pita.
-                                
-                                Pita (pita.png) diberi zIndex: 3 agar **berada di atas** kasetpita.png (zIndex: 2).
-                                */}
 
                                 {/* Left Tape Spool */}
                                 <style>{`
@@ -1855,7 +1926,7 @@ function RoomInner() {
                                         animation: "spin-tape 4s linear infinite",
                                         animationPlayState: room?.isPlaying && room?.currentSong ? "running" : "paused",
                                         willChange: "transform",
-                                        zIndex: 3 // Ditaruh DI ATAS kasetpita.png
+                                        zIndex: 3
                                     }}
                                 />
 
@@ -1866,23 +1937,20 @@ function RoomInner() {
                                         right: "-6.5%",
                                         top: "39.5%",
                                         width: "15%",
-                                        // border: "4px solid red",
                                         aspectRatio: "1/1",
                                         background: `url('/images/pita.png') center/contain no-repeat`,
                                         transformOrigin: "center center",
                                         animation: "spin-tape 4s linear infinite",
                                         animationPlayState: room?.isPlaying && room?.currentSong ? "running" : "paused",
                                         willChange: "transform",
-                                        zIndex: 3 // Ditaruh DI ATAS kasetpita.png
+                                        zIndex: 3
                                     }}
                                 />
                             </div>
-
                         </div>
                     </motion.div>
                 )}
 
-                {/* Immersive Mobile Custom Popup List */}
                 <AnimatePresence>
                     {(isFullscreen || isLandscape) && isMobileScreen && showImmersiveMobileMenu && (
                         <motion.div
@@ -1904,22 +1972,22 @@ function RoomInner() {
                                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                                 style={{
                                     width: "100%", maxWidth: 480, height: "100%", maxHeight: 360,
-                                    background: "#fff", borderRadius: 24, boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+                                    background: "var(--bg-card)", borderRadius: 24, boxShadow: "var(--shadow-strong)",
                                     display: "flex", flexDirection: "column", overflow: "hidden"
                                 }}
                             >
                                 {/* Header / Tabs */}
-                                <div style={{ padding: "20px 24px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f0f0f0" }}>
+                                <div style={{ padding: "20px 24px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border-soft)" }}>
                                     <div style={{ display: "flex", gap: 16 }}>
-                                        <button onClick={() => setImmersiveMobileTab("add")} style={{ border: "none", background: "none", padding: 0, cursor: "pointer", fontSize: 18, fontWeight: 900, color: immersiveMobileTab === "add" ? "#442222" : "#ccc", transition: "color 0.2s" }}>
+                                        <button onClick={() => setImmersiveMobileTab("add")} style={{ border: "none", background: "none", padding: 0, cursor: "pointer", fontSize: 18, fontWeight: 900, color: immersiveMobileTab === "add" ? "var(--text-primary)" : "var(--text-muted)", transition: "color 0.2s" }}>
                                             Pilih Lagu 🎵
                                         </button>
-                                        <button onClick={() => setImmersiveMobileTab("queue")} style={{ border: "none", background: "none", padding: 0, cursor: "pointer", fontSize: 18, fontWeight: 900, color: immersiveMobileTab === "queue" ? "#442222" : "#ccc", transition: "color 0.2s" }}>
+                                        <button onClick={() => setImmersiveMobileTab("queue")} style={{ border: "none", background: "none", padding: 0, cursor: "pointer", fontSize: 18, fontWeight: 900, color: immersiveMobileTab === "queue" ? "var(--text-primary)" : "var(--text-muted)", transition: "color 0.2s" }}>
                                             Antrian
                                         </button>
                                     </div>
                                     {immersiveMobileTab === "add" && isHost && (
-                                        <button onClick={addRandomSongs} style={{ padding: "6px 12px", borderRadius: 12, background: "#ff4d88", color: "#fff", border: "none", fontSize: 11, fontWeight: 900, cursor: "pointer", boxShadow: "0 4px 10px rgba(255, 77, 136, 0.4)" }}>
+                                        <button onClick={addRandomSongs} style={{ padding: "6px 12px", borderRadius: 12, background: "var(--accent-primary)", color: "#fff", border: "none", fontSize: 11, fontWeight: 900, cursor: "pointer", boxShadow: "0 4px 10px var(--accent-glow)" }}>
                                             🎲 RANDOM 5
                                         </button>
                                     )}
@@ -1935,8 +2003,8 @@ function RoomInner() {
                                             onChange={(e) => setImmersiveMobileSearch(e.target.value)}
                                             style={{
                                                 width: "100%", padding: "12px 16px", borderRadius: 16,
-                                                background: "#fff0f5", border: "1.5px solid #ffb3c6",
-                                                outline: "none", fontSize: 13, fontWeight: 600, color: "#442222"
+                                                background: "var(--bg-secondary)", border: "1.5px solid var(--border-soft)",
+                                                outline: "none", fontSize: 13, fontWeight: 600, color: "var(--text-primary)"
                                             }}
                                         />
                                     </div>
@@ -1948,32 +2016,32 @@ function RoomInner() {
                                         LOCAL_SONGS.filter(s => s.title.toLowerCase().includes(immersiveMobileSearch.toLowerCase()) || s.artist.toLowerCase().includes(immersiveMobileSearch.toLowerCase())).length > 0 ? (
                                             LOCAL_SONGS.filter(s => s.title.toLowerCase().includes(immersiveMobileSearch.toLowerCase()) || s.artist.toLowerCase().includes(immersiveMobileSearch.toLowerCase())).map((song) => (
                                                 <div key={song.id || `song-${song.title}`} onClick={() => handleSongSelect(song)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                                                    <div style={{ width: 44, height: 44, borderRadius: 14, background: "#ff4d88", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: 0 }}>
+                                                    <div style={{ width: 44, height: 44, borderRadius: 14, background: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", flexShrink: 0 }}>
                                                         <MusicalNoteIcon style={{ width: 22, height: 22 }} />
                                                     </div>
-                                                    <div style={{ flex: 1, borderBottom: "1px solid #f0f0f0", paddingBottom: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                    <div style={{ flex: 1, borderBottom: "1px solid var(--border-soft)", paddingBottom: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <div>
-                                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#222" }}>{song.title}</p>
-                                                            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#999" }}>{song.artist}</p>
+                                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>{song.title}</p>
+                                                            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>{song.artist}</p>
                                                         </div>
-                                                        <span style={{ fontSize: 11, fontWeight: 700, color: "#999" }}>{formatTime(song.duration || 0)}</span>
+                                                        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)" }}>{formatTime(song.duration || 0)}</span>
                                                     </div>
                                                 </div>
                                             ))
                                         ) : (
-                                            <p style={{ textAlign: "center", opacity: 0.5, fontWeight: 700, marginTop: 40, color: "#222" }}>Tidak ditemukan</p>
+                                            <p style={{ textAlign: "center", opacity: 0.5, fontWeight: 700, marginTop: 40, color: "var(--text-primary)" }}>Tidak ditemukan</p>
                                         )
                                     ) : (
                                         room?.queue?.length > 0 ? (
                                             room.queue.map((s: any, i: number) => (
                                                 <div key={s.queueId || `q-${i}`} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                                    <div style={{ width: 36, height: 36, borderRadius: 12, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", color: "#888", flexShrink: 0, fontWeight: 900, fontSize: 12 }}>
+                                                    <div style={{ width: 36, height: 36, borderRadius: 12, background: "var(--bg-secondary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", flexShrink: 0, fontWeight: 900, fontSize: 12 }}>
                                                         {i + 1}
                                                     </div>
-                                                    <div style={{ flex: 1, borderBottom: "1px solid #f0f0f0", paddingBottom: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                    <div style={{ flex: 1, borderBottom: "1px solid var(--border-soft)", paddingBottom: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                         <div>
-                                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "#222" }}>{s.title}</p>
-                                                            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#999" }}>{s.artist}</p>
+                                                            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>{s.title}</p>
+                                                            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>{s.artist}</p>
                                                         </div>
                                                         {isHost && (
                                                             <button onClick={() => removeFromQueue(s)} style={{ padding: 6, background: "none", border: "none", color: "#ff4d4d", cursor: "pointer" }}>
@@ -1985,7 +2053,7 @@ function RoomInner() {
                                             ))
                                         ) : (
                                             <div style={{ textAlign: "center", padding: 40, opacity: 0.5 }}>
-                                                <p style={{ margin: 0, fontWeight: 700, color: "#222" }}>Antrian Kosong</p>
+                                                <p style={{ margin: 0, fontWeight: 700, color: "var(--text-primary)" }}>Antrian Kosong</p>
                                             </div>
                                         )
                                     )}
@@ -1995,7 +2063,7 @@ function RoomInner() {
                                 <div style={{ padding: 16 }}>
                                     <button
                                         onClick={() => setShowImmersiveMobileMenu(false)}
-                                        style={{ width: "100%", padding: 14, borderRadius: 16, background: "#fff0f5", border: "none", color: "#442222", fontSize: 14, fontWeight: 900, cursor: "pointer", transition: "background 0.2s" }}
+                                        style={{ width: "100%", padding: 14, borderRadius: 16, background: "var(--bg-secondary)", border: "none", color: "var(--text-primary)", fontSize: 14, fontWeight: 900, cursor: "pointer", transition: "background 0.2s" }}
                                     >
                                         Tutup
                                     </button>
