@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -230,7 +230,7 @@ function RoomCard({ room, usersInRoom, onClick, onDelete, index }: { room: any; 
 }
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────
-export default function Dashboard() {
+function DashboardContent() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -788,5 +788,13 @@ export default function Dashboard() {
                 .song-of-the-day { background: var(--bg-secondary); border: 1px solid var(--border-soft); }
             `}</style>
         </div>
+    );
+}
+
+export default function Dashboard() {
+    return (
+        <Suspense fallback={null}>
+            <DashboardContent />
+        </Suspense>
     );
 }

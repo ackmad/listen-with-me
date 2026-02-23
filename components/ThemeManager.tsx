@@ -57,23 +57,45 @@ export default function ThemeManager() {
     };
 
     return (
-        <div style={{
-            position: "fixed", top: 16, right: 80, zIndex: 99999,
-            display: "flex", alignItems: "center", gap: 8
-        }}>
-            <button
-                onClick={toggleTheme}
-                title="Toggle Theme (Dev)"
-                style={{
-                    width: 40, height: 40, borderRadius: "50%",
-                    background: "var(--bg-card)", border: "1.5px solid var(--border-soft)",
-                    boxShadow: "var(--shadow-soft)", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 18, transition: "all 0.3s ease"
-                }}
-            >
-                {themeIcons[currentTheme] || "🌓"}
-            </button>
-        </div>
+        <button
+            onClick={toggleTheme}
+            title="Ssst! Ini Rahasia..."
+            style={{
+                position: "fixed",
+                bottom: "-30px",
+                left: "-30px",
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "rgba(255, 69, 58, 0.15)", // Subtle "Liquid Glass" red spot
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                cursor: "pointer",
+                zIndex: 999999, // Above everything
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                outline: "none",
+                backdropFilter: "blur(4px)",
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255, 69, 58, 0.4)";
+                e.currentTarget.style.transform = "scale(1.2)";
+                e.currentTarget.style.bottom = "-20px";
+                e.currentTarget.style.left = "-20px";
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255, 69, 58, 0.15)";
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.bottom = "-30px";
+                e.currentTarget.style.left = "-30px";
+            }}
+        >
+            <div style={{
+                width: 10, height: 10, borderRadius: "50%",
+                background: "rgba(255,255,255,0.2)",
+                position: "absolute", top: "35%", right: "35%"
+            }} />
+        </button>
     );
 }
