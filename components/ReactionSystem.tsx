@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,7 +119,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                             text: data.text,
                             userId: data.userId,
                             createdAt: data.createdAt,
-                            startX: 10 + Math.random() * 80, // Better horizontal distribution (10-90vw)
+                            startX: 10 + Math.random() * 80,
                             color: getUserColor(data.userId),
                         }));
                         setMessages(prev => [...prev, ...burstMsg]);
@@ -141,13 +141,12 @@ export default function ReactionSystem({ roomId, userId }: Props) {
             }));
             setMessages(prev => prev.filter(m => {
                 const t = m.createdAt?.toMillis ? m.createdAt.toMillis() : now;
-                return now - t < 12000; // Longer cleanup for slower animation
+                return now - t < 12000;
             }));
         }, 1500);
         return () => clearInterval(interval);
     }, []);
 
-    // ─── Actions ───
     const sendReaction = async (emoji: string) => {
         if (!userId) return;
         try {
@@ -196,30 +195,20 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                     ))}
                 </AnimatePresence>
 
-                {/* Messages Float — SMOOTH & COLORFUL */}
+                {/* Messages Float */}
                 <AnimatePresence>
                     {messages.map((m, idx) => (
                         <motion.div
                             key={m.id}
-                            initial={{
-                                opacity: 0,
-                                scale: 0.5,
-                                y: "110vh",
-                                x: `${m.startX}vw`,
-                                rotate: Math.random() * 20 - 10
-                            }}
+                            initial={{ opacity: 0, scale: 0.5, y: "110vh", x: `${m.startX}vw`, rotate: Math.random() * 20 - 10 }}
                             animate={{
                                 opacity: [0, 1, 1, 0],
                                 y: "-30vh",
-                                x: `${m.startX + (Math.random() * 20 - 10)}vw`, // Gentle horizontal drift
+                                x: `${m.startX + (Math.random() * 20 - 10)}vw`,
                                 scale: [0.5, 1, 1, 0.7],
                                 rotate: Math.random() * 30 - 15,
                             }}
-                            transition={{
-                                duration: 8 + Math.random() * 4, // Very slow float (8-12 seconds)
-                                ease: "linear", // Move at constant speed to hide "lag"
-                                delay: (idx % 8) * 0.2
-                            }}
+                            transition={{ duration: 8 + Math.random() * 4, ease: "linear", delay: (idx % 8) * 0.2 }}
                             style={{
                                 position: "absolute",
                                 background: m.color,
@@ -228,7 +217,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                                 borderRadius: "20px 20px 4px 20px",
                                 padding: "10px 18px",
                                 color: "#fff",
-                                fontSize: 18, // Smaller for better fit
+                                fontSize: 18,
                                 fontWeight: 800,
                                 fontFamily: "var(--font-fredoka), cursive",
                                 maxWidth: 260,
@@ -236,7 +225,7 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                                 pointerEvents: "none",
                                 textAlign: "center",
                                 letterSpacing: "-0.01em",
-                                whiteSpace: "normal", // Allow wrapping for long messages
+                                whiteSpace: "normal",
                                 zIndex: 10,
                             }}
                         >
@@ -246,159 +235,213 @@ export default function ReactionSystem({ roomId, userId }: Props) {
                 </AnimatePresence>
             </div>
 
-            {/* ─── Message Input (Top-Left Area) ─── */}
-            <div className="message-input-area" style={{
-                position: "fixed", top: 80, left: 16, zIndex: 1000, // Very high z-index
-                width: "calc(100% - 80px)", maxWidth: 420, // Diperbesar
-                pointerEvents: "auto", // Crucial for clickability
+            {/* ─── Desktop UI ─── */}
+            <div className="desktop-chat-ui">
+                <div className="message-input-area" style={{
+                    position: "fixed", top: 80, left: 16, zIndex: 1000,
+                    width: "calc(100% - 80px)", maxWidth: 420,
+                    pointerEvents: "auto",
+                }}>
+                    <form onSubmit={sendMessage} style={{ position: "relative" }}>
+                        <input
+                            type="text"
+                            placeholder="Kirim pesan singkat..."
+                            value={msgInput}
+                            onChange={(e) => setMsgInput(e.target.value.slice(0, 50))}
+                            style={{
+                                width: "100%", padding: "16px 54px 16px 24px",
+                                background: "var(--bg-card)", backdropFilter: "blur(20px)",
+                                border: "2px solid var(--border-soft)",
+                                borderRadius: 28, color: "var(--text-primary)", fontSize: 16,
+                                fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
+                                outline: "none",
+                                boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                                transition: "var(--theme-transition)",
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!msgInput.trim() || isSendingMsg}
+                            style={{
+                                position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                                width: 36, height: 36, borderRadius: "50%",
+                                background: msgInput.trim() ? "var(--accent-primary)" : "var(--border-soft)",
+                                border: "none", color: "#fff", cursor: "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                transition: "all 0.3s ease",
+                            }}
+                        >
+                            <PaperAirplaneIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
+                        </button>
+                    </form>
+                </div>
+
+                <div className="reaction-trigger-area" style={{
+                    position: "fixed", top: 80, right: 396, zIndex: 1000,
+                    pointerEvents: "auto",
+                }}>
+                    <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <motion.button
+                            whileHover={{ scale: 1.1, background: "rgba(255,110,181,0.15)" }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setShowMenu(!showMenu)}
+                            style={{
+                                width: 56, height: 56, borderRadius: "50%",
+                                background: "var(--bg-card)", backdropFilter: "blur(20px)",
+                                color: showMenu ? "var(--accent-primary)" : "var(--text-primary)",
+                                cursor: "pointer", border: "1.5px solid var(--border-soft)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                boxShadow: "var(--shadow-soft)", transition: "all 0.3s ease",
+                            }}
+                        >
+                            {showMenu ? <XMarkIcon style={{ width: 28, height: 28 }} /> : <FaceSmileIcon style={{ width: 28, height: 28 }} />}
+                        </motion.button>
+
+                        <AnimatePresence>
+                            {showMenu && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    style={{
+                                        position: "absolute", top: "100%", right: 0, marginTop: 12,
+                                        background: "var(--bg-card)", backdropFilter: "blur(24px)",
+                                        border: "2px solid var(--border-soft)",
+                                        borderRadius: 28, padding: "10px",
+                                        display: "flex", flexDirection: "column", gap: 8,
+                                        boxShadow: "0 15px 40px rgba(0,0,0,0.2)",
+                                    }}
+                                >
+                                    {REACTIONS.map((r, i) => (
+                                        <motion.button
+                                            key={r.label}
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            whileHover={{ scale: 1.25, background: "var(--bg-secondary)" }}
+                                            whileTap={{ scale: 0.8 }}
+                                            onClick={() => sendReaction(r.emoji)}
+                                            style={{
+                                                width: 44, height: 44, borderRadius: "50%",
+                                                background: "transparent", border: "none",
+                                                fontSize: 22, cursor: "pointer",
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                            }}
+                                        >
+                                            {r.emoji}
+                                        </motion.button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            </div>
+
+            {/* ─── Mobile UI (Consolidated Parallel Liquid Glass) ─── */}
+            <div className="mobile-chat-ui" style={{
+                position: "fixed", bottom: 96, left: 16, right: 16, zIndex: 1000,
+                display: "none", alignItems: "center", gap: 10,
+                pointerEvents: "auto",
             }}>
-                <form onSubmit={sendMessage} style={{ position: "relative", pointerEvents: "auto" }}>
+                <form onSubmit={sendMessage} style={{ flex: 1, position: "relative" }}>
                     <input
                         type="text"
-                        placeholder="Kirim pesan singkat..."
+                        placeholder="Kirim pesan..."
                         value={msgInput}
                         onChange={(e) => setMsgInput(e.target.value.slice(0, 50))}
                         style={{
-                            width: "100%", padding: "16px 54px 16px 24px",
-                            background: "var(--bg-card)", backdropFilter: "blur(20px)",
-                            border: "2px solid var(--border-soft)",
-                            borderRadius: 28, color: "var(--text-primary)", fontSize: 16,
-                            fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
+                            width: "100%", height: 52, padding: "0 54px 0 20px",
+                            background: "rgba(255, 255, 255, 0.05)",
+                            backdropFilter: "blur(24px) saturate(160%)",
+                            WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                            border: "1px solid rgba(255, 255, 255, 0.15)",
+                            borderRadius: 26,
+                            color: "var(--text-primary)",
+                            fontSize: 15,
+                            fontFamily: "var(--font-fredoka), sans-serif",
+                            fontWeight: 600,
                             outline: "none",
-                            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                            transition: "var(--theme-transition)",
-                            pointerEvents: "auto",
-                        }}
-                        onFocus={(e) => {
-                            e.target.style.borderColor = "var(--accent-primary)";
-                            e.target.style.boxShadow = "var(--shadow-soft)";
-                        }}
-                        onBlur={(e) => {
-                            e.target.style.borderColor = "var(--border-soft)";
-                            e.target.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                            transition: "all 0.3s ease",
                         }}
                     />
                     <button
                         type="submit"
                         disabled={!msgInput.trim() || isSendingMsg}
                         style={{
-                            position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-                            width: 36, height: 36, borderRadius: "50%",
-                            background: msgInput.trim() ? "var(--accent-primary)" : "var(--border-soft)",
-                            border: "none", color: "#fff", cursor: "pointer",
+                            position: "absolute", right: 7, top: "50%", transform: "translateY(-50%)",
+                            width: 38, height: 38, borderRadius: "50%",
+                            background: msgInput.trim() ? "var(--accent-primary)" : "rgba(255,255,255,0.05)",
+                            border: "none", color: msgInput.trim() ? "#fff" : "var(--text-muted)",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            opacity: msgInput.trim() ? 1 : 0.6,
                             transition: "all 0.3s ease",
-                            pointerEvents: "auto",
+                            cursor: "pointer"
                         }}
                     >
                         <PaperAirplaneIcon style={{ width: 18, height: 18, marginLeft: -2 }} />
                     </button>
                 </form>
-            </div>
 
-            {/* ─── Reaction Trigger (Top-Right Area) ─── */}
-            <div className="reaction-trigger-area" style={{
-                position: "fixed", top: 80, right: 16, zIndex: 1000,
-                pointerEvents: "auto",
-            }}>
-                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "auto" }}>
+                <div style={{ position: "relative" }}>
                     <motion.button
-                        whileHover={{ scale: 1.1, background: "var(--bg-secondary)" }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setShowMenu(!showMenu)}
-                        className="reaction-toggle-btn-desktop"
                         style={{
-                            width: 56, height: 56, borderRadius: "20px",
-                            background: "var(--bg-card)",
+                            width: 52, height: 52, borderRadius: "50%",
+                            background: "rgba(255, 255, 255, 0.05)",
+                            backdropFilter: "blur(24px) saturate(160%)",
+                            WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                            border: "1px solid rgba(255, 255, 255, 0.15)",
                             color: showMenu ? "var(--accent-primary)" : "var(--text-primary)",
-                            cursor: "pointer",
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                            pointerEvents: "auto",
-                            border: "1.5px solid var(--border-soft)",
-                            boxShadow: "var(--shadow-soft)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                            cursor: "pointer"
                         }}
                     >
-                        {showMenu ? <XMarkIcon style={{ width: 32, height: 32 }} /> : <FaceSmileIcon style={{ width: 32, height: 32 }} />}
+                        {showMenu ? <XMarkIcon style={{ width: 24, height: 24 }} /> : <FaceSmileIcon style={{ width: 24, height: 24 }} />}
                     </motion.button>
 
                     <AnimatePresence>
                         {showMenu && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="reaction-menu-popup"
+                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.9 }}
                                 style={{
-                                    position: "absolute", right: 0,
-                                    background: "var(--bg-card)", backdropFilter: "blur(24px)",
-                                    border: "2px solid var(--border-soft)",
-                                    borderRadius: 28, padding: "10px",
+                                    position: "absolute", bottom: "120%", right: 0,
+                                    background: "var(--bg-card)",
+                                    backdropFilter: "blur(20px)",
+                                    border: "1.5px solid var(--border-soft)",
+                                    borderRadius: 24, padding: "8px",
                                     display: "flex", flexDirection: "column", gap: 8,
-                                    boxShadow: "0 15px 40px rgba(0,0,0,0.2)",
-                                    pointerEvents: "auto",
+                                    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
                                 }}
                             >
-                                {REACTIONS.map((r, i) => (
-                                    <motion.button
+                                {REACTIONS.map((r) => (
+                                    <button
                                         key={r.label}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        whileHover={{ scale: 1.25, background: "var(--bg-secondary)" }}
-                                        whileTap={{ scale: 0.8 }}
                                         onClick={() => sendReaction(r.emoji)}
                                         style={{
-                                            width: 44, height: 44, borderRadius: "50%",
-                                            background: "transparent", border: "none",
-                                            fontSize: 22, cursor: "pointer",
+                                            width: 40, height: 40, borderRadius: "50%",
+                                            background: "transparent", border: "none", fontSize: 20,
                                             display: "flex", alignItems: "center", justifyContent: "center",
-                                            transition: "background 0.2s",
-                                            pointerEvents: "auto",
+                                            cursor: "pointer"
                                         }}
                                     >
                                         {r.emoji}
-                                    </motion.button>
+                                    </button>
                                 ))}
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </div>
+
             <style>{`
-                .reaction-toggle-btn-desktop {
-                    background: var(--bg-card) !important;
-                }
-                .reaction-menu-popup {
-                    top: 100%;
-                    margin-top: 12px;
-                }
                 @media (max-width: 1024px) {
-                    .message-input-area { 
-                        top: auto !important; 
-                        bottom: 96px !important; 
-                        width: calc(100% - 80px) !important; 
-                        left: 16px !important; 
-                    }
-                    .reaction-trigger-area { 
-                        top: auto !important; 
-                        bottom: 96px !important; 
-                        right: 16px !important; 
-                    }
-                    .reaction-toggle-btn-desktop {
-                        background: var(--bg-card) !important;
-                        border: 1.5px solid var(--border-soft) !important;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-                        width: 48px !important; height: 48px !important;
-                        border-radius: 50% !important;
-                    }
-                    .reaction-menu-popup {
-                        top: auto !important;
-                        bottom: 100% !important;
-                        margin-bottom: 16px !important;
-                        margin-top: 0 !important;
-                    }
+                    .desktop-chat-ui { display: none !important; }
+                    .mobile-chat-ui { display: flex !important; }
                 }
             `}</style>
         </>

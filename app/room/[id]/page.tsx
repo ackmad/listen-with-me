@@ -1030,6 +1030,56 @@ function RoomInner() {
                 )}
             </AnimatePresence>
 
+            {/* 📱 Mobile Simple Navbar (Liquid Glass) */}
+            <div className="mobile-simple-navbar" style={{
+                position: "fixed", top: 16, left: 16, right: 16, zIndex: 1000,
+                height: 60, display: "none", alignItems: "center", justifyContent: "space-between",
+                padding: "0 12px 0 16px",
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(24px) saturate(160%)",
+                WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 30,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(255,255,255,0.05)",
+                transition: "var(--theme-transition)",
+            }}>
+                <button onClick={() => router.push("/dashboard")} style={{
+                    width: 42, height: 42, borderRadius: "50%",
+                    background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.1)",
+                    color: "var(--text-primary)", display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", transition: "all 0.2s ease"
+                }}>
+                    <ArrowLeftIcon style={{ width: 20, height: 20 }} />
+                </button>
+
+                <div style={{ textAlign: "center", flex: 1, padding: "0 12px" }}>
+                    <h1 style={{ margin: 0, fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {room?.name || "Loading..."}
+                    </h1>
+                    <p style={{ margin: 0, fontSize: 9, fontWeight: 800, color: "var(--accent-primary)", opacity: 0.9 }}>
+                        {isHost ? "KONTROL HOST" : "MENDENGARKAN"}
+                    </p>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <button onClick={toggleFullscreen} style={{
+                        width: 42, height: 42, borderRadius: "50%",
+                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.05)",
+                        color: "var(--text-primary)", display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                        {isFullscreen ? <ArrowsPointingInIcon style={{ width: 18, height: 18 }} /> : <ArrowsPointingOutIcon style={{ width: 18, height: 18 }} />}
+                    </button>
+                    <button onClick={() => setShowSongs(true)} style={{
+                        width: 42, height: 42, borderRadius: "50%",
+                        background: "var(--accent-primary)", border: "none",
+                        color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 8px 20px var(--accent-glow)"
+                    }}>
+                        <PlusIcon style={{ width: 22, height: 22 }} />
+                    </button>
+                </div>
+            </div>
+
             {/* Main Header (Mostly for desktop) */}
             <header className="room-main-header" style={{
                 padding: "0 24px", height: 72,
@@ -1087,11 +1137,14 @@ function RoomInner() {
                     </div>
 
                     {/* Mobile Content */}
-                    <div className="mobile-view room-player-panel" style={{ flex: 1, display: "none", flexDirection: "column", overflow: "hidden", background: "var(--bg-primary)" }}>
-
+                    <div className="mobile-view room-player-panel" style={{
+                        flex: 1, display: "none", flexDirection: "column", overflow: "hidden",
+                        background: "var(--bg-primary)",
+                        paddingTop: 96, // Ample space for floating header
+                    }}>
 
                         {/* Mobile Tab Switcher (Lagu / Lirik) */}
-                        <div className="room-player-panel" style={{ padding: "16px 20px 8px", display: "flex", justifyContent: "center", background: "var(--bg-primary)" }}>
+                        <div className="room-player-panel" style={{ padding: "0 20px 8px", display: "flex", justifyContent: "center", background: "var(--bg-primary)" }}>
                             <div style={{
                                 display: "flex",
                                 background: "var(--bg-secondary)",
@@ -1221,7 +1274,7 @@ function RoomInner() {
                                         </button>
                                     </div>
 
-                                    <div style={{ marginTop: 40 }}>
+                                    <div style={{ marginTop: 24, marginBottom: 12 }}>
                                         <span style={{ fontSize: 10, fontWeight: 800, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                                             🎵 Sinkronisasi dengan host
                                         </span>
@@ -1240,18 +1293,23 @@ function RoomInner() {
                                 </div>
                             )}
                         </div>
-                        {/* Visual spacer for bottom bar area */}
-                        <div style={{ height: 84, flexShrink: 0 }} />
+                        {/* Visual spacer for bottom bar & chat input area */}
+                        <div style={{ height: 180, flexShrink: 0 }} />
                     </div>
                 </div>
             </div>
 
-            {/* Mobile Tabbar */}
+            {/* Mobile Tabbar (Liquid Glass) */}
             <div className="mobile-tabbar" style={{
-                position: "fixed", bottom: 0, left: 0, right: 0, height: 84,
-                background: "var(--bg-navbar)", borderTop: "1.5px solid var(--border-soft)",
+                position: "fixed", bottom: 20, left: 24, right: 24, height: 64,
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(24px) saturate(160%)",
+                WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 32,
                 display: "none", alignItems: "center", justifyContent: "space-around",
-                padding: "0 12px", zIndex: 1000
+                padding: "0 12px", zIndex: 1000,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(255,255,255,0.05)",
             }}>
                 {[
                     { id: "queue", icon: QueueListIcon, label: "Antrian", action: () => { setMobileTab("queue"); setShowDrawer(true); } },
@@ -1302,7 +1360,8 @@ function RoomInner() {
                     .desktop-view { display: none !important; }
                     .mobile-view { display: flex !important; }
                     .mobile-tabbar { display: flex !important; }
-                    .room-main-header { height: 64px !important; }
+                    .room-main-header { display: none !important; }
+                    .mobile-simple-navbar { display: flex !important; }
                     .sm-hidden { display: none; }
                     .mobile-view-toggle { display: block !important; }
                     .desktop-only-btn { display: none !important; }

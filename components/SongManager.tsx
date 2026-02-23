@@ -3,11 +3,11 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LOCAL_SONGS = [
-    { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192, addedAt: Date.now() - (2 * 60 * 60 * 1000) }, // 2 hours ago
-    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325, hasLyrics: true, addedAt: Date.now() - (24 * 60 * 60 * 1000) }, // 24 hours ago
-    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249, hasLyrics: true, addedAt: Date.now() - (40 * 60 * 60 * 1000) }, // 40 hours ago
-    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270, hasLyrics: true, addedAt: Date.now() - (50 * 60 * 60 * 1000) }, // 50 hours ago (More than 42h)
-    { id: 'pp-05', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613, hasLyrics: true },
+    { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192, hasLyrics: true, addedAt: Date.now() - (2 * 60 * 60 * 1000) },
+    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325, hasLyrics: true, addedAt: Date.now() - (24 * 60 * 60 * 1000) },
+    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249, hasLyrics: true, addedAt: Date.now() - (40 * 60 * 60 * 1000) },
+    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270, hasLyrics: true, addedAt: Date.now() - (50 * 60 * 60 * 1000) },
+    { id: 'pp-05', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613 },
     { id: 'pp-06', title: 'An Art Gallery Could Never Be As Unique As You', artist: 'mrld', url: '/music/paypay/AnArtGalleryCouldNeverBeAsUniqueAsYou-mrld.mp3', duration: 169 },
     { id: 'pp-07', title: 'Anchor', artist: 'Novo Amor', url: '/music/paypay/Anchor-NovoAmor.mp3', duration: 254 },
     { id: 'pp-08', title: 'Anything', artist: 'Adrianne Lenker', url: '/music/paypay/Anything-AdrianneLenker.mp3', duration: 202 },
@@ -87,6 +87,37 @@ export const LOCAL_SONGS = [
     { id: 'pp-82', title: 'You Always', artist: 'Artist Unknown', url: '/music/paypay/YouAlways-ArtistUnknown.mp3', duration: 191 },
     { id: 'pp-83', title: 'You Are Enough', artist: 'Sleeping At Last', url: '/music/paypay/YouAreEnough-SleepingAtLast.mp3', duration: 180 },
     { id: 'pp-84', title: "You're Gonna Live Forever in Me", artist: 'John Mayer', url: '/music/paypay/YoureGonnaLiveForeverInMe-JohnMayer.mp3', duration: 185 },
+    { id: 'pp-85', title: '18', artist: 'One Direction', url: '/music/paypay/18-OneDirection.mp3', duration: 252, addedAt: Date.now() },
+    { id: 'pp-86', title: '2112', artist: 'Reality Club', url: '/music/paypay/2112-RealityClub.mp3', duration: 356, addedAt: Date.now() },
+    { id: 'pp-87', title: 'A Man Without Love', artist: 'Engelbert Humperdinck', url: '/music/paypay/AManWithoutLove-EngelbertHumperdinck.mp3', duration: 197, addedAt: Date.now() },
+    { id: 'pp-88', title: 'Another Love', artist: 'Tom Odell', url: '/music/paypay/AnotherLove-TomOdell.mp3', duration: 241, addedAt: Date.now() },
+    { id: 'pp-89', title: 'A Sorrowful Reunion', artist: 'Reality Club', url: '/music/paypay/ASorrowfulReunion-RealityClub.mp3', duration: 259, addedAt: Date.now() },
+    { id: 'pp-90', title: 'A Year Ago', artist: 'James Arthur', url: '/music/paypay/AYearAgo-JamesArthur.mp3', duration: 171, addedAt: Date.now() },
+    { id: 'pp-91', title: 'Back To December', artist: 'Taylor Swift', url: '/music/paypay/BackToDecember-TaylorSwift.mp3', duration: 295, addedAt: Date.now() },
+    { id: 'pp-92', title: 'Back To Friends', artist: 'Sombr', url: '/music/paypay/BackToFriends-Sombr.mp3', duration: 199, addedAt: Date.now() },
+    { id: 'pp-93', title: 'Cars Outside', artist: 'James Arthur', url: '/music/paypay/CarsOutside-JamesArthur.mp3', duration: 247, addedAt: Date.now() },
+    { id: 'pp-94', title: 'Dandelions', artist: 'Ruth B.', url: '/music/paypay/Dandelions-RuthB.mp3', duration: 228, addedAt: Date.now() },
+    { id: 'pp-95', title: 'Daydreamin', artist: 'Ariana Grande', url: '/music/paypay/Daydreamin-ArianaGrande.mp3', duration: 213, addedAt: Date.now() },
+    { id: 'pp-96', title: 'Drunk Text', artist: 'Henry Moodie', url: '/music/paypay/DrunkText-HenryMoodie.mp3', duration: 191, addedAt: Date.now() },
+    { id: 'pp-97', title: 'Forever Young', artist: 'Alphaville', url: '/music/paypay/ForeverYoung-Alphaville.mp3', duration: 227, addedAt: Date.now() },
+    { id: 'pp-98', title: 'Heat Waves', artist: 'Glass Animals', url: '/music/paypay/HeatWaves-GlassAnimals.mp3', duration: 239, addedAt: Date.now() },
+    { id: 'pp-99', title: 'Just A Friend To You', artist: 'Meghan Trainor', url: '/music/paypay/JustAFriendToYou-MeghanTrainor.mp3', duration: 162, addedAt: Date.now() },
+    { id: 'pp-100', title: 'Kota Ini Tak Sama Tanpamu', artist: 'Nadhif Basalamah', url: '/music/paypay/KotaIniTakSamaTanpamu-NadhifBasalamah.mp3', duration: 272, addedAt: Date.now() },
+    { id: 'pp-101', title: 'Labyrinth', artist: 'Taylor Swift', url: '/music/paypay/Labyrinth-TaylorSwift.mp3', duration: 248, addedAt: Date.now() },
+    { id: 'pp-102', title: 'Locked Away', artist: 'R. City', url: '/music/paypay/LockedAway-RCity.mp3', duration: 226, addedAt: Date.now() },
+    { id: 'pp-103', title: 'Mind Over Matter (Reprise)', artist: 'Young The Giant', url: '/music/paypay/MindOverMatterReprise-YoungTheGiant.mp3', duration: 230, addedAt: Date.now() },
+    { id: 'pp-104', title: 'Mockingbird', artist: 'Eminem', url: '/music/paypay/Mockingbird-Eminem.mp3', duration: 253, addedAt: Date.now() },
+    { id: 'pp-105', title: 'Monolog', artist: 'Pamungkas', url: '/music/paypay/Monolog-Pamungkas.mp3', duration: 201, addedAt: Date.now() },
+    { id: 'pp-106', title: 'Night Changes', artist: 'One Direction', url: '/music/paypay/NightChanges-OneDirection.mp3', duration: 240, addedAt: Date.now() },
+    { id: 'pp-107', title: 'No One Noticed', artist: 'The Marías', url: '/music/paypay/NoOneNoticed-TheMarias.mp3', duration: 236, addedAt: Date.now() },
+    { id: 'pp-108', title: 'Perfect', artist: 'One Direction', url: '/music/paypay/Perfect-OneDirection.mp3', duration: 228, addedAt: Date.now() },
+    { id: 'pp-109', title: 'See You Again', artist: 'Wiz Khalifa', url: '/music/paypay/SeeYouAgain-WizKhalifa.mp3', duration: 229, addedAt: Date.now() },
+    { id: 'pp-110', title: 'The Fate Of Ophelia', artist: 'Taylor Swift', url: '/music/paypay/TheFateOfOphelia-TaylorSwift.mp3', duration: 226, addedAt: Date.now() },
+    { id: 'pp-111', title: 'The Man Who Cant Be Moved', artist: 'The Script', url: '/music/paypay/TheManWhoCantBeMoved-TheScript.mp3', duration: 239, addedAt: Date.now() },
+    { id: 'pp-112', title: 'Wildest Dreams', artist: 'Taylor Swift', url: '/music/paypay/WildestDreams-TaylorSwift.mp3', duration: 234, addedAt: Date.now() },
+    { id: 'pp-113', title: 'Wish You Were Here', artist: 'Taylor Swift', url: '/music/paypay/WishYouWereHere-TaylorSwift.mp3', duration: 248, addedAt: Date.now() },
+    { id: 'pp-114', title: 'You Belong With Me', artist: 'Taylor Swift', url: '/music/paypay/YouBelongWithMe-TaylorSwift.mp3', duration: 228, addedAt: Date.now() },
+    { id: 'pp-115', title: 'Youre Losing Me', artist: 'Taylor Swift', url: '/music/paypay/YoureLosingMe-TaylorSwift.mp3', duration: 277, addedAt: Date.now() },
 ];
 
 
