@@ -3,10 +3,10 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const LOCAL_SONGS = [
-    { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192 },
-    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325, hasLyrics: true },
-    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249, hasLyrics: true },
-    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270, hasLyrics: true },
+    { id: 'pp-01', title: '8 Letters', artist: 'Why Dont We', url: '/music/paypay/8Letters-WhyDontWe.mp3', duration: 192, addedAt: Date.now() - (2 * 60 * 60 * 1000) }, // 2 hours ago
+    { id: 'pp-02', title: 'About You', artist: 'The 1975', url: '/music/paypay/AboutYou-The1975.mp3', duration: 325, hasLyrics: true, addedAt: Date.now() - (24 * 60 * 60 * 1000) }, // 24 hours ago
+    { id: 'pp-03', title: 'Alexandra', artist: 'Reality Club', url: '/music/paypay/Alexandra-RealityClub.mp3', duration: 249, hasLyrics: true, addedAt: Date.now() - (40 * 60 * 60 * 1000) }, // 40 hours ago
+    { id: 'pp-04', title: 'All Of Me', artist: 'John Legend', url: '/music/paypay/AllOfMe-JohnLegend.mp3', duration: 270, hasLyrics: true, addedAt: Date.now() - (50 * 60 * 60 * 1000) }, // 50 hours ago (More than 42h)
     { id: 'pp-05', title: 'All Too Well (10 Minute Version)', artist: 'Taylor Swift', url: '/music/paypay/AllTooWell10MinuteVersionTaylorsVersionFromTheVault-TaylorSwift.mp3', duration: 613, hasLyrics: true },
     { id: 'pp-06', title: 'An Art Gallery Could Never Be As Unique As You', artist: 'mrld', url: '/music/paypay/AnArtGalleryCouldNeverBeAsUniqueAsYou-mrld.mp3', duration: 169 },
     { id: 'pp-07', title: 'Anchor', artist: 'Novo Amor', url: '/music/paypay/Anchor-NovoAmor.mp3', duration: 254 },
@@ -96,10 +96,28 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
     const [search, setSearch] = useState("");
 
     const sortedSongs = [...LOCAL_SONGS].sort((a, b) => {
+        const now = Date.now();
+        const threshold = 42 * 60 * 60 * 1000;
+
+        const isNewA = a.addedAt && (now - a.addedAt < threshold);
+        const isNewB = b.addedAt && (now - b.addedAt < threshold);
+
+        if (isNewA && !isNewB) return -1;
+        if (!isNewA && isNewB) return 1;
+        if (isNewA && isNewB) return (b.addedAt || 0) - (a.addedAt || 0);
+
         const artistCompare = a.artist.localeCompare(b.artist);
         if (artistCompare !== 0) return artistCompare;
         return a.title.localeCompare(b.title);
     });
+
+    const getTimeAgo = (timestamp?: number) => {
+        if (!timestamp) return "";
+        const diff = Date.now() - timestamp;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        if (hours < 1) return "Barusan";
+        return `${hours} jam yang lalu`;
+    };
 
     const filtered = sortedSongs.filter(s =>
         s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -202,8 +220,28 @@ export default function SongManager({ isOpen, onClose, onSongSelect, onAddRandom
                                                 alignItems: "center", justifyContent: "center", fontSize: 20
                                             }}>🎵</div>
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
                                                     <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>{s.title}</p>
+                                                    {s.addedAt && (Date.now() - s.addedAt < 42 * 60 * 60 * 1000) && (
+                                                        <div style={{ display: 'flex', gap: 4 }}>
+                                                            <span style={{
+                                                                fontSize: 9,
+                                                                background: "linear-gradient(135deg, #FF0099, #FF0055)",
+                                                                color: "#fff",
+                                                                padding: "2px 8px",
+                                                                borderRadius: 6,
+                                                                fontWeight: 900,
+                                                                textTransform: "uppercase",
+                                                                letterSpacing: "0.05em",
+                                                                boxShadow: "0 2px 8px rgba(255,0,153,0.3)"
+                                                            }}>
+                                                                Baru
+                                                            </span>
+                                                            <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--accent-primary)', opacity: 0.8 }}>
+                                                                {getTimeAgo(s.addedAt)}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     {s.hasLyrics && (
                                                         <span style={{
                                                             fontSize: 9,

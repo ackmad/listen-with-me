@@ -98,8 +98,32 @@ export default function SongsLibrary() {
             const matchesArtist = filterArtist === 'Semua' || s.artist === filterArtist;
             return matchesSearch && matchesArtist;
         });
-        return filtered;
+
+        // Sort: New songs (within 42h) first, then alphabetical by artist
+        const now = Date.now();
+        const threshold = 42 * 60 * 60 * 1000;
+
+        return filtered.sort((a, b) => {
+            const isNewA = a.addedAt && (now - a.addedAt < threshold);
+            const isNewB = b.addedAt && (now - b.addedAt < threshold);
+
+            if (isNewA && !isNewB) return -1;
+            if (!isNewA && isNewB) return 1;
+            if (isNewA && isNewB) return (b.addedAt || 0) - (a.addedAt || 0);
+
+            const artistCompare = a.artist.localeCompare(b.artist);
+            if (artistCompare !== 0) return artistCompare;
+            return a.title.localeCompare(b.title);
+        });
     }, [search, filterArtist]);
+
+    const getTimeAgo = (timestamp?: number) => {
+        if (!timestamp) return "";
+        const diff = Date.now() - timestamp;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        if (hours < 1) return "Barusan";
+        return `${hours} jam yang lalu`;
+    };
 
     const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
     const paginatedSongs = useMemo(() => {
@@ -278,6 +302,20 @@ export default function SongsLibrary() {
                                             transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                                             style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
                                         />
+
+                                        {/* New Badge Overlay (Grid) */}
+                                        {song.addedAt && (Date.now() - song.addedAt < 42 * 60 * 60 * 1000) && (
+                                            <div style={{
+                                                position: 'absolute', top: 12, right: 12,
+                                                background: 'linear-gradient(135deg, #FF0099, #FF0055)',
+                                                color: '#fff', fontSize: 10, fontWeight: 900,
+                                                padding: '4px 10px', borderRadius: 10,
+                                                boxShadow: '0 4px 12px rgba(255,0,153,0.4)',
+                                                zIndex: 10
+                                            }}>
+                                                BARU
+                                            </div>
+                                        )}
                                     </motion.div>
 
                                     {/* Song Info (Below Vinyl) */}
@@ -287,11 +325,18 @@ export default function SongsLibrary() {
                                             color: 'var(--text-primary)',
                                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                                         }}>{song.title}</h3>
-                                        <p style={{
-                                            margin: 0, fontSize: 11, fontWeight: 700,
-                                            color: 'var(--text-muted)',
-                                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                                        }}>{song.artist}</p>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                            <p style={{
+                                                margin: 0, fontSize: 11, fontWeight: 700,
+                                                color: 'var(--text-muted)',
+                                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                            }}>{song.artist}</p>
+                                            {song.addedAt && (Date.now() - song.addedAt < 42 * 60 * 60 * 1000) && (
+                                                <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--accent-primary)', opacity: 0.8 }}>
+                                                    • {getTimeAgo(song.addedAt)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </>
                             ) : (
@@ -305,7 +350,22 @@ export default function SongsLibrary() {
                                     </div>
 
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ margin: '0 0 1px', fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song.title}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 1 }}>
+                                            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song.title}</h3>
+                                            {song.addedAt && (Date.now() - song.addedAt < 42 * 60 * 60 * 1000) && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                    <span style={{
+                                                        fontSize: 8, background: 'linear-gradient(135deg, #FF0099, #FF0055)',
+                                                        color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 900
+                                                    }}>
+                                                        BARU
+                                                    </span>
+                                                    <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--accent-primary)', opacity: 0.7 }}>
+                                                        {getTimeAgo(song.addedAt)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                         <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song.artist}</p>
                                     </div>
 
